@@ -1,0 +1,10 @@
+/*Move this to _style.scss*/
+
+.chapters {
+	list-style:none;
+}
+
+.chapters li {
+	float:left;
+	margin: $defaultmargin;
+}
