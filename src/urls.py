@@ -15,7 +15,6 @@ urlpatterns = patterns('',
     url(r'^logout$', 'views.logout_user'),
     
     #api debuggin part
-    url(r'^apidebug$', 'views.apidebug'),
     url(r'^mediacollector$', 'views.mediacollector'),
     url(r'^unstructuredsearch$', 'views.unstructuredsearch'),
     url(r'^tvenricher$', 'views.tvenricher'),
@@ -27,8 +26,7 @@ urlpatterns = patterns('',
     #new API calls
     url(r'^videos$', 'views.videos'),
     url(r'^chapters$', 'views.chapters'),
-
-
-
+    url(r'^entities$', 'views.entities'),
+    url(r'^enrichments$', 'views.enrichments'),
 
 )

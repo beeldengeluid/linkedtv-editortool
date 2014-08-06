@@ -9,3 +9,7 @@ a {
 body {
 	padding-top:70px;
 }
+
+.panel-menu {
+	@include panelMenu($wonderblue, true);
+}

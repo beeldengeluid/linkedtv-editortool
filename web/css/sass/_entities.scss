@@ -1,0 +1,71 @@
+.entities {
+	list-style:none;
+}
+
+.entities li {
+	display:inline;
+}
+
+.label {
+	display:inline-block;
+	margin:$defaulItemMargin;
+	cursor:pointer;	
+
+	&:hover {
+		@include activeLabel;
+	}
+
+	.selected & {		
+		@include activeLabel;
+	}
+
+	.verylow & {
+		background-color:crimson;
+		font-size:85%;
+	}
+	.low & {
+		background-color:indianred;
+		font-size:90%;
+	}
+	.fair & {
+		background-color:darkorange;
+		font-size:100%;
+	}
+	.medium & {
+		background-color:orange;
+		font-size:110%;
+	}
+	.high & {
+		background-color:lightgreen;
+		font-size:120%;
+	}
+	.veryhigh & {
+		background-color:yellowgreen;
+		font-size:130%;
+	}
+}
+
+
+.slots {
+	list-style:none;
+}
+
+.slots li {
+	cursor:pointer;
+	float:left;
+	margin:$defaultmargin;
+	text-align:center;
+
+	.thumbnail {
+		border:1px solid white;
+		&:hover {
+			@include activeSlot;
+		}		
+	}
+
+	.selected.thumbnail {
+		@include activeSlot;
+	}
+	
+}
+

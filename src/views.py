@@ -10,7 +10,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.context_processors import csrf
 from django.template import RequestContext
 
-from linkedtv.api.sparql.DataLoader import DataLoader
 from linkedtv.api.sparql.SaveEndpoint import SaveEndpoint
 from linkedtv.images.ImageFetcher import ImageFetcher
 from linkedtv.video.VideoPlayoutHandler import VideoPlayoutHandler
@@ -49,7 +48,6 @@ For loading a the page that lists the available mediaresources/videos per provid
 
 @login_required
 def provider(request, pub = '', id = ''):
-    api = DataLoader()
     authorized = False
     if pub:       
         for g in request.user.groups.all():            
@@ -71,24 +69,24 @@ For loading a single mediaresource (for populating the main detail page of a vid
 
 """This is called to fetch the data of a single media resource"""
 def resource(request):
-    mediaResourceID = request.GET.get('id', None)
+    resourceUri = request.GET.get('id', None)
+    data = request.GET.get('ld', 'false') == 'true'
     clientIP = getClientIP(request)
-    if mediaResourceID:
-        
+    if resourceUri:        
         """Get the playout URL"""
         
         vph = VideoPlayoutHandler()
-        #playoutURL = vph.getPlayoutURL(mediaResourceID, clientIP)        
-        playoutURL = 'none'
-        #print 'PLAYOUT URL => %s' % playoutURL
+        playoutURL = 'none'#vph.getPlayoutURL(resourceUri, clientIP)                
         imgf = ImageFetcher()
-        thumbURL = imgf.getThumbnailLocatorFromAPI(mediaResourceID)
-        print 'THUMB URL => %s' % thumbURL        
+        thumbURL =  imgf.getThumbnailLocatorFromAPI(resourceUri)
+
         """Only if there is a playout URL get the annotation data"""        
         if playoutURL:
-            api = DataLoader()
-            mr = api.loadMediaResource(mediaResourceID)
-            print 'got some stuff back'
+            mr = {}
+            if data:
+                api = Api()
+                mr = api.getEntireResource(resourceUri, True)
+                print 'Loaded data from the SPARL endpoint'
             mr['locator'] = playoutURL
             mr['thumb_base'] = thumbURL
             resp = simplejson.dumps(mr)
@@ -203,15 +201,33 @@ def chapters(request):
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')
 
+#this function should be updated to fetch the entities of a chapter (once the LinkedTV API supports this)
+def entities(request):
+    r = request.GET.get('r', None)
+    if r:
+        api = Api()
+        resp = api.getEntitiesOfResource(r)
+        if resp:
+            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+    return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')
+
+def enrichments(request):
+    q = request.GET.get('q', None)
+    p = request.GET.get('p', None)
+    if p and q:
+        p = str(p).upper()
+        api = Api()
+        resp = api.getEnrichmentsOnDemand(q.split(','), p)
+        print resp
+        if resp:
+            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+    return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')
 
 """ 
 *********************************************************************************************************
 External APIs from LinkedTV WP2
 *********************************************************************************************************
 """
-
-def apidebug(request):
-    return render_to_response('apidebug.html')
 
 def mediacollector(request):
     s = request.GET.get('s', None)

@@ -87,8 +87,8 @@ class DataLoader():
                         locs.append(loc)
         return {'videos' : locs}
     
-    def loadMediaResource(self, mediaResourceID, locator = None):     
-        print 'getting computaded data...'   
+    def loadMediaResource(self, mediaResourceID, locator = None):
+        print 'getting computated data...'   
         mediaResource = self.loadComputatedMediaResourceData(mediaResourceID)
         print 'getting curated data...'
         mediaResource['curated'] = self.loadCuratedMediaResourceData(mediaResourceID)

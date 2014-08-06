@@ -20,7 +20,6 @@ angular.module('linkedtv').controller('videoSelectionController', function($root
 
 	$scope.setActiveVideo = function(video) {
 		window.location.assign('http://' + location.host + '/' + $scope.provider + '/' + video)
-		
 	};
 
 	$scope.init();

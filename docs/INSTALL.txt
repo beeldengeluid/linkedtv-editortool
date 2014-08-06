@@ -19,17 +19,13 @@ sudo npm install -g bower
 
 
 
-[Bower - Angular]
+[Install with Bower]
 
 bower install angular#1.2.20
 
-
-
-[Bower - Bootstrap]
-
 bower install bootstrap
 
-
+bower install underscore
 
 
 [Grunt]
@@ -55,14 +51,24 @@ sudo npm install grunt-contrib-uglify --save-dev
 
 
 
-[Create users]
+[Create users with Django]
 
-python
+	go into the python shell:
 
-	import os
-	os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
-	from django.contrib.auth.models import User
-	user = User.objects.create_user('sv', 'jblom@beeldengeluid.nl', 'sv_TekahKah!')
-	user.save()
-	user = User.objects.create_user('rbb', 'oliver.pidancet@rbb-online.de', 'rbb_noviZeit$')
-	user.save()
+		import os
+		os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
+		from django.contrib.auth.models import User
+		user = User.objects.create_user('sv', 'jblom@beeldengeluid.nl', 'sv_TekahKah!')
+		user.save()
+		user = User.objects.create_user('rbb', 'oliver.pidancet@rbb-online.de', 'rbb_noviZeit$')
+		user.save()
+
+
+
+[Getting Bootstrap SASS with glyphicons to work]
+	
+	Check the file /css/sass/_bootstrap-overrides.scss and make sure the icon path is set correctly:
+
+		$icon-font-path: "../bower_components/bootstrap-sass-official/assets/fonts/bootstrap/" !default;
+
+

@@ -14,12 +14,10 @@
 
     <meta name="description" content="">
     <meta name="author" content="Jaap Blom">
-    <link rel="icon" href="../../favicon.ico">
+    
+    <link rel="icon" href="/site_media/images/favicon.ico">
 
     <title>LinkedTV - Editor Tool v2.0</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="/site_media/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="/site_media/css/linkedtv-et.css" rel="stylesheet">
@@ -30,31 +28,59 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-
     <!-- angular -->
     <script src="/site_media/bower_components/angular/angular.min.js"></script>
+    <script src="/site_media/bower_components/angular-route/angular-route.min.js"></script>
+    <script src="/site_media/bower_components/angular-bootstrap/ui-bootstrap.min.js"></script>
+    <script src="/site_media/bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+
+    <!-- underscore -->
+    <script src="/site_media/bower_components/underscore/underscore.js"></script>
 
     <!-- main application -->
     <script src="/site_media/js/dist/app.concatenated.js"></script>
 
   </head>
 
-  <body>
+  <body ng-controller="appController">
 
     <navigation-bar user="{{user}}"></navigation-bar>
 
-    <div class="container">
-		<section ng-controller="videoSelectionController" ng-show="!resourceUri">
-        	<video-selector videos="videos"></video-selector>
-      	</section>
+    <div class="col-md-12">
 
-		<section ng-controller="chapterController" ng-show="resourceUri">
-        	<chapter-editor chapters="chapters" view-mode="vertical"></chapter-editor>
-      	</section>
+      <!-- Video selector -->
+		  <section ng-controller="videoSelectionController" ng-show="!resourceUri" class="row">
+       	<video-selector></video-selector>
+      </section>      
+
+      <div class="row">
+
+        <div class="col-md-6">
+          <!-- Video player -->
+          <section ng-controller="playerController" ng-show="resourceUri">
+           	<video-player></video-player>
+          </section>
+
+          <!-- Entity editor -->
+          <section ng-controller="entityController" ng-show="chapter">
+            <entity-editor></entity-editor>
+          </section>
+        </div>
+
+        <!-- Chapter editor -->
+  		  <section ng-controller="chapterController" ng-show="resourceUri" class="col-md-6">
+         	<chapter-editor></chapter-editor>
+        </section>
+
+      </div>
+
+      <div class="row">
+
+        
 
     </div>
-   
 
+    </div>
 
     <!-- Bootstrap core JavaScript -->
     <script src="/site_media/bower_components/jquery/dist/jquery.min.js"></script>

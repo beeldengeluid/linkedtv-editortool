@@ -1,0 +1,15 @@
+<div class="panel panel-default" ng-show="playoutUrl">
+
+	<div class="panel-heading">Video title: {{resourceUri}}</div>
+	<div class="panel-body">
+	
+		<video id="html5player" controls>
+			<source id="videoSource" ng-src="{{playoutUrl}}" type="video/mp4">
+		</video>
+		
+		<div id="jwplayer">
+		
+		</div>
+		
+	</div>
+</div>

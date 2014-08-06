@@ -1,0 +1,33 @@
+/* Mixins - highlighting selected/hovering elements */
+
+@mixin activeLabel {
+	@include single-box-shadow;
+	border: 1px solid #e3e3e3;
+	color: $wonderblue;
+}
+
+@mixin activeSlot {
+	@include single-box-shadow;
+	border: 1px solid #a3a3a3;
+	a {
+		color: $wonderblue;
+	}
+	
+}
+
+/* Mixins - panel header menu holding glyphicons */
+
+@mixin panelMenu($color, $rightFloat : true) {
+	list-style:none;
+	margin:0px;
+	padding:0px;
+	@if $rightFloat == true {
+		float:right;
+	}
+	li {
+		display:inline;
+		i {
+			color: $color;
+		}
+	}	
+}

@@ -38,6 +38,7 @@ class ImageFetcher():
         p1 = Popen(cmd_arr, stdout=PIPE)
         resp = p1.communicate()[0]        
         if resp:
+            print resp
             xml = etree.fromstring(resp)
             rels = xml.xpath('//mediaresourcerelation')
             for rel in rels:

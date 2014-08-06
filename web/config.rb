@@ -4,6 +4,7 @@ encoding = "utf-8"
 # Set this to the root of your project when deployed:
 http_path = "/"
 css_dir = "css"
+#fonts_dir = "bower_components/bootstrap-sass-official/assets/fonts"
 sass_dir = "css/sass"
 images_dir = "images"
 generated_images_dir = "images/sprites"

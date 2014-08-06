@@ -1,4 +1,8 @@
-@import "compass/css3";
 @import "_variables.scss";
+@import "_components.scss";
+@import "_bootstrap-overrides";
+@import "../../bower_components/bootstrap-sass-official/assets/stylesheets/bootstrap";
+@import "compass/css3";
 @import "_style.scss";
 @import "_chapters.scss";
+@import "_entities.scss";
