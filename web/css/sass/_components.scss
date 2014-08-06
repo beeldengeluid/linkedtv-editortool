@@ -31,3 +31,56 @@
 		}
 	}	
 }
+
+@mixin mediaSlots {
+	list-style:none;
+
+	li {
+		
+		cursor:pointer;
+		float:left;
+		margin:$defaultmargin;
+		text-align:center;
+		width:121px;
+
+		/*TODO make sure this works*/
+
+		@media all and (min-width: 550px) {
+			&:nth-child(4n + 1) {
+				clear:left;
+			}
+		}
+
+		@media all and (min-width: 400px) and (max-width: 549px) {
+			&:nth-child(3n + 1) {
+				clear:left;
+			}
+		}
+
+		@media all and (min-width: 260px) and (max-width: 399px) {
+			&:nth-child(odd) {
+				clear:left;
+			}
+		}
+
+		@media all and (max-width: 259px) {			
+			clear:left;
+		}
+
+		.thumbnail {			
+			border:1px solid white;
+			&:hover {
+				@include activeSlot;
+			}
+			img {
+				width:121px;
+			}
+		}
+
+		.selected.thumbnail {
+			@include activeSlot;
+		}
+		
+	}	
+
+}

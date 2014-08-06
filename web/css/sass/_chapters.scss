@@ -1,2 +1,5 @@
 /*Move this to _style.scss*/
 
+.chapters {
+	@include mediaSlots;
+}

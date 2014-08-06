@@ -40,7 +40,7 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 			method: 'GET',
 			dataType : 'json',
 			url : '/resource?id=' + resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
-			success : function(json) {
+			success : function(json) {				
 				callback(json);
 			},
 			error : function(err) {
@@ -114,6 +114,100 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 		getEntitiesOfResource : getEntitiesOfResource
 	}
 
+}]);;angular.module('linkedtv').factory('imageService', [function(){
+	
+	function getThumbnail(thumbBaseUrl, resourceUri, millis) {
+		if (!thumbBaseUrl) {
+			return '/image?ms=' + millis + '&id=' + resourceUri;
+		}
+		var h = m = s = 0;
+		while (millis >= 3600000) {
+			h ++;
+            millis -= 3600000;
+		}
+        while (millis >= 60000) {
+            m ++;
+            millis -= 60000;
+        }
+        while (millis >= 1000) {
+            s++;        
+            millis -= 1000;
+        }
+        var url = thumbBaseUrl;
+        url += 'h/' + h + '/m/' + m + '/sec' + s + '.jpg';
+        return url;
+	}
+
+	return {
+		getThumbnail : getThumbnail
+	}
+
+}]);;angular.module('linkedtv').factory('timeUtils', [function(){
+
+	function toMillis(t) {
+		var ms = -1;
+		var tmp = t + '';
+		if (tmp.indexOf(':') == -1) {
+			//converts seconds to millis (e.g. strings like 24124.22)
+			ms = t * 1000 + '';
+			if(ms.indexOf('.') == -1) {
+				return parseInt(ms);
+			} else {
+				return parseInt(ms.substring(0, ms.indexOf('.')));
+			}
+		} else if (t.indexOf(':') != -1) {
+			//converts a hh:mm:ss.ms timestring into millis 
+			var t_arr = t.split(':');
+			if(t_arr.length == 3) {
+				//add the hours
+				ms = parseInt(t_arr[0]) * 3600000;
+				//add the minutes
+				ms += parseInt(t_arr[1]) * 60000;
+				if(t_arr[2].indexOf('.') == -1) {
+					//add the seconds
+					ms += parseInt(t_arr[2]) * 1000;
+				} else {
+					//add the seconds before the '.'
+					ms += parseInt(t_arr[2].substring(0, t_arr[2].indexOf('.'))) * 1000;
+					//add the remaining ms after the '.'
+					ms += parseInt(t_arr[2].indexOf('.') + 1);
+				}
+				return ms;
+			}
+		}
+		return -1;
+	}
+		
+	function toPrettyTime(millis) {
+		var h = 0;
+		var m = 0;
+		var s = 0;
+		while (millis >= 3600000) {
+			h++;
+			millis -= 3600000;
+		}
+		while (millis >= 60000) {
+			m++;
+			millis -= 60000;
+		}
+		while (millis >= 1000) {
+			s++;
+			millis -= 1000;
+		}
+		h = h < 10 ? '0' + h : h + '';
+		m = m < 10 ? '0' + m : m + '';
+		s = s < 10 ? '0' + s : s + '';
+		millis = millis + '';
+		for(var i=millis.length;i<3;i++) {
+			millis += '0';
+		}
+		return h + ':' + m + ':' + s; //+ '.' + millis;
+	}
+
+	return {
+		toMillis : toMillis,
+		toPrettyTime : toPrettyTime
+	}
 }]);;angular.module('linkedtv').factory('videoSelectionService', [function(){
 	
 	function getVideosOfProvider(provider, callback) {
@@ -148,16 +242,14 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 	$scope.dataLoaded = function(resourceData) {
 		if(resourceData != null) {
 			console.debug('Adding fetched data to rootScope');
-			$rootScope.$apply(function(){
-				$rootScope.resourceData = resourceData;
-			});
+			$rootScope.resourceData = resourceData;
 		} else {
 			// TODO error
 		}
 	};
 
 	$scope.init();
-});;angular.module('linkedtv').controller('chapterController', function($rootScope, $scope, chapterService) {
+});;angular.module('linkedtv').controller('chapterController', function($rootScope, $scope, timeUtils, imageService, chapterService) {
 	
 	$scope.resourceUri = $rootScope.resourceUri;
 	$scope.chapters = [];
@@ -166,16 +258,22 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 	//watch the rootScope that updates once the main resourceData is loaded (it contains also the playoutUrl)
 	$rootScope.$watch('resourceData', function(resourceData){
 		if(resourceData) {
+			var chapters = [];
 			if(resourceData.chapters.length == 0) {
-				$scope.chapters = resourceData.curated.chapters;
+				chapters = resourceData.curated.chapters;
 			} else {
-				$scope.chapters = resourceData.chapters;
+				chapters = resourceData.chapters;
 			}
+			//add all the posters to the chapters (FIXME this should be done on the server!!)
+			for(var c in chapters) {
+				var chapter = chapters[c];				
+				chapter.poster = imageService.getThumbnail($rootScope.resourceData.thumbBaseUrl, $rootScope.resourceUri, timeUtils.toMillis(chapter.start));
+			}
+			$scope.chapters = chapters;
 		}
 	});
 
 	$scope.setActiveChapter = function(chapter) {
-		console.debug(chapter);
 		$rootScope.chapter = chapter;
 		$scope.activeChapterId = chapter.$$hashKey;
 	};
@@ -183,6 +281,8 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 	$scope.isChapterSelected = function(chapterId) {
 		return $scope.activeChapterId == chapterId ? 'selected' : '';
 	};
+
+
 
 	$scope.init();
 });;angular.module('linkedtv').controller('entityController', function($rootScope, $scope, entityService, enrichmentService) {

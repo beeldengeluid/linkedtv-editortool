@@ -47,25 +47,5 @@
 
 
 .slots {
-	list-style:none;
+	@include mediaSlots;
 }
-
-.slots li {
-	cursor:pointer;
-	float:left;
-	margin:$defaultmargin;
-	text-align:center;
-
-	.thumbnail {
-		border:1px solid white;
-		&:hover {
-			@include activeSlot;
-		}		
-	}
-
-	.selected.thumbnail {
-		@include activeSlot;
-	}
-	
-}
-

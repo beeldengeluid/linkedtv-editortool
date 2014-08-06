@@ -10,9 +10,7 @@ angular.module('linkedtv').controller('appController', function($rootScope, $sco
 	$scope.dataLoaded = function(resourceData) {
 		if(resourceData != null) {
 			console.debug('Adding fetched data to rootScope');
-			$rootScope.$apply(function(){
-				$rootScope.resourceData = resourceData;
-			});
+			$rootScope.resourceData = resourceData;
 		} else {
 			// TODO error
 		}

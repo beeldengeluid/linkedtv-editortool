@@ -88,7 +88,7 @@ def resource(request):
                 mr = api.getEntireResource(resourceUri, True)
                 print 'Loaded data from the SPARL endpoint'
             mr['locator'] = playoutURL
-            mr['thumb_base'] = thumbURL
+            mr['thumbBaseUrl'] = thumbURL
             resp = simplejson.dumps(mr)
             return HttpResponse(resp, mimetype='application/json')
         else:
