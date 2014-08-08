@@ -1,5 +1,23 @@
-angular.module('linkedtv').factory('entityService', [function(){
+angular.module('linkedtv').factory('entityService', ['$rootScope', 'languageMap', function($rootScope, languageMap){
 	
+
+	function getEntityDBPediaInfo(dbpediaUri, callback) {
+		console.debug('Getting entity info for: ' + dbpediaUri);		
+		$.ajax({
+			method: 'GET',
+			dataType : 'json',
+			url : '/entityproxy?uri=' + dbpediaUri + '&lang=' + languageMap[$rootScope.provider],
+			success : function(json) {				
+				callback(json);
+			},
+			error : function(err) {
+				console.debug(err);
+				callback(null);
+			}
+		});
+	}
+
+	//this function is currently unused (instead the dataService is used to load all data in one go)
 	function getEntitiesOfResource(resourceUri, callback) {
 		console.debug('Getting entities of resource: ' + resourceUri);
 		$.ajax({
@@ -16,6 +34,7 @@ angular.module('linkedtv').factory('entityService', [function(){
 		});
 	}
 
+	//this function is currently unused (instead the dataService is used to load all data in one go)
 	function getAllEntitiesOfResource(resourceUri, callback) {
 		console.debug('Getting entities of resource: ' + resourceUri);
 		$.ajax({
@@ -33,7 +52,9 @@ angular.module('linkedtv').factory('entityService', [function(){
 	}
 
 	return {
-		getEntitiesOfResource : getEntitiesOfResource
+		getEntitiesOfResource : getEntitiesOfResource,
+		getAllEntitiesOfResource : getAllEntitiesOfResource,
+		getEntityDBPediaInfo : getEntityDBPediaInfo
 	}
 
 }]);

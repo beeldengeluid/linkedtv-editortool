@@ -1,4 +1,11 @@
-var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(function($rootScope) {
+//TODO make sure to have a programme specific config options in a nice way
+var config = angular.module('configuration', [])
+       .constant('languageMap', {'rbb' : 'de', 'sv' : 'nl'})
+       .constant('chapterSlotsMap', {'rbb' : 8, 'sv' : 6});var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
+
+//linkedtv.constant('languageMap', {'rbb' : 'de', 'sv' : 'nl'});
+
+linkedtv.run(function($rootScope) {
 	var urlParts = window.location.pathname.split('/');
 
 	//set the provider as a property of the rootScope
@@ -10,8 +17,30 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 	if(urlParts && urlParts.length >= 3) {
 		$rootScope.resourceUri = urlParts[2];
 	}
-});;angular.module('linkedtv').factory('chapterService', [function(){
+});;angular.module('linkedtv').factory('chapterCollection', [function() {
 	
+	var chapters = [];
+
+	function getChapters() {
+		return chapters;
+	}
+
+    function setChapters(newChapters) {
+		chapters = newChapters;
+	}
+
+	function setChapterData(chapterData) {
+
+	}
+
+	return {
+		getChapters : getChapters,
+		setChapters : setChapters
+	}
+
+}]);;angular.module('linkedtv').factory('chapterService', [function(){
+	
+	//TODO later on when using this again make sure to fill the chapterCollection
 	function getChaptersOfResource(resourceUri, callback) {
 		console.debug('Getting chapters of resource: ' + resourceUri);
 		$.ajax({
@@ -76,8 +105,26 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 		search : search
 	}
 
-}]);;angular.module('linkedtv').factory('entityService', [function(){
+}]);;angular.module('linkedtv').factory('entityService', ['$rootScope', 'languageMap', function($rootScope, languageMap){
 	
+
+	function getEntityDBPediaInfo(dbpediaUri, callback) {
+		console.debug('Getting entity info for: ' + dbpediaUri);		
+		$.ajax({
+			method: 'GET',
+			dataType : 'json',
+			url : '/entityproxy?uri=' + dbpediaUri + '&lang=' + languageMap[$rootScope.provider],
+			success : function(json) {				
+				callback(json);
+			},
+			error : function(err) {
+				console.debug(err);
+				callback(null);
+			}
+		});
+	}
+
+	//this function is currently unused (instead the dataService is used to load all data in one go)
 	function getEntitiesOfResource(resourceUri, callback) {
 		console.debug('Getting entities of resource: ' + resourceUri);
 		$.ajax({
@@ -94,6 +141,7 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 		});
 	}
 
+	//this function is currently unused (instead the dataService is used to load all data in one go)
 	function getAllEntitiesOfResource(resourceUri, callback) {
 		console.debug('Getting entities of resource: ' + resourceUri);
 		$.ajax({
@@ -111,7 +159,9 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 	}
 
 	return {
-		getEntitiesOfResource : getEntitiesOfResource
+		getEntitiesOfResource : getEntitiesOfResource,
+		getAllEntitiesOfResource : getAllEntitiesOfResource,
+		getEntityDBPediaInfo : getEntityDBPediaInfo
 	}
 
 }]);;angular.module('linkedtv').factory('imageService', [function(){
@@ -230,59 +280,81 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 		getVideosOfProvider : getVideosOfProvider
 	}
 
-}]);;angular.module('linkedtv').controller('appController', function($rootScope, $scope, dataService) {
+}]);;angular.module('linkedtv').controller('appController',
+	function($rootScope, $scope, dataService, timeUtils, imageService, chapterCollection, chapterSlotsMap) {
 		
-
+	//wait for the resourceUri to have been extracted from the application URL
 	$scope.init = function() {
+		//fetch all of this resource's data from the server
 		$rootScope.$watch('resourceUri', function(resourceUri){
 			dataService.getResourceData(resourceUri, true, $scope.dataLoaded);
 		});
 	};
 
+	//when the resource data has been loaded, start populating the application data
 	$scope.dataLoaded = function(resourceData) {
 		if(resourceData != null) {
-			console.debug('Adding fetched data to rootScope');
+			console.debug('Loaded data from the server');
+			
+			//FIXME get rid of the resourceData on the rootscope!!
 			$rootScope.resourceData = resourceData;
+
+			
+			//load the chapterCollection with chapter data
+			$scope.loadChapterCollection(resourceData);
+
 		} else {
 			// TODO error
 		}
 	};
 
+	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)
+	$scope.loadChapterCollection = function(resourceData) {
+		var chapters = null;
+		if(resourceData.chapters.length == 0) {
+			chapters = resourceData.curated.chapters;
+		} else {
+			chapters = resourceData.chapters;
+		}
+		//add all the posters to the chapters (FIXME this should be done on the server!!)
+		for(var c in chapters) {
+			var chapter = chapters[c];
+			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, $rootScope.resourceUri, timeUtils.toMillis(chapter.start));
+
+			//set the default slots based on the provider config
+			var slots = [];
+			for(var i=0;i<chapterSlotsMap[$rootScope.provider];i++) {
+				slots.push({'title' : 'Slot ' + (i+1)});
+			}
+			chapter.slots = slots;
+		}
+		chapterCollection.setChapters(chapters);
+	}
+
 	$scope.init();
-});;angular.module('linkedtv').controller('chapterController', function($rootScope, $scope, timeUtils, imageService, chapterService) {
+});;angular.module('linkedtv').controller('chapterController', 
+	function($rootScope, $scope, chapterCollection, chapterService) {
 	
 	$scope.resourceUri = $rootScope.resourceUri;
 	$scope.chapters = [];
-	$scope.activeChapterId = null;
 
-	//watch the rootScope that updates once the main resourceData is loaded (it contains also the playoutUrl)
-	$rootScope.$watch('resourceData', function(resourceData){
-		if(resourceData) {
-			var chapters = [];
-			if(resourceData.chapters.length == 0) {
-				chapters = resourceData.curated.chapters;
-			} else {
-				chapters = resourceData.chapters;
-			}
-			//add all the posters to the chapters (FIXME this should be done on the server!!)
-			for(var c in chapters) {
-				var chapter = chapters[c];				
-				chapter.poster = imageService.getThumbnail($rootScope.resourceData.thumbBaseUrl, $rootScope.resourceUri, timeUtils.toMillis(chapter.start));
-			}
-			$scope.chapters = chapters;
-		}
+	//watch the chapterCollection to see when it is loaded
+	$scope.$watch(function () { return chapterCollection.getChapters(); }, function(newValue) {
+		console.debug('loaded the chapters');
+		console.debug(newValue);
+		$scope.chapters = newValue;
 	});
 
 	$scope.setActiveChapter = function(chapter) {
 		$rootScope.chapter = chapter;
-		$scope.activeChapterId = chapter.$$hashKey;
 	};
 
-	$scope.isChapterSelected = function(chapterId) {
-		return $scope.activeChapterId == chapterId ? 'selected' : '';
+	$scope.isChapterSelected = function(chapter) {
+		if($rootScope.chapter) {
+			return $rootScope.chapter.$$hashKey == chapter.$$hashKey ? 'selected' : '';
+		}
+		return '';
 	};
-
-
 
 	$scope.init();
 });;angular.module('linkedtv').controller('entityController', function($rootScope, $scope, entityService, enrichmentService) {
@@ -290,14 +362,16 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 	/*
 	TODO NOTES:
 		- mogelijk opgehaalde enrichments voor chapters bewaren (omdat het lang duurt om deze op te halen)
+		- entityService ook weer gebruiken om via de API entities te laden?
 	*/
 
 	$scope.resourceUri = $rootScope.resourceUri;
+	$scope.entities = {};
 	$scope.activeChapter = $rootScope.chapter;
 	$scope.activeSlotIndex = 0;
 	$scope.activeEntities = [];
 	$scope.popOverContent = {};//contains the HTML for each entity
-	$scope.slots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5'];	
+	$scope.slots = null;
 
 	//watch the rootScope that updates once the main resourceData is loaded (it contains also the playoutUrl)
 	$rootScope.$watch('chapter', function(chapter) {
@@ -309,10 +383,18 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 	/*------------Load everything according to the selected chapter-----------------*/
 
 	$scope.setActiveChapter = function(chapter) {
-		$scope.activeChapter = chapter;		
+		$scope.activeChapter = chapter;
 		$scope.activeSlotIndex = 0;
 		$scope.activeEntities = [];
 
+		//load the correct entities belonging to the activeChapter FIXME do this in the chapterCollection
+		$scope.updateEntities();
+
+		//populate the slots
+		$scope.slots = $scope.activeChapter.slots;
+	};
+
+	$scope.updateEntities = function() {
 		//first filter all the entities to be only of the selected chapter
 		var entities = _.filter($rootScope.resourceData.nes, function(item) {
 			if(item.start >= $scope.activeChapter.start && item.end <=  $scope.activeChapter.end) {				
@@ -333,18 +415,35 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 				daUrls.push(v[e].disambiguationURL);
 			}
 			$scope.popOverContent[k] = labels.join(' ') + '&nbsp;' + daUrls.join(' ');
-		});
-
-		console.debug($scope.popOverContent);
+		});		
 		//TODO sort the entities
-
-		console.debug($scope.entities);
-	};
+	}
 
 	/*------------Add selected entity to slot-----------------*/
 
 	$scope.addEntityToSlot = function() {
+		console.debug('Adding entity to slot');
+		if($scope.activeEntities.length > 0) {
+			console.debug('Getting entity info');
+			var label = $scope.entities[$scope.activeEntities[0]];
+			var uri = null;
+			var e = null;
+			for (var i in label) {
+				e = label[i];
+				//only dbpedia uri's are supported
+				console.debug(e);
+				if (e.disambiguationURL && e.disambiguationURL.indexOf('dbpedia.org') != -1) {
+					uri = e.disambiguationURL;
+					break;
+				}
+			}
+			console.debug('dbpediaUri: ' + uri)
+			entityService.getEntityDBPediaInfo(uri, $scope.entityInfoLoaded);
+		}
+	}
 
+	$scope.entityInfoLoaded = function(data) {		
+		console.debug(data);
 	}
 
 	/*------------Search for Enrichments-----------------*/
@@ -390,7 +489,6 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 
 	$scope.setActiveSlotIndex = function(slot) {		
 		$scope.activeSlotIndex = slot;
-		console.debug($scope.activeSlotIndex);
 	};
 
 	$scope.isSlotSelected = function(slot) {
@@ -405,7 +503,6 @@ var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(funct
 		} else {
 			$scope.activeEntities.splice($scope.activeEntities.indexOf(entityLabel),1);
 		}
-		console.debug($scope.activeEntities);
 	};
 
 	$scope.isEntitySelected = function(entityLabel) {

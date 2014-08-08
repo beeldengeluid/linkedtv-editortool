@@ -1,0 +1,9 @@
+<ul class="entities">
+	<li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
+		
+		<!-- tooltip-html-unsafe="{{popOverContent[k]}}" tooltip-trigger="mouseenter" -->
+		<div ng-click="toggleEntity(k);" class="label label-default" title="{{k}}">
+			{{k}}&nbsp;({{v.length}})
+		</div>
+	</li>
+</ul>

@@ -3,14 +3,16 @@ angular.module('linkedtv').controller('entityController', function($rootScope, $
 	/*
 	TODO NOTES:
 		- mogelijk opgehaalde enrichments voor chapters bewaren (omdat het lang duurt om deze op te halen)
+		- entityService ook weer gebruiken om via de API entities te laden?
 	*/
 
 	$scope.resourceUri = $rootScope.resourceUri;
+	$scope.entities = {};
 	$scope.activeChapter = $rootScope.chapter;
 	$scope.activeSlotIndex = 0;
 	$scope.activeEntities = [];
 	$scope.popOverContent = {};//contains the HTML for each entity
-	$scope.slots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5'];	
+	$scope.slots = null;
 
 	//watch the rootScope that updates once the main resourceData is loaded (it contains also the playoutUrl)
 	$rootScope.$watch('chapter', function(chapter) {
@@ -22,10 +24,18 @@ angular.module('linkedtv').controller('entityController', function($rootScope, $
 	/*------------Load everything according to the selected chapter-----------------*/
 
 	$scope.setActiveChapter = function(chapter) {
-		$scope.activeChapter = chapter;		
+		$scope.activeChapter = chapter;
 		$scope.activeSlotIndex = 0;
 		$scope.activeEntities = [];
 
+		//load the correct entities belonging to the activeChapter FIXME do this in the chapterCollection
+		$scope.updateEntities();
+
+		//populate the slots
+		$scope.slots = $scope.activeChapter.slots;
+	};
+
+	$scope.updateEntities = function() {
 		//first filter all the entities to be only of the selected chapter
 		var entities = _.filter($rootScope.resourceData.nes, function(item) {
 			if(item.start >= $scope.activeChapter.start && item.end <=  $scope.activeChapter.end) {				
@@ -46,18 +56,35 @@ angular.module('linkedtv').controller('entityController', function($rootScope, $
 				daUrls.push(v[e].disambiguationURL);
 			}
 			$scope.popOverContent[k] = labels.join(' ') + '&nbsp;' + daUrls.join(' ');
-		});
-
-		console.debug($scope.popOverContent);
+		});		
 		//TODO sort the entities
-
-		console.debug($scope.entities);
-	};
+	}
 
 	/*------------Add selected entity to slot-----------------*/
 
 	$scope.addEntityToSlot = function() {
+		console.debug('Adding entity to slot');
+		if($scope.activeEntities.length > 0) {
+			console.debug('Getting entity info');
+			var label = $scope.entities[$scope.activeEntities[0]];
+			var uri = null;
+			var e = null;
+			for (var i in label) {
+				e = label[i];
+				//only dbpedia uri's are supported
+				console.debug(e);
+				if (e.disambiguationURL && e.disambiguationURL.indexOf('dbpedia.org') != -1) {
+					uri = e.disambiguationURL;
+					break;
+				}
+			}
+			console.debug('dbpediaUri: ' + uri)
+			entityService.getEntityDBPediaInfo(uri, $scope.entityInfoLoaded);
+		}
+	}
 
+	$scope.entityInfoLoaded = function(data) {		
+		console.debug(data);
 	}
 
 	/*------------Search for Enrichments-----------------*/
@@ -103,7 +130,6 @@ angular.module('linkedtv').controller('entityController', function($rootScope, $
 
 	$scope.setActiveSlotIndex = function(slot) {		
 		$scope.activeSlotIndex = slot;
-		console.debug($scope.activeSlotIndex);
 	};
 
 	$scope.isSlotSelected = function(slot) {
@@ -118,7 +144,6 @@ angular.module('linkedtv').controller('entityController', function($rootScope, $
 		} else {
 			$scope.activeEntities.splice($scope.activeEntities.indexOf(entityLabel),1);
 		}
-		console.debug($scope.activeEntities);
 	};
 
 	$scope.isEntitySelected = function(entityLabel) {

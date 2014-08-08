@@ -1,4 +1,8 @@
-var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap']).run(function($rootScope) {
+var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
+
+//linkedtv.constant('languageMap', {'rbb' : 'de', 'sv' : 'nl'});
+
+linkedtv.run(function($rootScope) {
 	var urlParts = window.location.pathname.split('/');
 
 	//set the provider as a property of the rootScope

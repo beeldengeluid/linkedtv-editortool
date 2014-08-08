@@ -15,6 +15,7 @@ from linkedtv.images.ImageFetcher import ImageFetcher
 from linkedtv.video.VideoPlayoutHandler import VideoPlayoutHandler
 
 from linkedtv.api.dbpedia.AutoComplete import AutoComplete
+from linkedtv.api.dbpedia.EntityProxy import EntityProxy
 from linkedtv.api.external.MediaCollector import MediaCollector
 from linkedtv.api.external.UnstructuredSearch import UnstructuredSearch
 from linkedtv.api.external.TvEnricher import TvEnricher
@@ -229,6 +230,29 @@ External APIs from LinkedTV WP2
 *********************************************************************************************************
 """
 
+def tvenricher(request):
+    call = request.GET.get('call', None)
+    uuid = request.GET.get('id', None)
+    resp = 'Nothing to see here'
+    tve = TvEnricher()
+    if call == 'list':  
+        resp = tve.getProcessedResources()
+    elif id:
+        resp = tve.getProcessedResource(uuid)
+    print resp
+    return HttpResponse(resp, mimetype='application/json')
+
+def entityproxy(request):
+    uri = request.GET.get('uri', None)
+    lang = request.GET.get('lang', None)
+    if uri:
+        ep = EntityProxy()
+        resp = ep.fetch(uri, lang)
+        print resp
+        return HttpResponse(resp, mimetype='application/json')
+    return HttpResponse("{'error' : 'Please provide a DBPedia URI'}", mimetype='application/json')
+
+"""
 def mediacollector(request):
     s = request.GET.get('s', None)
     provider = request.GET.get('p') 
@@ -248,17 +272,5 @@ def unstructuredsearch(request):
         resp = us.search(s, provider)
         return HttpResponse(resp, mimetype='application/json')
     return HttpResponse("{'error' : 'Could not find anything'}", mimetype='application/json')
-
-def tvenricher(request):
-    call = request.GET.get('call', None)
-    uuid = request.GET.get('id', None)
-    resp = 'Nothing to see here'
-    tve = TvEnricher()
-    if call == 'list':  
-        resp = tve.getProcessedResources()
-    elif id:
-        resp = tve.getProcessedResource(uuid)
-    print resp
-    return HttpResponse(resp)#, mimetype='text/xml'
-        
+"""        
     

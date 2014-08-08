@@ -1,5 +1,6 @@
 .entities {
 	list-style:none;
+	margin-top:$defaultMargin;
 }
 
 .entities li {
@@ -43,9 +44,4 @@
 		background-color:yellowgreen;
 		font-size:130%;
 	}
-}
-
-
-.slots {
-	@include mediaSlots;
 }

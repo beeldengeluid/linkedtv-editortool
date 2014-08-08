@@ -14,10 +14,11 @@ urlpatterns = patterns('',
     url(r'^login$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     url(r'^logout$', 'views.logout_user'),
     
-    #api debuggin part
-    url(r'^mediacollector$', 'views.mediacollector'),
-    url(r'^unstructuredsearch$', 'views.unstructuredsearch'),
+    #external/partner APIs   
     url(r'^tvenricher$', 'views.tvenricher'),
+    url(r'^entityproxy$', 'views.entityproxy'),
+    #url(r'^mediacollector$', 'views.mediacollector'),
+    #url(r'^unstructuredsearch$', 'views.unstructuredsearch'),
     
     #refactored navigation
     url(r'^(?P<pub>\w+)/$', 'views.provider'),

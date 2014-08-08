@@ -1,5 +1,6 @@
 angular.module('linkedtv').factory('chapterService', [function(){
 	
+	//TODO later on when using this again make sure to fill the chapterCollection
 	function getChaptersOfResource(resourceUri, callback) {
 		console.debug('Getting chapters of resource: ' + resourceUri);
 		$.ajax({
