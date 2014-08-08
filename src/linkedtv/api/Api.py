@@ -41,7 +41,8 @@ class Api():
     """-----------------Chapters------------------"""
 
     def getChaptersOfResource(self, resourceUri):
-    	url = '%s/annotation?_view=all&hasTarget.isFragmentOf=%s/media/%s&hasBody.type=Chapter' % (self.DATA_END_POINT, self.DATA_END_POINT, resourceUri)
+    	url = '%s/annotation?_view=all&hasTarget.isFragmentOf=%s/media/%s&hasBody.type=Chapter' % (self.DATA_END_POINT,
+         self.DATA_END_POINT, resourceUri)
     	resp = self.sendRequest(url)    	
     	chapterData = simplejson.loads(resp)
     	chapters = []
@@ -90,6 +91,6 @@ class Api():
 
     """-----------------Enrichments------------------"""
 
-    def getEnrichmentsOnDemand(self, entities, provider):
+    def getEnrichmentsOnDemand(self, entities, provider, useDummyEnrichments = False):
         tve = TvEnricher()
-        return tve.getEnrichmentsOnDemand(entities, provider)
+        return tve.getEnrichmentsOnDemand(entities, provider, useDummyEnrichments)

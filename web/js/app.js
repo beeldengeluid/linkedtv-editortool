@@ -1,7 +1,5 @@
 var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
 
-//linkedtv.constant('languageMap', {'rbb' : 'de', 'sv' : 'nl'});
-
 linkedtv.run(function($rootScope) {
 	var urlParts = window.location.pathname.split('/');
 

@@ -218,8 +218,7 @@ def enrichments(request):
     if p and q:
         p = str(p).upper()
         api = Api()
-        resp = api.getEnrichmentsOnDemand(q.split(','), p)
-        print resp
+        resp = api.getEnrichmentsOnDemand(q.split(','), p, True)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')

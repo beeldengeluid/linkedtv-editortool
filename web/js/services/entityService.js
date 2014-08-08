@@ -1,4 +1,4 @@
-angular.module('linkedtv').factory('entityService', ['$rootScope', 'languageMap', function($rootScope, languageMap){
+angular.module('linkedtv').factory('entityService', ['$rootScope', 'conf', function($rootScope, conf){
 	
 
 	function getEntityDBPediaInfo(dbpediaUri, callback) {
@@ -6,7 +6,7 @@ angular.module('linkedtv').factory('entityService', ['$rootScope', 'languageMap'
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/entityproxy?uri=' + dbpediaUri + '&lang=' + languageMap[$rootScope.provider],
+			url : '/entityproxy?uri=' + dbpediaUri + '&lang=' + conf.languageMap[$rootScope.provider],
 			success : function(json) {				
 				callback(json);
 			},

@@ -1,5 +1,5 @@
 angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, dataService, timeUtils, imageService, chapterCollection, chapterSlotsMap) {
+	function($rootScope, $scope, conf, dataService, timeUtils, imageService, chapterCollection) {
 		
 	//wait for the resourceUri to have been extracted from the application URL
 	$scope.init = function() {
@@ -39,9 +39,9 @@ angular.module('linkedtv').controller('appController',
 			var chapter = chapters[c];
 			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, $rootScope.resourceUri, timeUtils.toMillis(chapter.start));
 
-			//set the default slots based on the provider config
+			//set the default slots based on the provider conf
 			var slots = [];
-			for(var i=0;i<chapterSlotsMap[$rootScope.provider];i++) {
+			for(var i=0;i<conf.chapterSlotsMap[$rootScope.provider];i++) {
 				slots.push({'title' : 'Slot ' + (i+1)});
 			}
 			chapter.slots = slots;

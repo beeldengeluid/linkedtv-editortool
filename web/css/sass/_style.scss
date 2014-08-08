@@ -11,6 +11,15 @@ body {
 	background-image: url(../images/bg-tile-fg.png);
 }
 
-.panel-menu {
-	@include panelMenu($wonderblue, true);
+.tab-content {
+	margin-top:$defaultMargin;
+}
+
+.tab-menu {
+	width:100%;
+	display:inline-block;
+}
+
+.vertical-menu {
+	@include verticalMenu($wonderblue, true);
 }

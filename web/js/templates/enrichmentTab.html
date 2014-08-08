@@ -1,9 +1,41 @@
-<ul class="enrichments">
-	<li ng-repeat="e in enrichments">
-		<div class="thumbnail">
-	      <img ng-src="e.posterUrl" alt="test">
-	      <a>test</a>
-	    </div>
-	</li>
+<div class="tab-content">
 
-</ul>
+	<nav class="tab-menu">
+		<ul class="vertical-menu">
+			<li ng-if="activeEnrichmentSource">
+				{{activeEnrichmentSource}}
+			</li>
+			<li>
+				<div class="dropdown">
+					<button class="btn btn-default dropdown-toggle" type="button" id="menuFilterSource" data-toggle="dropdown">
+						Filter by source
+						<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" role="menu" aria-labelledby="menuFilterSource">
+						<li role="presentation" ng-repeat="s in enrichmentSources">
+							<a role="menuitem" tabindex="-1" ng-click="filterEnrichmentsBySource(s)">{{s}}</a>
+						</li>
+						
+						<li role="presentation" class="divider"></li>
+
+						<li role="presentation" ng-repeat="es in enrichmentEntitySources">
+							<a role="menuitem" tabindex="-1" ng-click="filterEnrichmentsByEntitySource(es)">{{es}}</a>
+						</li>
+					</ul>
+				</div>
+			</li>
+		</ul>
+	</nav>
+
+	<ul class="enrichments">
+		<li ng-repeat="e in enrichments">
+			<div class="thumbnail" ng-if="e.micropostUrl">
+				<a href="{{e.micropostUrl}}" target="_external">
+					<img ng-src="{{e.posterUrl}}" alt="{{e.micropost.plainText}}">				
+				</a>
+				{{e.micropost.plainText | limitTo:30}}
+		    </div>
+		</li>
+	</ul>
+
+</div>

@@ -1,16 +1,28 @@
 from subprocess import *
 import os
+import redis
+from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS
+import simplejson
+
+"""
+TODO replace the ugly curl functions and use Python httplib2 & urllib
+"""
 
 class TvEnricher():
     
     def __init__(self):
         print '__init__'
-        self.BASE_URL = 'http://linkedtv.eurecom.fr/tvenricher/api'            
+        self.BASE_URL = 'http://linkedtv.eurecom.fr/tvenricher/api'
+        self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
     
-    def getEnrichmentsOnDemand(self, entities, provider):
+    def getEnrichmentsOnDemand(self, entities, provider, useDummyCache = False):
         #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v
         print 'getting list of processed resources:'
         print '%s/entity/enrichment/%s?q=%s' % (self.BASE_URL, provider, ' '.join(entities))
+        if useDummyCache and self.cache.exists('dummyEnrichments'):
+            print 'Loading dummy enrichments from cache!'
+            return simplejson.loads(self.cache.get('dummyEnrichments'))
+
         cmd_arr = []
         cmd_arr.append('curl')
         cmd_arr.append('-X')
@@ -21,6 +33,8 @@ class TvEnricher():
         p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p1.communicate()
         if stdout:
+            if useDummyCache and not self.cache.exists('dummyEnrichments'):
+                self.cache.set('dummyEnrichments', simplejson.dumps({ 'enrichments' : stdout }))
             return { 'enrichments' : stdout }
         else:
             print stderr

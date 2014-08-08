@@ -1,6 +1,5 @@
 .entities {
 	list-style:none;
-	margin-top:$defaultMargin;
 }
 
 .entities li {
@@ -10,6 +9,7 @@
 .label {
 	display:inline-block;
 	margin:$defaulItemMargin;
+	border: 1px solid white;
 	cursor:pointer;	
 
 	&:hover {
