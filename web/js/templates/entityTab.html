@@ -1,4 +1,9 @@
 <div class="tab-content">
+
+	<button type="button" id="fetch_enrichments" data-loading-text="Loading..." class="btn btn-primary" ng-click="fetchEnrichments()">
+  		Fetch enrichments
+	</button>
+
 	<ul class="entities">
 		<li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
 			

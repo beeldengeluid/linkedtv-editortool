@@ -27,7 +27,7 @@ class TvEnricher():
         cmd_arr.append('curl')
         cmd_arr.append('-X')
         cmd_arr.append('GET')
-        cmd_arr.append('%s/entity/enrichment/%s?q=%s' % (self.BASE_URL, provider, ' '.join(entities)))
+        cmd_arr.append('%s/entity/enrichment/%s?q=%s&strategy=%s' % (self.BASE_URL, provider, ' '.join(entities), provider))
         cmd_arr.append('-H')
         cmd_arr.append('Accept: application/json')
         p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)

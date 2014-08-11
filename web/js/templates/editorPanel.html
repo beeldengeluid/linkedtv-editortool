@@ -1,0 +1,56 @@
+
+<div class="panel panel-default">
+
+	<div class="panel-heading">
+		Entities of: {{chapter.label}}&nbsp;&dash;&nbsp;{{slots[activeSlotIndex].title}}
+
+		<!--
+		<ul class="vertical-menu">
+			<li>
+				<i class="glyphicon glyphicon-plus interactive"
+					ng-click="addEntityToSlot()"
+					title="Set selected entity in slot"></i>		
+			</li>
+			<li>
+				<i class="glyphicon glyphicon-search interactive"
+					ng-click="searchEnrichments()"
+					title="Search enrichments for selected entities"></i>
+			</li>
+		</ul>
+		-->
+
+	</div>
+
+	<div class="panel-body">
+		
+		<tabset>
+
+			<tab ng-controller="slotsController">
+				<tab-heading>
+					<i class="glyphicon glyphicon-star"></i>&nbsp;Slots
+				</tab-heading>
+
+				<slots-tab></slots-tab>
+			</tab>
+
+			<tab ng-controller="entityController">
+				<tab-heading>
+					<i class="glyphicon glyphicon-cloud"></i>&nbsp;Entities
+				</tab-heading>
+				
+				<entity-tab></entity-tab>
+		    </tab>
+
+			<tab ng-controller="enrichmentController">
+				<tab-heading>
+					<i class="glyphicon glyphicon-new-window"></i>&nbsp;Enrichments
+				</tab-heading>
+				
+				<enrichment-tab></enrichment-tab>
+			</tab>
+			
+		  </tabset>		
+
+	</div>
+	
+</div>

@@ -18,25 +18,159 @@ linkedtv.run(function($rootScope) {
 	if(urlParts && urlParts.length >= 3) {
 		$rootScope.resourceUri = urlParts[2];
 	}
-});;angular.module('linkedtv').factory('chapterCollection', [function() {
+});;angular.module('linkedtv').factory('chapterCollection', 
+	['conf', 'timeUtils', 'imageService', 'slotCollection', 'entityCollection', 'enrichmentCollection',
+	function(conf, timeUtils, imageService, slotCollection, entityCollection, enrichmentCollection) {
 	
-	var chapters = [];
+	var _chapters = [];
+	var _activeChapter = null;
+
+	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)	
+	function initCollectionData(resourceUri, provider, resourceData) {
+		console.debug('Initializing chapter data');
+		var chapters = null;
+		if(resourceData.chapters.length == 0) {
+			chapters = resourceData.curated.chapters;
+		} else {
+			chapters = resourceData.chapters;
+		}
+		//add all the posters to the chapters (FIXME this should be done on the server!!)
+		for(var c in chapters) {
+			var chapter = chapters[c];
+			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, timeUtils.toMillis(chapter.start));
+
+			//set the default slots based on the provider conf
+			var slots = [];
+			for(var i=0;i<conf.chapterSlotsMap[provider];i++) {
+				slots.push({'title' : 'Slot ' + (i+1)});
+			}
+			chapter.slots = slots;
+		}
+		_chapters = chapters;
+	}
 
 	function getChapters() {
-		return chapters;
+		return _chapters;
 	}
 
-    function setChapters(newChapters) {
-		chapters = newChapters;
+	function setActiveChapter(activeChapter) {
+		_activeChapter = activeChapter;
+		entityCollection.updateChapterEntities(_activeChapter);
+		slotCollection.updateChapterSlots(_activeChapter);
+		enrichmentCollection.updateActiveChapter(_activeChapter);
+
 	}
 
-	function setChapterData(chapterData) {
-
+	function getActiveChapter() {
+		return _activeChapter;
 	}
 
 	return {
+		initCollectionData : initCollectionData,
 		getChapters : getChapters,
-		setChapters : setChapters
+		setActiveChapter : setActiveChapter,
+		getActiveChapter : getActiveChapter
+	}
+
+}]);;angular.module('linkedtv').factory('enrichmentCollection', [function() {
+
+	var _activeChapter = null;
+	var _enrichments = {}; //contains all enrichments of all chapters
+
+	function updateActiveChapter(chapter) {
+		_activeChapter = chapter;
+	}
+
+	function getEnrichments() {
+		return _enrichments;
+	}
+
+	function addEnrichmentsToActiveChapter(enrichments, replace) {
+		if(replace && _activeChapter) {
+			_enrichments[_activeChapter.$$hashKey] = enrichments;
+		}
+	}
+
+	function getEnrichmentsOfActiveChapter() {		
+		if(_activeChapter && _enrichments[_activeChapter.$$hashKey]) {
+			return _enrichments[_activeChapter.$$hashKey];
+		}
+		return null;
+	}
+
+	return {
+		updateActiveChapter : updateActiveChapter,
+		getEnrichmentsOfActiveChapter : getEnrichmentsOfActiveChapter,
+		getEnrichments : getEnrichments,
+		addEnrichmentsToActiveChapter : addEnrichmentsToActiveChapter
+	}
+
+}]);;angular.module('linkedtv').factory('entityCollection', [function() {
+	
+	var _entities = [];
+	var _chapterEntities = [];
+
+	function initCollectionData(resourceData) {
+		console.debug('Initializing entity data');
+		_entities = resourceData; //no transformation necessary
+	}
+
+	function getEntities() {
+		return _entities;
+	}
+
+	function getChapterEntities() {
+		return _chapterEntities;
+	}
+
+	function updateChapterEntities(chapter) {
+		//first filter all the entities to be only of the selected chapter
+		var entities = _.filter(_entities, function(item) {
+			if(item.start >= chapter.start && item.end <=  chapter.end) {				
+				return item;
+			}
+		});
+
+		//group all the entities by label
+		_chapterEntities = _.groupBy(entities, function(e) {
+			return e.label;
+		});
+
+ 		/*
+		$.each(this.entities, function(k, v) {
+			var labels = [];
+			var daUrls = [];
+			for (var e in v) {
+				labels.push(v[e].label);
+				daUrls.push(v[e].disambiguationURL);
+			}
+			$scope.popOverContent[k] = labels.join(' ') + '&nbsp;' + daUrls.join(' ');
+		});*/	
+		//TODO sort the entities
+	}
+
+	return {
+		initCollectionData : initCollectionData,
+		getEntities : getEntities,		
+		getChapterEntities : getChapterEntities,
+		updateChapterEntities : updateChapterEntities
+	}
+
+}]);;angular.module('linkedtv').factory('slotCollection', [function() {
+		
+	var _slots = [];
+	
+	function getSlots() {
+		return _slots;
+	}
+
+	function updateChapterSlots(chapter) {
+		_slots = chapter.slots;
+	}
+
+	return {
+		getSlots : getSlots,
+		updateChapterSlots : updateChapterSlots
 	}
 
 }]);;angular.module('linkedtv').factory('chapterService', [function(){
@@ -282,12 +416,12 @@ linkedtv.run(function($rootScope) {
 	}
 
 }]);;angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, timeUtils, imageService, chapterCollection) {
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection) {
 		
 	//wait for the resourceUri to have been extracted from the application URL
 	$scope.init = function() {
 		//fetch all of this resource's data from the server
-		$rootScope.$watch('resourceUri', function(resourceUri){
+		$rootScope.$watch('resourceUri', function(resourceUri) {
 			dataService.getResourceData(resourceUri, true, $scope.dataLoaded);
 		});
 	};
@@ -302,35 +436,15 @@ linkedtv.run(function($rootScope) {
 
 			
 			//load the chapterCollection with chapter data
-			$scope.loadChapterCollection(resourceData);
+			chapterCollection.initCollectionData($rootScope.resourceUri, $rootScope.provider, resourceData);
+
+			//load the entityCollection with entity data
+			entityCollection.initCollectionData($rootScope.resourceData.nes);
 
 		} else {
 			// TODO error
 		}
-	};
-
-	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)
-	$scope.loadChapterCollection = function(resourceData) {
-		var chapters = null;
-		if(resourceData.chapters.length == 0) {
-			chapters = resourceData.curated.chapters;
-		} else {
-			chapters = resourceData.chapters;
-		}
-		//add all the posters to the chapters (FIXME this should be done on the server!!)
-		for(var c in chapters) {
-			var chapter = chapters[c];
-			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, $rootScope.resourceUri, timeUtils.toMillis(chapter.start));
-
-			//set the default slots based on the provider conf
-			var slots = [];
-			for(var i=0;i<conf.chapterSlotsMap[$rootScope.provider];i++) {
-				slots.push({'title' : 'Slot ' + (i+1)});
-			}
-			chapter.slots = slots;
-		}
-		chapterCollection.setChapters(chapters);
-	}
+	};	
 
 	$scope.init();
 });;angular.module('linkedtv').controller('chapterController', 
@@ -346,8 +460,8 @@ linkedtv.run(function($rootScope) {
 		$scope.chapters = newValue;
 	});
 
-	$scope.setActiveChapter = function(chapter) {
-		$rootScope.chapter = chapter;
+	$scope.setActiveChapter = function(chapter) {		
+		chapterCollection.setActiveChapter(chapter);
 	};
 
 	$scope.isChapterSelected = function(chapter) {
@@ -358,131 +472,39 @@ linkedtv.run(function($rootScope) {
 	};
 
 	$scope.init();
-});;angular.module('linkedtv').controller('entityController', function($rootScope, $scope, conf, entityService, enrichmentService) {
+});;angular.module('linkedtv').controller('editorPanelController', 
+	function($rootScope, $scope, conf, chapterCollection) {
 	
-	/*
-	TODO NOTES:
-		- mogelijk opgehaalde enrichments voor chapters bewaren (omdat het lang duurt om deze op te halen)
-		- entityService ook weer gebruiken om via de API entities te laden?
-	*/
+	$scope.activeChapter = null;
+	//TODO add variable for active slots
 
-	$scope.resourceUri = $rootScope.resourceUri;
-	$scope.entities = {};
-
-	$scope.activeChapter = $rootScope.chapter;
-	$scope.activeSlotIndex = 0;
-	$scope.activeEntities = [];
-	$scope.activeEnrichmentSource = null; //current source filter
-	$scope.activeEnrichmentEntitySource = null; //current entity source filter
-
-	$scope.popOverContent = {};//contains the HTML for each entity
-	$scope.slots = null; //will be filled when chapter data has been loaded
-	$scope.enrichments = null; //will be filled when the user requests for enrichments
-	$scope.enrichmentSources = null;//will be filled when the user requests for enrichments
-	$scope.enrichmentEntitySources = null;//will be filled when the user requests for enrichments
-
-	//watch the rootScope that updates once the main resourceData is loaded (it contains also the playoutUrl)
-	$rootScope.$watch('chapter', function(chapter) {
-		if(chapter) {
-			$scope.setActiveChapter(chapter);
+	//watch the chapterCollection to see what chapter has been selected
+	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {
+		if(newValue) {
+			$scope.activeChapter = newValue;
 		}
 	});
 
-	/*------------Load everything according to the selected chapter-----------------*/
+	//TODO listen to changes in the slots
+	
+});;angular.module('linkedtv').controller('enrichmentController', function($rootScope, $scope, conf, enrichmentCollection) {
+	
+	$scope.allEnrichments = null;
+	$scope.enrichmentSources = null; //allEnrichments filtered by link source
+	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
 
-	$scope.setActiveChapter = function(chapter) {
-		$scope.activeChapter = chapter;
-		$scope.activeSlotIndex = 0;
-		$scope.activeEntities = [];
+	$scope.activeEnrichmentSource = null; //current source filter
+	$scope.activeEnrichmentEntitySource = null; //current entity source filter
 
-		//load the correct entities belonging to the activeChapter FIXME do this in the chapterCollection
-		$scope.updateEntities();
-
-		//populate the slots
-		$scope.slots = $scope.activeChapter.slots;
-	};
-
-	$scope.updateEntities = function() {
-		//first filter all the entities to be only of the selected chapter
-		var entities = _.filter($rootScope.resourceData.nes, function(item) {
-			if(item.start >= $scope.activeChapter.start && item.end <=  $scope.activeChapter.end) {				
-				return item;
-			}
-		});
-
-		//group all the entities by label
-		$scope.entities = _.groupBy(entities, function(e) {
-			return e.label;
-		});
- 	
-		$.each($scope.entities, function(k, v) {
-			var labels = [];
-			var daUrls = [];
-			for (var e in v) {
-				labels.push(v[e].label);
-				daUrls.push(v[e].disambiguationURL);
-			}
-			$scope.popOverContent[k] = labels.join(' ') + '&nbsp;' + daUrls.join(' ');
-		});		
-		//TODO sort the entities
-	}
-
-	/*------------Add selected entity to slot-----------------*/
-
-	$scope.addEntityToSlot = function() {
-		if($scope.activeEntities.length > 0) {
-
-			//use the entity label for the slot title
-			$scope.slots[$scope.activeSlotIndex].title = $scope.activeEntities[0];
-
-			//set the loading image to the slot
-			$scope.slots[$scope.activeSlotIndex].image = conf.loadingImage;
-
-			//find the dbpedia url to fetch info from the entityProxy
-			var label = $scope.entities[$scope.activeEntities[0]];
-			var uri = null;
-			var e = null;
-			for (var i in label) {
-				e = label[i];
-				//only dbpedia uri's are supported
-				console.debug(e);
-				if (e.disambiguationURL && e.disambiguationURL.indexOf('dbpedia.org') != -1) {
-					uri = e.disambiguationURL;
-					break;
-				}
-			}
-			console.debug('dbpediaUri: ' + uri);
-			entityService.getEntityDBPediaInfo(uri, $scope.entityInfoLoaded);
+	$scope.$watch(function () { return enrichmentCollection.getEnrichmentsOfActiveChapter(); }, function(newValue) {		
+		console.debug('Updating enrichments');
+		if(newValue) {
+			$scope.updateEnrichments(newValue);
 		}
-	}
+	});
 
-	$scope.entityInfoLoaded = function(data) {
-		console.debug(data);
-		for (key in data) {
-			if (data[key] && data[key].thumb) {
-				$scope.$apply(function() {
-					$scope.slots[$scope.activeSlotIndex].image = data[key].thumb[0];
-				});
-				break;
-			} else {
-				$scope.slots[$scope.activeSlotIndex].image = null;
-			}
-		}
-		//reset the activeEntities
-		$scope.activeEntities = [];
-	}
-
-	/*------------Search for Enrichments-----------------*/
-
-	$scope.searchEnrichments = function() {
-		if($scope.activeEntities && $scope.activeEntities.length > 0) {
-			enrichmentService.search($scope.activeEntities, $rootScope.provider, $scope.onSearchEnrichments);
-		} else {
-			alert('Please select a number of entities before triggering the enrichment search');
-		}
-	};
-
-	$scope.onSearchEnrichments = function(enrichments) {
+	//TODO make sure this function is called by listening to the enrichmentCollection!
+	$scope.updateEnrichments = function(enrichments) {
 		console.debug(enrichments);
 		var temp = [];//will contain enrichments
 		var sources = [];
@@ -512,28 +534,17 @@ linkedtv.run(function($rootScope) {
 			}
 		}
 		//apply the enrichments to the scope
-		$scope.$apply(function() {
-			$scope.enrichmentSources = sources;
-			$scope.enrichmentEntitySources = eSources;
-			$scope.allEnrichments = temp;
-		});
+		
+		$scope.enrichmentSources = sources;
+		$scope.enrichmentEntitySources = eSources;
+		$scope.allEnrichments = temp;
+		
 		console.debug($scope.enrichmentEntitySources)
 
 		//by default filter by the first source in the list
-		$scope.filterEnrichmentsBySource(sources[0]);
-
-		/*
-		mediaUrl: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Steltman.JPG"
-		micropost: Object
-		micropostUrl: "https://commons.wikimedia.org/wiki/File:Steltman.JPG"
-		posterUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Steltman.JPG/500px-Steltman.JPG"
-		publicationDate: "2010-10-01T16:05:29Z"
-		socialInteractions: Object
-		timestamp: "1285949129000"
-		type: "photo"
-		userProfileUrl: "https://commons.wikimedia.org/wiki/User:Pvt pauline"
-		*/
+		$scope.filterEnrichmentsBySource(sources[0]);		
 	};
+
 
 	//filters the enrichments by source
 	$scope.filterEnrichmentsBySource = function(source) {
@@ -554,18 +565,33 @@ linkedtv.run(function($rootScope) {
 			}
 		});
 	}
+	
+});;angular.module('linkedtv').controller('entityController', 
+	function($rootScope, $scope, conf, entityCollection, enrichmentCollection, enrichmentService) {
+	
+	$scope.entities = {};
+	$scope.activeEntities = [];
+	$scope.popOverContent = {};//contains the HTML for each entity
 
-	/*------------Selecting slots-----------------*/
-
-	$scope.setActiveSlotIndex = function(slot) {		
-		$scope.activeSlotIndex = slot;
+	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
+		$scope.entities = newValue;
+	});
+	
+	//the actual enrichments will be shown in the enrichment tab
+	$scope.fetchEnrichments = function() {		
+		if($scope.activeEntities && $scope.activeEntities.length > 0) {
+			$('#fetch_enrichments').button('loading');
+			enrichmentService.search($scope.activeEntities, $rootScope.provider, $scope.onSearchEnrichments);
+		} else {
+			alert('Please select a number of entities before triggering the enrichment search');
+		}
 	};
 
-	$scope.isSlotSelected = function(slot) {
-		return $scope.activeSlotIndex == slot ? 'selected' : '';
-	};
-
-	/*------------Selecting entities-----------------*/
+	$scope.onSearchEnrichments = function(enrichments) {
+		console.debug('got some enrichments, setting them in the enrichment collection');
+		$('#fetch_enrichments').button('reset');
+		enrichmentCollection.addEnrichmentsToActiveChapter(enrichments, true);
+	}
 
 	$scope.toggleEntity = function(entityLabel) {
 		if($scope.activeEntities.indexOf(entityLabel) == -1) {
@@ -578,9 +604,6 @@ linkedtv.run(function($rootScope) {
 	$scope.isEntitySelected = function(entityLabel) {
 		return $scope.activeEntities.indexOf(entityLabel) == -1 ? '' : 'selected';
 	};
-
-
-	/*------------Confidence of entities-----------------*/
 
 	$scope.getConfidenceClass = function(entityList) {
 		//really ugly hack: somehow the reduce function screws up when there is one item in the list
@@ -602,8 +625,7 @@ linkedtv.run(function($rootScope) {
 			return 'veryhigh';
 		}
 	};
-	
-	
+
 });;angular.module('linkedtv').controller('playerController', function($sce, $rootScope, $scope){
 	
 	$scope.playoutUrl = null;
@@ -696,6 +718,67 @@ linkedtv.run(function($rootScope) {
 	
 	
 
+});;angular.module('linkedtv').controller('slotsController', function($rootScope, $scope, conf, slotCollection, entityService) {
+
+	$scope.slots = null; //will be filled when chapter data has been loaded
+	$scope.activeSlotIndex = 0;
+
+	$scope.$watch(function () { return slotCollection.getSlots(); }, function(newValue) {		
+		$scope.slots = newValue;
+		$scope.activeSlotIndex = 0;
+	});
+
+	$scope.addEntityToSlot = function() {
+		if($scope.activeEntities.length > 0) {
+
+			//use the entity label for the slot title
+			$scope.slots[$scope.activeSlotIndex].title = $scope.activeEntities[0];
+
+			//set the loading image to the slot
+			$scope.slots[$scope.activeSlotIndex].image = conf.loadingImage;
+
+			//find the dbpedia url to fetch info from the entityProxy
+			var label = $scope.entities[$scope.activeEntities[0]];
+			var uri = null;
+			var e = null;
+			for (var i in label) {
+				e = label[i];
+				//only dbpedia uri's are supported
+				console.debug(e);
+				if (e.disambiguationURL && e.disambiguationURL.indexOf('dbpedia.org') != -1) {
+					uri = e.disambiguationURL;
+					break;
+				}
+			}
+			console.debug('dbpediaUri: ' + uri);
+			entityService.getEntityDBPediaInfo(uri, $scope.entityInfoLoaded);
+		}
+	}
+
+	$scope.entityInfoLoaded = function(data) {
+		console.debug(data);
+		for (key in data) {
+			if (data[key] && data[key].thumb) {
+				$scope.$apply(function() {
+					$scope.slots[$scope.activeSlotIndex].image = data[key].thumb[0];
+				});
+				break;
+			} else {
+				$scope.slots[$scope.activeSlotIndex].image = null;
+			}
+		}
+		//reset the activeEntities
+		$scope.activeEntities = [];
+	}
+
+	$scope.setActiveSlotIndex = function(slot) {
+		$scope.activeSlotIndex = slot;
+	};
+
+	$scope.isSlotSelected = function(slot) {
+		return $scope.activeSlotIndex == slot ? 'selected' : '';
+	};
+	
 });;angular.module('linkedtv').controller('videoSelectionController', function($rootScope, $scope, videoSelectionService) {
 		
 	$scope.provider = $rootScope.provider;
@@ -739,7 +822,29 @@ linkedtv.run(function($rootScope) {
 
     	replace : true,
 
-        templateUrl : '/site_media/js/templates/entityEditor.html',
+        templateUrl : '/site_media/js/templates/editorPanel.html',
+
+    };
+
+}]);;angular.module('linkedtv').directive('enrichmentTab', [function(){
+	
+	return {
+    	restrict : 'E',
+
+    	replace : true,
+
+        templateUrl : '/site_media/js/templates/enrichmentTab.html',
+
+    };
+
+}]);;angular.module('linkedtv').directive('entityTab', [function(){
+	
+	return {
+    	restrict : 'E',
+
+    	replace : true,
+
+        templateUrl : '/site_media/js/templates/entityTab.html',
 
     };
 
@@ -757,7 +862,18 @@ linkedtv.run(function($rootScope) {
 		templateUrl : '/site_media/js/templates/navigationBar.html'
 	};
 
-});;angular.module('linkedtv').directive('videoPlayer', [function(){
+});;angular.module('linkedtv').directive('slotsTab', [function(){
+	
+	return {
+    	restrict : 'E',
+
+    	replace : true,
+
+        templateUrl : '/site_media/js/templates/slotsTab.html',
+
+    };
+
+}]);;angular.module('linkedtv').directive('videoPlayer', [function(){
 	
 	return {
     	restrict : 'E',

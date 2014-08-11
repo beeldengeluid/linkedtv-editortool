@@ -1,10 +1,10 @@
 angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, timeUtils, imageService, chapterCollection) {
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection) {
 		
 	//wait for the resourceUri to have been extracted from the application URL
 	$scope.init = function() {
 		//fetch all of this resource's data from the server
-		$rootScope.$watch('resourceUri', function(resourceUri){
+		$rootScope.$watch('resourceUri', function(resourceUri) {
 			dataService.getResourceData(resourceUri, true, $scope.dataLoaded);
 		});
 	};
@@ -19,35 +19,15 @@ angular.module('linkedtv').controller('appController',
 
 			
 			//load the chapterCollection with chapter data
-			$scope.loadChapterCollection(resourceData);
+			chapterCollection.initCollectionData($rootScope.resourceUri, $rootScope.provider, resourceData);
+
+			//load the entityCollection with entity data
+			entityCollection.initCollectionData($rootScope.resourceData.nes);
 
 		} else {
 			// TODO error
 		}
-	};
-
-	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)
-	$scope.loadChapterCollection = function(resourceData) {
-		var chapters = null;
-		if(resourceData.chapters.length == 0) {
-			chapters = resourceData.curated.chapters;
-		} else {
-			chapters = resourceData.chapters;
-		}
-		//add all the posters to the chapters (FIXME this should be done on the server!!)
-		for(var c in chapters) {
-			var chapter = chapters[c];
-			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, $rootScope.resourceUri, timeUtils.toMillis(chapter.start));
-
-			//set the default slots based on the provider conf
-			var slots = [];
-			for(var i=0;i<conf.chapterSlotsMap[$rootScope.provider];i++) {
-				slots.push({'title' : 'Slot ' + (i+1)});
-			}
-			chapter.slots = slots;
-		}
-		chapterCollection.setChapters(chapters);
-	}
+	};	
 
 	$scope.init();
 });

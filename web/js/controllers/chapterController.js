@@ -11,8 +11,8 @@ angular.module('linkedtv').controller('chapterController',
 		$scope.chapters = newValue;
 	});
 
-	$scope.setActiveChapter = function(chapter) {
-		$rootScope.chapter = chapter;
+	$scope.setActiveChapter = function(chapter) {		
+		chapterCollection.setActiveChapter(chapter);
 	};
 
 	$scope.isChapterSelected = function(chapter) {
