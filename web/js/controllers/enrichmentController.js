@@ -1,5 +1,8 @@
 angular.module('linkedtv').controller('enrichmentController', function($rootScope, $scope, conf, enrichmentCollection) {
 	
+	$scope.activeEntities = [];
+
+
 	$scope.allEnrichments = null;
 	$scope.enrichmentSources = null; //allEnrichments filtered by link source
 	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
@@ -13,6 +16,30 @@ angular.module('linkedtv').controller('enrichmentController', function($rootScop
 			$scope.updateEnrichments(newValue);
 		}
 	});
+
+
+	/*This part should be the generic part that calls the correct enrichments services (based on the dimension)*/
+
+	//the actual enrichments will be shown in the enrichment tab
+	$scope.fetchEnrichments = function() {
+		if($scope.activeEntities && $scope.activeEntities.length > 0) {
+			$('#fetch_enrichments').button('loading');
+			enrichmentService.search($scope.activeEntities, $rootScope.provider, $scope.onSearchEnrichments);
+		} else {
+			alert('Please select a number of entities before triggering the enrichment search');
+		}
+	};
+
+	$scope.onSearchEnrichments = function(enrichments) {
+		//reset the button and the selected entities
+		$('#fetch_enrichments').button('reset');
+		$scope.activeEntities = [];
+
+		//add the enrichments to the enrichmentCollection
+		enrichmentCollection.addEnrichmentsToActiveChapter(enrichments, true);
+	}
+
+	/*this part is only relevant for the tvenrichment service*/
 
 	//TODO make sure this function is called by listening to the enrichmentCollection!
 	$scope.updateEnrichments = function(enrichments) {

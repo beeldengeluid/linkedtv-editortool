@@ -16,9 +16,7 @@ urlpatterns = patterns('',
     
     #external/partner APIs   
     url(r'^tvenricher$', 'views.tvenricher'),
-    url(r'^entityproxy$', 'views.entityproxy'),
-    #url(r'^mediacollector$', 'views.mediacollector'),
-    #url(r'^unstructuredsearch$', 'views.unstructuredsearch'),
+    url(r'^entityproxy$', 'views.entityproxy'),    
     
     #refactored navigation
     url(r'^(?P<pub>\w+)/$', 'views.provider'),

@@ -2,7 +2,9 @@ angular.module('linkedtv').controller('editorPanelController',
 	function($rootScope, $scope, conf, chapterCollection) {
 	
 	$scope.activeChapter = null;
-	//TODO add variable for active slots
+	$scope.activeDimension = conf.programmeConfig.dimensions[0];
+	$scope.conf = conf;
+	//$scope.activeDimension = conf.programmeConf.dimensions[0];	
 
 	//watch the chapterCollection to see what chapter has been selected
 	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {
@@ -11,6 +13,8 @@ angular.module('linkedtv').controller('editorPanelController',
 		}
 	});
 
-	//TODO listen to changes in the slots
+	$scope.setActiveDimension = function(dimension) {
+		$scope.activeDimension = dimension;
+	}
 	
 });

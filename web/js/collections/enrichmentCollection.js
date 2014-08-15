@@ -17,7 +17,7 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 		}
 	}
 
-	function getEnrichmentsOfActiveChapter() {		
+	function getEnrichmentsOfActiveChapter() {
 		if(_activeChapter && _enrichments[_activeChapter.$$hashKey]) {
 			return _enrichments[_activeChapter.$$hashKey];
 		}

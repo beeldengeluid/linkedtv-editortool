@@ -1,0 +1,28 @@
+<div class="tab-content">
+	
+	<div class="row">
+
+		<div class="col-md-6" ng-controller="entityController">
+			<ul class="entities">
+				<li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
+						
+					<div ng-click="toggleEntity(k);" class="label label-default" title="{{k}}">
+						{{k}}&nbsp;({{v.length}})
+					</div>
+				</li>
+			</ul>
+
+			<button type="button" id="fetch_enrichments" data-loading-text="Loading..." class="btn btn-primary" ng-click="fetchEnrichments()">
+  				Fetch enrichments
+			</button>
+		</div>
+
+		<span>Selected entities: {{activeEntities}}</span>
+
+		<div class="col-md-6" ng-controller="enrichmentController">
+			<span>{{dimension.label}}</span>
+		</div>
+	
+	</div>
+
+</div>

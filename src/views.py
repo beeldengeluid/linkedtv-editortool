@@ -174,6 +174,7 @@ def autocomplete(request):
     prefix = request.GET.get('term', None)
     ac = AutoComplete()
     options = ac.autoComplete(prefix)
+    print options;
     resp = simplejson.dumps(options)
     return HttpResponse(resp, mimetype='application/json')
     
@@ -218,7 +219,7 @@ def enrichments(request):
     if p and q:
         p = str(p).upper()
         api = Api()
-        resp = api.getEnrichmentsOnDemand(q.split(','), p, True)
+        resp = api.getEnrichmentsOnDemand(q.split(','), p, False)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')
@@ -250,26 +251,3 @@ def entityproxy(request):
         print resp
         return HttpResponse(resp, mimetype='application/json')
     return HttpResponse("{'error' : 'Please provide a DBPedia URI'}", mimetype='application/json')
-
-"""
-def mediacollector(request):
-    s = request.GET.get('s', None)
-    provider = request.GET.get('p') 
-    if s:
-        mc = MediaCollector()
-        print 'Searching (MC) for %s (%s)' % (s, provider)
-        resp = mc.search(s, provider)
-        return HttpResponse(resp, mimetype='application/json')
-    return HttpResponse("{'error' : 'Could not find anything'}", mimetype='application/json')
-
-def unstructuredsearch(request):
-    s = request.GET.get('s', None)
-    provider = request.GET.get('p') 
-    if s:
-        us = UnstructuredSearch()
-        print 'Searching (US) for %s (%s)' % (s, provider)
-        resp = us.search(s, provider)
-        return HttpResponse(resp, mimetype='application/json')
-    return HttpResponse("{'error' : 'Could not find anything'}", mimetype='application/json')
-"""        
-    

@@ -2,54 +2,42 @@
 <div class="panel panel-default">
 
 	<div class="panel-heading">
-		Entities of: {{chapter.label}}&nbsp;&dash;&nbsp;{{slots[activeSlotIndex].title}}
-
-		<!--
-		<ul class="vertical-menu">
-			<li>
-				<i class="glyphicon glyphicon-plus interactive"
-					ng-click="addEntityToSlot()"
-					title="Set selected entity in slot"></i>		
-			</li>
-			<li>
-				<i class="glyphicon glyphicon-search interactive"
-					ng-click="searchEnrichments()"
-					title="Search enrichments for selected entities"></i>
-			</li>
-		</ul>
-		-->
+		Entities of: {{activeChapter.label}}
 
 	</div>
 
 	<div class="panel-body">
-		
-		<tabset>
+					
+		<div>
+			<ul class="nav nav-tabs" role="tablist">
+				<li>
+					<a data-target="#tab_ic" role="tab" data-toggle="tab">Information cards</a>
+				</li>
 
-			<tab ng-controller="slotsController">
-				<tab-heading>
-					<i class="glyphicon glyphicon-star"></i>&nbsp;Slots
-				</tab-heading>
+				<li class="dropdown">
+					<a href="#" id="dimension_tabs" class="dropdown-toggle" data-toggle="dropdown">{{activeDimension.label}} <span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu" aria-labelledby="dimension_tabs">
+						<li ng-repeat="d in conf.programmeConfig.dimensions">
+							<a data-target="#dimension_tab_{{$index}}" tabindex="-1" role="tab" data-toggle="tab"
+							ng-click="setActiveDimension(d)">{{d.label}}</a>
+						</li>
+						
+					</ul>
+				</li>
 
-				<slots-tab></slots-tab>
-			</tab>
+			</ul>
 
-			<tab ng-controller="entityController">
-				<tab-heading>
-					<i class="glyphicon glyphicon-cloud"></i>&nbsp;Entities
-				</tab-heading>
-				
-				<entity-tab></entity-tab>
-		    </tab>
+			<div class="tab-content">
+				<div id="tab_ic" class="tab-pane fade" ng-controller="informationCardsController">
+					<information-cards-tab></information-cards-tab>
+				</div>
 
-			<tab ng-controller="enrichmentController">
-				<tab-heading>
-					<i class="glyphicon glyphicon-new-window"></i>&nbsp;Enrichments
-				</tab-heading>
-				
-				<enrichment-tab></enrichment-tab>
-			</tab>
-			
-		  </tabset>		
+				<div class="tab-pane fade" ng-repeat="d in conf.programmeConfig.dimensions" id="dimension_tab_{{$index}}">
+					<dimension-tab dimension="d"></dimension-tab>
+				</div>
+			</div>
+		</div>
+
 
 	</div>
 	

@@ -1,28 +1,26 @@
 angular.module('linkedtv').controller('entityController', 
-	function($rootScope, $scope, conf, entityCollection, enrichmentCollection, enrichmentService) {
+	function($scope, entityCollection) {
 	
-	$scope.entities = {};
 	$scope.activeEntities = [];
+	$scope.entities = {};	
 	$scope.popOverContent = {};//contains the HTML for each entity
 
 	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
-		$scope.entities = newValue;
+		$scope.updateEntities(newValue);
 	});
 	
-	//the actual enrichments will be shown in the enrichment tab
-	$scope.fetchEnrichments = function() {		
-		if($scope.activeEntities && $scope.activeEntities.length > 0) {
-			$('#fetch_enrichments').button('loading');
-			enrichmentService.search($scope.activeEntities, $rootScope.provider, $scope.onSearchEnrichments);
-		} else {
-			alert('Please select a number of entities before triggering the enrichment search');
-		}
-	};
-
-	$scope.onSearchEnrichments = function(enrichments) {
-		console.debug('got some enrichments, setting them in the enrichment collection');
-		$('#fetch_enrichments').button('reset');
-		enrichmentCollection.addEnrichmentsToActiveChapter(enrichments, true);
+	//called whenever a chapter is selected
+	$scope.updateEntities = function(entities) {
+		$scope.entities	= entities;
+		$.each(entities, function(k, v) {
+			var labels = [];
+			var daUrls = [];
+			for (var e in v) {
+				labels.push(v[e].label);
+				daUrls.push(v[e].disambiguationURL);
+			}
+			$scope.popOverContent[k] = labels.join(' ') + '&nbsp;' + daUrls.join(' ');
+		});
 	}
 
 	$scope.toggleEntity = function(entityLabel) {

@@ -1,0 +1,121 @@
+<div class="modal-header">
+    <h3 ng-if="card" class="modal-title">Edit card: {{card.title}}</h3>
+    <h3 ng-if="!card" class="modal-title">Create new card</h3>
+</div>
+
+<div class="modal-body">
+
+
+    <!-- display entities -->
+    <div class="row">
+        <div class="col-md-9">
+            <h4>Detected entities</h4>
+            <ul class="entities">
+                <li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
+                        
+                    <div ng-click="fetchExtraInfo(v)" class="label label-default entity" title="{{k}}">
+                        {{k}}&nbsp;({{v.length}})
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-3">
+            <div class="thumbnail card-edit-thumb">
+                <img ng-show="loading" src="/site_media/images/loading.gif" alt="...">
+                <img ng-show="thumbs" ng-src="{{thumbs[thumbIndex]}}" ng-click="nextThumb()" alt="{{card.title}}">
+                <a>Portrait</a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- search for entities on DBpedia -->
+    <div class="row">
+        <div class="col-md-12">
+            <h4>Search DBpedia</h4>
+            <form class="form-inline" role="form">
+                <div class="form-group">
+                    <label>Search</label>
+                    <dbpedia-autocomplete></dbpedia-autocomplete>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- results from proxy -->
+    <div class="row">
+        <div ng-show="fetchedTriples" class="card-edit-form">
+            <div class="col-md-12">
+                <h4>Fetched properties</h4>
+                <header>
+                    <ul>
+                        <li>Label</li>
+                        <li>Value</li>
+                        <li>Online representation</li>
+                    </ul>
+                </header>
+                <form class="form-inline" role="form" ng-repeat="triple in fetchedTriples" 
+                    ng-click="nextTriple($index)">
+                    <div class="form-group">
+                        <input disabled class="form-control" value="{{triple.key}}">
+                    </div>
+                    <div class="form-group">
+                        <input disabled class="form-control" value="{{triple.values[triple.index]}}">
+                    </div>
+                    <div class="form-group">
+                        <input disabled class="form-control" value="{{triple.uris[triple.index]}}">
+                    </div>
+                    <i class="glyphicon glyphicon-plus interactive" ng-click="addToCard(triple)"></i>
+                </form>                
+            </div>
+            
+        </div>
+    </div>
+
+
+    <!-- for new cards, or cards without entities -->
+    <div class="row" ng-show="!card.triples">
+        <div class="col-md-12">
+             <h4>Saved to card</h4>
+            <div class="alert alert-info">No properties have been saved to this card</div>
+        </div>
+    </div>   
+
+
+    <!-- saved entities -->
+    <div class="row">        
+        <div ng-show="card.triples" class="card-edit-form">
+            <div class="col-md-12">
+                <h4>Saved to card</h4>
+                <header>
+                    <ul>
+                        <li>Label</li>
+                        <li>Value</li>
+                        <li>Online representation</li>
+                    </ul>
+                </header>
+                <form class="form-inline" role="form" ng-repeat="triple in card.triples">
+                    <div class="form-group">
+                        <input class="form-control" value="{{triple.key}}">
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control" value="{{triple.value}}">
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control" value="{{triple.uri}}">
+                    </div>
+                    <i class="glyphicon glyphicon-minus interactive" ng-click="removeFromCard($index)"></i>
+                </form>
+            </div>
+            
+        </div>
+    </div>
+    
+</div>
+
+
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()">Save</button>
+    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

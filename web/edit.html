@@ -17,9 +17,12 @@
     <link rel="icon" href="/site_media/images/favicon.ico">
 
     <title>LinkedTV - Editor Tool v2.0</title>
-
+    
     <!-- Custom styles for this template -->
     <link href="/site_media/css/linkedtv-et.css" rel="stylesheet">
+
+    <!-- jquery ui theme -->
+    <link href="/site_media/bower_components/jquery-ui/themes/ui-lightness/jquery-ui.min.css" rel="stylesheet">    
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -31,7 +34,7 @@
     <script src="/site_media/bower_components/angular/angular.min.js"></script>
     <script src="/site_media/bower_components/angular-route/angular-route.min.js"></script>
     <script src="/site_media/bower_components/angular-bootstrap/ui-bootstrap.min.js"></script>
-    <script src="/site_media/bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script src="/site_media/bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>    
 
     <!-- underscore -->
     <script src="/site_media/bower_components/underscore/underscore.js"></script>
@@ -50,7 +53,7 @@
       <!-- Video selector -->
 		  <section ng-controller="videoSelectionController" ng-show="!resourceUri" class="row">
        	<video-selector></video-selector>
-      </section>      
+      </section>
 
       <div class="row">
 
@@ -71,21 +74,18 @@
          	<chapter-editor></chapter-editor>
         </section>
 
-      </div>
-
-      <div class="row">
-
-        
-
-    </div>
+      </div>      
 
     </div>
 
     <!-- Bootstrap core JavaScript -->
     <script src="/site_media/bower_components/jquery/dist/jquery.min.js"></script>
     <script src="/site_media/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <!-- jquery ui -->
+    <script src="/site_media/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/site_media/bower_components/jquery-ui/jquery-ui.min.js"></script>
+
   </body>
+
 </html>
-
-
-

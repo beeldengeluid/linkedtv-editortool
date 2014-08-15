@@ -1,0 +1,50 @@
+.cards {
+	@include mediaSlots;
+}
+
+.card-edit-thumb {
+	width:121px;
+}
+
+.card-edit-form {
+	margin-bottom:$defaultItemMargin;
+
+	header ul {
+		@include verticalList(true);
+		li {
+			font-weight:bold;
+			&:nth-child(1) {
+	 			width:20%;
+	 		}
+	 		&:nth-child(2) {
+	 			width:55%;
+	 		}
+	 		&:nth-child(3) {
+	 			width:20%; 		
+	 		}
+ 		}
+	}
+
+	.form-group {
+		margin-bottom:$defaultItemMargin;
+		input {
+ 			width:100%;
+ 			&:hover {
+				@include box-shadow($wonderblue 2px 2px 10px);
+			}
+ 		}
+ 		input[disabled] {
+	 		cursor:pointer;
+ 		}
+		&:nth-child(1) {
+ 			width:20%;
+ 			font-weight:bold;
+ 		}
+ 		&:nth-child(2) {
+ 			width:55%; 		
+ 		}
+ 		&:nth-child(3) {
+ 			width:20%; 		
+ 		} 		
+ 	}
+ }

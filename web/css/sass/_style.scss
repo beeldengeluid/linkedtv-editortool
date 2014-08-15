@@ -11,15 +11,15 @@ body {
 	background-image: url(../images/bg-tile-fg.png);
 }
 
-.tab-content {
-	margin-top:$defaultMargin;
-}
-
-.tab-menu {
-	width:100%;
-	display:inline-block;
-}
-
-.vertical-menu {
-	@include verticalMenu($wonderblue, true);
+@mixin verticalList($inlineBlock : false){
+	list-style:none;
+	padding:0px;
+	margin:0px;
+	li {
+		@if $inlineBlock {
+			display:inline-block;
+		} @else {		
+			display:inline;
+		}
+	}
 }

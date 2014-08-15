@@ -1,47 +1,55 @@
 .entities {
-	list-style:none;
+	@include verticalList();
+	margin-bottom:$defaultMargin;
 }
 
-.entities li {
-	display:inline;
-}
+/* Mixin for displaying entity labels */
 
-.label {
-	display:inline-block;
-	margin:$defaulItemMargin;
+@mixin entityLabel($adjustFonts : false) {
+	display:inline-block;	
 	border: 1px solid white;
-	cursor:pointer;	
+	cursor:pointer;
+	font-size:100%;
+
+	& li {
+		margin-right:$defaultItemMargin;
+		margin-bottom:$defaultItemMargin;
+	}
 
 	&:hover {
 		@include activeLabel;
 	}
 
-	.selected & {		
+	.selected & {
 		@include activeLabel;
 	}
 
 	.verylow & {
 		background-color:crimson;
-		font-size:85%;
+		@if $adjustFonts == true {font-size:85%;}
 	}
 	.low & {
 		background-color:indianred;
-		font-size:90%;
+		@if $adjustFonts == true {font-size:90%;}
 	}
 	.fair & {
 		background-color:darkorange;
-		font-size:100%;
+		@if $adjustFonts == true {font-size:100%;}
 	}
 	.medium & {
 		background-color:orange;
-		font-size:110%;
+		@if $adjustFonts == true {font-size:110%;}
 	}
 	.high & {
 		background-color:lightgreen;
-		font-size:120%;
+		@if $adjustFonts == true {font-size:120%;}
 	}
 	.veryhigh & {
 		background-color:yellowgreen;
-		font-size:130%;
+		@if $adjustFonts == true {font-size:130%;}
 	}
+}
+
+.entity {
+	@include entityLabel();
 }
