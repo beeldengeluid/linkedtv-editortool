@@ -29,8 +29,22 @@ angular.module('linkedtv').factory('chapterCollection',
 	function setActiveChapter(activeChapter) {
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
-		enrichmentCollection.updateActiveChapter(_activeChapter);
 
+
+		//enrichmentCollection.updateActiveChapter(_activeChapter);
+
+	}
+
+	function setChapterCard(index, card) {
+		for(c in _chapters) {
+			if(_chapters[c].$$hashKey == _activeChapter.$$hashKey) {
+				if(_chapters[c].cards) {
+					_chapters[c].cards[index] = card;
+				} else {
+					_chapters[c].cards = [card]
+				}
+			}
+		}
 	}
 
 	function getActiveChapter() {

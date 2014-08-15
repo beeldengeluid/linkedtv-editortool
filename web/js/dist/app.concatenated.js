@@ -77,6 +77,10 @@ linkedtv.run(function($rootScope, conf) {
 	if(urlParts && urlParts.length >= 3) {
 		$rootScope.resourceUri = urlParts[2];
 	}
+
+	$rootScope.$on('$viewContentLoaded', function() {
+		$templateCache.removeAll();
+   });
 });;angular.module('linkedtv').factory('chapterCollection', 
 	['conf', 'timeUtils', 'imageService', 'entityCollection', 'enrichmentCollection',
 	function(conf, timeUtils, imageService, entityCollection, enrichmentCollection) {
@@ -108,8 +112,22 @@ linkedtv.run(function($rootScope, conf) {
 	function setActiveChapter(activeChapter) {
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
-		enrichmentCollection.updateActiveChapter(_activeChapter);
 
+
+		//enrichmentCollection.updateActiveChapter(_activeChapter);
+
+	}
+
+	function setChapterCard(index, card) {
+		for(c in _chapters) {
+			if(_chapters[c].$$hashKey == _activeChapter.$$hashKey) {
+				if(_chapters[c].cards) {
+					_chapters[c].cards[index] = card;
+				} else {
+					_chapters[c].cards = [card]
+				}
+			}
+		}
 	}
 
 	function getActiveChapter() {
@@ -450,7 +468,7 @@ linkedtv.run(function($rootScope, conf) {
 		$scope.chapters = newValue;
 	});
 
-	$scope.setActiveChapter = function(chapter) {		
+	$scope.setActiveChapter = function(chapter) {
 		chapterCollection.setActiveChapter(chapter);
 	};
 
@@ -647,9 +665,79 @@ linkedtv.run(function($rootScope, conf) {
 
 });;angular.module('linkedtv').controller('informationCardsController', function($rootScope, $scope, $modal, conf, entityProxyService, entityCollection) {
 
+	/*-------------------------TAB FUNCTIONS---------------------------*/
+	
+	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
+
 	$scope.cards = []; //TODO load the information cards from the selected chapter	
 	$scope.activeCardIndex = 0;
-	$scope.entities = null; //filled when selecting a chapter
+
+	/*
+	$scope.$watch(function () { return informationCardCollection.getCards(); }, function(newValue) {		
+		$scope.updateInformationCards(newValue);
+	});
+
+	$scope.updateInformationCards = function(cards) {
+		$scope.cards = cards;
+		$scope.setActiveSlot(0);
+	}*/
+
+	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
+		if(newValue) {
+			$scope.updateEntities(newValue);
+		}
+	});
+	
+	//called whenever a chapter is selected
+	$scope.updateEntities = function(entities) {
+		$scope.entities	= entities;
+	}
+
+	$scope.createNewCard = function() {
+		$scope.openCardDialog(null);
+	}
+
+	$scope.editCard = function() {
+		$scope.openCardDialog($scope.cards[$scope.activeCardIndex]);
+	}
+
+	$scope.openCardDialog = function(card) {
+
+		var modalInstance = $modal.open({
+			templateUrl: '/site_media/js/templates/informationCardModal.html',
+			controller: editCardDialog,
+			size: 'lg',
+			//make sure to make a nice separate controller
+			resolve: {
+				entities: function () {
+					return $scope.entities;
+				},
+				card : function () {
+					return card;
+				},
+				entityProxyService : function () {
+					return entityProxyService;
+				}
+			}
+		});
+
+		//when the modal is closed (using 'ok', or 'cancel')
+		modalInstance.result.then(function (card) {
+			console.debug('I saved a damn card yeah!');
+			console.debug(card);
+			$scope.cards[$scope.activeCardIndex] = card;
+		}, function () {
+			console.debug('Modal dismissed at: ' + new Date());
+		});
+	};
+
+	$scope.setActiveCard = function(index) {
+		$scope.activeCardIndex = index;		
+	};
+
+	$scope.isCardSelected = function(index) {
+		return $scope.activeCardIndex == index ? 'selected' : '';
+	};
 
 
 	/*-------------------------DIALOG TO EDIT THE CARDS---------------------------*/
@@ -657,7 +745,7 @@ linkedtv.run(function($rootScope, conf) {
 	var editCardDialog = function ($scope, $modalInstance, card, entities, entityProxyService) {
 
 		$scope.entityProxyService = entityProxyService;
-		$scope.card = card || {};		
+		$scope.card = card || {};
 		$scope.entities = entities;
 
 		$scope.thumbs = null;
@@ -665,12 +753,20 @@ linkedtv.run(function($rootScope, conf) {
 
 		$scope.fetchedTriples = null;
 
+		$scope.autocompleteId = 'autocomplete_1';
+		$scope.foundEntity = {};
+
 		//state variables
 		$scope.loading = false;
 
-
-		//$scope.selectedEntity = null;
-		//$scope.activeEntities = [];
+		/*
+		$scope.$watch('foundEntity', function(newValue) {
+			if(newValue) {
+				console.debug(newValue);
+				$scope.fetchExtraInfo(newValue.uri);
+				$('#dbpedia').attr('value', '');
+			}
+		});*/
 
 		$scope.initializeCard = function(card) {
 
@@ -707,7 +803,6 @@ linkedtv.run(function($rootScope, conf) {
 
 		$scope.getThumbsFromTriples = function(triples) {
 			for(var i=0;i<triples.length;i++) {
-				console.debug(triples[i]);
 				if(triples[i].key == 'thumb') {
 					return triples[i].values;
 				}
@@ -736,7 +831,7 @@ linkedtv.run(function($rootScope, conf) {
 			}
 		};
 
-		$scope.fetchExtraInfo = function(entitiesOfLabel) {
+		$scope.fetchExtraInfoForEntityLabel = function(entitiesOfLabel) {
 			var entityUri = null;
 			for(k in entitiesOfLabel) {
 				var e = entitiesOfLabel[k];
@@ -745,14 +840,17 @@ linkedtv.run(function($rootScope, conf) {
 					break;
 				}
 			}
+			$scope.fetchExtraInfo(entityUri);
+		}
+
+		$scope.fetchExtraInfo = function(entityUri) {
 			if(entityUri) {				
 				entityProxyService.getEntityDBPediaInfo(entityUri, $scope.fetchedTriplesLoaded);
 				$scope.loading = true;
 			}
 		}
 
-		$scope.fetchedTriplesLoaded = function(data) {
-			console.debug(data);
+		$scope.fetchedTriplesLoaded = function(data) {			
 			$scope.fetchedTriples = [];
 			var info = [];
 			for (key in data) {
@@ -775,83 +873,18 @@ linkedtv.run(function($rootScope, conf) {
 				$scope.loading = false;
 				$scope.thumbIndex = 0;
 				$scope.thumbs = $scope.getThumbsFromTriples(info);
-				$scope.fetchedTriples = info;				
+				$scope.fetchedTriples = info;
 			})
 		}
 
 		$scope.ok = function () {
-			$modalInstance.close($scope.selectedEntity);
+			$modalInstance.close($scope.card);
 		};
 
 		$scope.cancel = function () {
 			$modalInstance.dismiss('cancel');
 		};		
 		
-	};
-
-	/*-------------------------TAB FUNCTIONS---------------------------*/
-
-	/*
-	$scope.$watch(function () { return informationCardCollection.getCards(); }, function(newValue) {		
-		$scope.updateInformationCards(newValue);
-	});
-
-	$scope.updateInformationCards = function(cards) {
-		$scope.cards = cards;
-		$scope.setActiveSlot(0);
-	}*/
-
-	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
-		if(newValue) {
-			$scope.updateEntities(newValue);
-		}
-	});
-	
-	//called whenever a chapter is selected
-	$scope.updateEntities = function(entities) {
-		$scope.entities	= entities;
-		console.debug('entities');
-		console.debug($scope.entities);
-	}
-
-	$scope.createNewCard = function() {
-		$scope.openCardDialog(null);
-	}
-
-	$scope.openCardDialog = function(card) {
-
-		var modalInstance = $modal.open({
-			templateUrl: '/site_media/js/templates/informationCardModal.html',
-			controller: editCardDialog,
-			size: 'lg',
-			//make sure to make a nice separate controller
-			resolve: {
-				entities: function () {
-					return $scope.entities;
-				},
-				card : function () {
-					return card;
-				},
-				entityProxyService : function () {
-					return entityProxyService;
-				}
-			}
-		});
-
-		modalInstance.result.then(function (selectedItem) {
-			console.debug(selectedItem);
-			$scope.selected = selectedItem;
-		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
-		});
-	};
-
-	$scope.setActiveCard = function(index) {
-		$scope.activeCardIndex = index;		
-	};
-
-	$scope.isCardSelected = function(index) {
-		return $scope.activeCardIndex == index ? 'selected' : '';
 	};
 	
 });;angular.module('linkedtv').controller('playerController', function($sce, $rootScope, $scope){
@@ -982,42 +1015,48 @@ linkedtv.run(function($rootScope, conf) {
 
     };
 
-}]);;angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
+}]);;//userful read: http://jasonmore.net/angular-js-directives-difference-controller-link/
+
+angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 
 	return {
 		restrict : 'E',
 
 		replace : true,
 
-		scope : true,
+		scope : {
+			entity : '=',//the selected entity will be communicated via this variable
+			target : '@' //this is the id of the html element that holds the autocomplete widget
+		},
 
 		templateUrl : '/site_media/js/templates/dbpediaAutocomplete.html',
 
-		controller : function($scope) {
+		controller : function($scope, $element) {
 
-			$scope.selectedDBpediaInstance = null;
+			$scope.entity = null;
 
 			$scope.BUTTON_MAPPINGS = {'who' : 'orange', 'unknown' : 'red', 'where' : 'blue', 
 				'what' : 'yellow', 'Freebase' : 'pink', 'DBpedia' : 'green', 'NERD' : 'yellow'
 			};
 
-			$scope.RENDER_OPTIONS = {				
+			$scope.RENDER_OPTIONS = {
 				ORIGINAL :  $.ui.autocomplete.prototype._renderItem,
 				
 				DBPEDIA : function(ul, item) {
-					$(ul).css('z-index', '999999');
+					$(ul).css('z-index', '999999'); // needed when displayed within an Angular modal
 					var v_arr = item.label.split('\|');
 					var l = v_arr[0];
 					var t = v_arr[1];
 					var c = v_arr[2];
-					t = '<button class="button small">' + t + '</button>';
-					c = '<button class="button small ' + $scope.BUTTON_MAPPINGS[c] + '">' + c + '</button>';
+					t = '<button class="button button-primary">' + t + '</button>';
+					c = '<button class="button button-primary ' + $scope.BUTTON_MAPPINGS[c] + '">' + c + '</button>';
 					var row = l + '&nbsp;' + t + '&nbsp;' + c;
 					return $("<li></li>").data("item.autocomplete", item).append("<a>" + row + "</a>").appendTo(ul);
 				}
 			};
 
 			$scope.init = function() {
+				console.debug($element);
 				$scope.setAutocompleteRendering('dbpedia');
 				var url = '/autocomplete';
 				$('#dbpedia').autocomplete({
@@ -1030,13 +1069,16 @@ linkedtv.run(function($rootScope, conf) {
 							var t = v_arr[1];
 							var c = v_arr[2];
 							var dbpediaURL = ui.item.value;
+
 							//stores the selected DBpedia entry
-							$scope.selectedDBpediaInstance = {'label' : l, 'type' : t, 'category' : c, 'url' : dbpediaURL};
-							
+							$scope.$apply(function() {
+								$scope.entity = {label : l, type : t, category : c, uri : dbpediaURL};
+							});
+
 							//use the selected DBpedia entry to fill in the label and vocab URL of the annotation
 							$('#entity').attr('value', l);
 							$('#entity_url').attr('value', dbpediaURL);
-							this.value = l;
+							this.value = '';
 							return false;
 						}
 					}

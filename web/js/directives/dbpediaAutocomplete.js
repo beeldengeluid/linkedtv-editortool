@@ -1,3 +1,5 @@
+//userful read: http://jasonmore.net/angular-js-directives-difference-controller-link/
+
 angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 
 	return {
@@ -5,19 +7,22 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 
 		replace : true,
 
-		scope : true,
+		scope : {
+			entity : '=',//the selected entity will be communicated via this variable
+			target : '@' //this is the id of the html element that holds the autocomplete widget
+		},
 
 		templateUrl : '/site_media/js/templates/dbpediaAutocomplete.html',
 
-		controller : function($scope) {
+		controller : function($scope, $element) {
 
-			$scope.selectedDBpediaInstance = null;
+			$scope.entity = null;
 
 			$scope.BUTTON_MAPPINGS = {'who' : 'orange', 'unknown' : 'red', 'where' : 'blue', 
 				'what' : 'yellow', 'Freebase' : 'pink', 'DBpedia' : 'green', 'NERD' : 'yellow'
 			};
 
-			$scope.RENDER_OPTIONS = {				
+			$scope.RENDER_OPTIONS = {
 				ORIGINAL :  $.ui.autocomplete.prototype._renderItem,
 				
 				DBPEDIA : function(ul, item) {
@@ -34,6 +39,7 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 			};
 
 			$scope.init = function() {
+				console.debug($element);
 				$scope.setAutocompleteRendering('dbpedia');
 				var url = '/autocomplete';
 				$('#dbpedia').autocomplete({
@@ -46,13 +52,16 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 							var t = v_arr[1];
 							var c = v_arr[2];
 							var dbpediaURL = ui.item.value;
+
 							//stores the selected DBpedia entry
-							$scope.selectedDBpediaInstance = {'label' : l, 'type' : t, 'category' : c, 'url' : dbpediaURL};
-							
+							$scope.$apply(function() {
+								$scope.entity = {label : l, type : t, category : c, uri : dbpediaURL};
+							});
+
 							//use the selected DBpedia entry to fill in the label and vocab URL of the annotation
 							$('#entity').attr('value', l);
 							$('#entity_url').attr('value', dbpediaURL);
-							this.value = l;
+							this.value = '';
 							return false;
 						}
 					}

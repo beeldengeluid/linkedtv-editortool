@@ -1,8 +1,78 @@
 angular.module('linkedtv').controller('informationCardsController', function($rootScope, $scope, $modal, conf, entityProxyService, entityCollection) {
 
+	/*-------------------------TAB FUNCTIONS---------------------------*/
+	
+	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
+
 	$scope.cards = []; //TODO load the information cards from the selected chapter	
 	$scope.activeCardIndex = 0;
-	$scope.entities = null; //filled when selecting a chapter
+
+	/*
+	$scope.$watch(function () { return informationCardCollection.getCards(); }, function(newValue) {		
+		$scope.updateInformationCards(newValue);
+	});
+
+	$scope.updateInformationCards = function(cards) {
+		$scope.cards = cards;
+		$scope.setActiveSlot(0);
+	}*/
+
+	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
+		if(newValue) {
+			$scope.updateEntities(newValue);
+		}
+	});
+	
+	//called whenever a chapter is selected
+	$scope.updateEntities = function(entities) {
+		$scope.entities	= entities;
+	}
+
+	$scope.createNewCard = function() {
+		$scope.openCardDialog(null);
+	}
+
+	$scope.editCard = function() {
+		$scope.openCardDialog($scope.cards[$scope.activeCardIndex]);
+	}
+
+	$scope.openCardDialog = function(card) {
+
+		var modalInstance = $modal.open({
+			templateUrl: '/site_media/js/templates/informationCardModal.html',
+			controller: editCardDialog,
+			size: 'lg',
+			//make sure to make a nice separate controller
+			resolve: {
+				entities: function () {
+					return $scope.entities;
+				},
+				card : function () {
+					return card;
+				},
+				entityProxyService : function () {
+					return entityProxyService;
+				}
+			}
+		});
+
+		//when the modal is closed (using 'ok', or 'cancel')
+		modalInstance.result.then(function (card) {
+			console.debug('I saved a damn card yeah!');
+			console.debug(card);
+			$scope.cards[$scope.activeCardIndex] = card;
+		}, function () {
+			console.debug('Modal dismissed at: ' + new Date());
+		});
+	};
+
+	$scope.setActiveCard = function(index) {
+		$scope.activeCardIndex = index;		
+	};
+
+	$scope.isCardSelected = function(index) {
+		return $scope.activeCardIndex == index ? 'selected' : '';
+	};
 
 
 	/*-------------------------DIALOG TO EDIT THE CARDS---------------------------*/
@@ -10,7 +80,7 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 	var editCardDialog = function ($scope, $modalInstance, card, entities, entityProxyService) {
 
 		$scope.entityProxyService = entityProxyService;
-		$scope.card = card || {};		
+		$scope.card = card || {};
 		$scope.entities = entities;
 
 		$scope.thumbs = null;
@@ -18,12 +88,20 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 
 		$scope.fetchedTriples = null;
 
+		$scope.autocompleteId = 'autocomplete_1';
+		$scope.foundEntity = {};
+
 		//state variables
 		$scope.loading = false;
 
-
-		//$scope.selectedEntity = null;
-		//$scope.activeEntities = [];
+		/*
+		$scope.$watch('foundEntity', function(newValue) {
+			if(newValue) {
+				console.debug(newValue);
+				$scope.fetchExtraInfo(newValue.uri);
+				$('#dbpedia').attr('value', '');
+			}
+		});*/
 
 		$scope.initializeCard = function(card) {
 
@@ -60,7 +138,6 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 
 		$scope.getThumbsFromTriples = function(triples) {
 			for(var i=0;i<triples.length;i++) {
-				console.debug(triples[i]);
 				if(triples[i].key == 'thumb') {
 					return triples[i].values;
 				}
@@ -89,7 +166,7 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 			}
 		};
 
-		$scope.fetchExtraInfo = function(entitiesOfLabel) {
+		$scope.fetchExtraInfoForEntityLabel = function(entitiesOfLabel) {
 			var entityUri = null;
 			for(k in entitiesOfLabel) {
 				var e = entitiesOfLabel[k];
@@ -98,14 +175,17 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 					break;
 				}
 			}
+			$scope.fetchExtraInfo(entityUri);
+		}
+
+		$scope.fetchExtraInfo = function(entityUri) {
 			if(entityUri) {				
 				entityProxyService.getEntityDBPediaInfo(entityUri, $scope.fetchedTriplesLoaded);
 				$scope.loading = true;
 			}
 		}
 
-		$scope.fetchedTriplesLoaded = function(data) {
-			console.debug(data);
+		$scope.fetchedTriplesLoaded = function(data) {			
 			$scope.fetchedTriples = [];
 			var info = [];
 			for (key in data) {
@@ -128,83 +208,18 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 				$scope.loading = false;
 				$scope.thumbIndex = 0;
 				$scope.thumbs = $scope.getThumbsFromTriples(info);
-				$scope.fetchedTriples = info;				
+				$scope.fetchedTriples = info;
 			})
 		}
 
 		$scope.ok = function () {
-			$modalInstance.close($scope.selectedEntity);
+			$modalInstance.close($scope.card);
 		};
 
 		$scope.cancel = function () {
 			$modalInstance.dismiss('cancel');
 		};		
 		
-	};
-
-	/*-------------------------TAB FUNCTIONS---------------------------*/
-
-	/*
-	$scope.$watch(function () { return informationCardCollection.getCards(); }, function(newValue) {		
-		$scope.updateInformationCards(newValue);
-	});
-
-	$scope.updateInformationCards = function(cards) {
-		$scope.cards = cards;
-		$scope.setActiveSlot(0);
-	}*/
-
-	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
-		if(newValue) {
-			$scope.updateEntities(newValue);
-		}
-	});
-	
-	//called whenever a chapter is selected
-	$scope.updateEntities = function(entities) {
-		$scope.entities	= entities;
-		console.debug('entities');
-		console.debug($scope.entities);
-	}
-
-	$scope.createNewCard = function() {
-		$scope.openCardDialog(null);
-	}
-
-	$scope.openCardDialog = function(card) {
-
-		var modalInstance = $modal.open({
-			templateUrl: '/site_media/js/templates/informationCardModal.html',
-			controller: editCardDialog,
-			size: 'lg',
-			//make sure to make a nice separate controller
-			resolve: {
-				entities: function () {
-					return $scope.entities;
-				},
-				card : function () {
-					return card;
-				},
-				entityProxyService : function () {
-					return entityProxyService;
-				}
-			}
-		});
-
-		modalInstance.result.then(function (selectedItem) {
-			console.debug(selectedItem);
-			$scope.selected = selectedItem;
-		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
-		});
-	};
-
-	$scope.setActiveCard = function(index) {
-		$scope.activeCardIndex = index;		
-	};
-
-	$scope.isCardSelected = function(index) {
-		return $scope.activeCardIndex == index ? 'selected' : '';
 	};
 	
 });

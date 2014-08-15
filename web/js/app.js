@@ -14,4 +14,8 @@ linkedtv.run(function($rootScope, conf) {
 	if(urlParts && urlParts.length >= 3) {
 		$rootScope.resourceUri = urlParts[2];
 	}
+
+	$rootScope.$on('$viewContentLoaded', function() {
+		$templateCache.removeAll();
+   });
 });

@@ -10,7 +10,7 @@
 	margin-bottom:$defaultItemMargin;
 
 	header ul {
-		@include verticalList(true);
+		@include horizontalList(true);
 		li {
 			font-weight:bold;
 			&:nth-child(1) {

@@ -11,7 +11,7 @@ body {
 	background-image: url(../images/bg-tile-fg.png);
 }
 
-@mixin verticalList($inlineBlock : false){
+@mixin horizontalList($inlineBlock : false){
 	list-style:none;
 	padding:0px;
 	margin:0px;
