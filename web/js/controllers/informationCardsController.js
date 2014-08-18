@@ -1,21 +1,19 @@
-angular.module('linkedtv').controller('informationCardsController', function($rootScope, $scope, $modal, conf, entityProxyService, entityCollection) {
+angular.module('linkedtv').controller('informationCardsController', 
+	function($rootScope, $scope, $modal, conf, entityProxyService, entityCollection, chapterCollection) {
 
 	/*-------------------------TAB FUNCTIONS---------------------------*/
 	
 	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
-
-	$scope.cards = []; //TODO load the information cards from the selected chapter	
+	$scope.activeChapter = null;//holds the up-to-date active chapter
 	$scope.activeCardIndex = 0;
 
-	/*
-	$scope.$watch(function () { return informationCardCollection.getCards(); }, function(newValue) {		
-		$scope.updateInformationCards(newValue);
-	});
 
-	$scope.updateInformationCards = function(cards) {
-		$scope.cards = cards;
-		$scope.setActiveSlot(0);
-	}*/
+	//watch for changes in the active chapter
+	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {
+		console.debug('the active chapter has changed: ');
+		console.debug(newValue);
+		$scope.activeChapter = newValue;
+	});
 
 	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
 		if(newValue) {
@@ -33,7 +31,7 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 	}
 
 	$scope.editCard = function() {
-		$scope.openCardDialog($scope.cards[$scope.activeCardIndex]);
+		$scope.openCardDialog($scope.activeChapter.cards[$scope.activeCardIndex]);
 	}
 
 	$scope.openCardDialog = function(card) {
@@ -60,14 +58,22 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 		modalInstance.result.then(function (card) {
 			console.debug('I saved a damn card yeah!');
 			console.debug(card);
-			$scope.cards[$scope.activeCardIndex] = card;
+			if($scope.activeChapter.cards[$scope.activeCardIndex]) {
+				$scope.activeChapter.cards[$scope.activeCardIndex] = card;
+			} else {
+				$scope.activeChapter.cards.push(card);
+			}
+			console.debug($scope.activeChapter);
+
+			//update the chapter collection (this triggers the $watch at the top)
+			chapterCollection.saveChapter($scope.activeChapter);
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());
 		});
 	};
 
 	$scope.setActiveCard = function(index) {
-		$scope.activeCardIndex = index;		
+		$scope.activeCardIndex = index;
 	};
 
 	$scope.isCardSelected = function(index) {
@@ -83,6 +89,7 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 		$scope.card = card || {};
 		$scope.entities = entities;
 
+		$scope.POSTER = 'thumb';
 		$scope.thumbs = null;
 		$scope.thumbIndex = 0;
 
@@ -108,15 +115,28 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 		}
 
 		$scope.addToCard = function(triple) {
-			var t = {key : triple.key, value : triple.values[triple.index], uri : triple.uris[triple.index]};
+			var t = null;
+			if(triple) {
+				//create a triple based on values/uris that are currently selected by the user
+				t = {key : triple.key, value : triple.values[triple.index], uri : triple.uris[triple.index]};
+				//use the key/value to add a property to a card (for convenience)
+				$scope.card[t.key] = t.value;
+			} else {
+				t = {key : null, value : null, uri : null};
+			}
+
+			//Also add the triple to the list of triples (for convencience)
 			if($scope.card.triples) {
 				$scope.card.triples.push(t);
 			} else {
 				$scope.card.triples = [t];
-			}
+			}			
 		}
 
 		$scope.removeFromCard = function(index) {
+			if($scope.card.triples[index].key === 'label') {
+				$scope.card.label = null;
+			}
 			$scope.card.triples.splice(index, 1);
 		}
 
@@ -126,6 +146,10 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 			} else {
 				$scope.fetchedTriples[index].index = 0;
 			}
+		}
+
+		$scope.setCardPoster = function(thumb) {
+			$scope.card.poster = thumb;
 		}
 
 		$scope.nextThumb = function() {
@@ -138,7 +162,7 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 
 		$scope.getThumbsFromTriples = function(triples) {
 			for(var i=0;i<triples.length;i++) {
-				if(triples[i].key == 'thumb') {
+				if(triples[i].key == $scope.POSTER) {
 					return triples[i].values;
 				}
 			}
@@ -199,7 +223,9 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 							values.push(prop[p].value || prop[p]);
 							uris.push(prop[p].uri);
 						}
-						info.push({index : 0, key : k, values : values, uris : uris});
+						if(key !== $scope.POSTER) {
+							info.push({index : 0, key : k, values : values, uris : uris});
+						}
 					}
 				}
 			}
@@ -212,8 +238,24 @@ angular.module('linkedtv').controller('informationCardsController', function($ro
 			})
 		}
 
+		$scope.isReserved = function(key) {
+			return key === $scope.POSTER;
+		}
+
+		//really ugly, but necessary for now...
+		$scope.updateCardProperties = function() {
+			for(t in $scope.card.triples) {
+				$scope.card[$scope.card.triples[t].key] = $scope.card.triples[t].value;
+			}
+		}
+
 		$scope.ok = function () {
-			$modalInstance.close($scope.card);
+			$scope.updateCardProperties();
+			if($scope.card.label) {				
+				$modalInstance.close($scope.card);
+			} else {
+				alert('Please add a label');
+			}
 		};
 
 		$scope.cancel = function () {

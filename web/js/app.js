@@ -15,7 +15,8 @@ linkedtv.run(function($rootScope, conf) {
 		$rootScope.resourceUri = urlParts[2];
 	}
 
+	/*
 	$rootScope.$on('$viewContentLoaded', function() {
 		$templateCache.removeAll();
-   });
+   });*/
 });

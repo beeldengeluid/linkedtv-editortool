@@ -18,7 +18,10 @@ angular.module('linkedtv').factory('chapterCollection',
 		for(var c in chapters) {
 			var chapter = chapters[c];
 			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, timeUtils.toMillis(chapter.start));			
+			//add a default empty collection to hold information cards
+			chapter.cards = [];
 		}
+
 		_chapters = chapters;
 	}
 
@@ -29,33 +32,30 @@ angular.module('linkedtv').factory('chapterCollection',
 	function setActiveChapter(activeChapter) {
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
-
-
 		//enrichmentCollection.updateActiveChapter(_activeChapter);
-
-	}
-
-	function setChapterCard(index, card) {
-		for(c in _chapters) {
-			if(_chapters[c].$$hashKey == _activeChapter.$$hashKey) {
-				if(_chapters[c].cards) {
-					_chapters[c].cards[index] = card;
-				} else {
-					_chapters[c].cards = [card]
-				}
-			}
-		}
 	}
 
 	function getActiveChapter() {
 		return _activeChapter;
 	}
 
+	function saveChapter(chapter) {
+		console.debug('Saving chapter');
+		console.debug(chapter);
+		_activeChapter = chapter;
+		for(c in _chapters) {
+			if(_chapters[c].$$hashKey == _activeChapter.$$hashKey) {
+				_chapters[c] = _activeChapter;
+			}
+		}
+	}
+
 	return {
 		initCollectionData : initCollectionData,
 		getChapters : getChapters,
 		setActiveChapter : setActiveChapter,
-		getActiveChapter : getActiveChapter
+		getActiveChapter : getActiveChapter,
+		saveChapter : saveChapter
 	}
 
 }]);
