@@ -3,8 +3,7 @@ angular.module('linkedtv').controller('editorPanelController',
 	
 	$scope.activeChapter = null;
 	$scope.activeDimension = conf.programmeConfig.dimensions[0];
-	$scope.conf = conf;
-	//$scope.activeDimension = conf.programmeConf.dimensions[0];	
+	$scope.conf = conf;	
 
 	//watch the chapterCollection to see what chapter has been selected
 	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {

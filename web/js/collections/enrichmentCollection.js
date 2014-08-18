@@ -1,3 +1,5 @@
+//todo this should be adapted so it represents the automatically generated enrichments only
+
 angular.module('linkedtv').factory('enrichmentCollection', [function() {
 
 	var _activeChapter = null;

@@ -5,10 +5,6 @@ angular.module('linkedtv').directive('dimensionTab', [function(){
 
     	replace : true,
 
-    	scope : {    		
-    		dimension : '='
-    	},
-
         templateUrl : '/site_media/js/templates/dimensionTab.html',
 
     };

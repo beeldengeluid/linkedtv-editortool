@@ -13,7 +13,11 @@
 				<li class="active">
 					<a data-target="#tab_ic" role="tab" data-toggle="tab">Information cards</a>
 				</li>
+				<li>
+					<a data-target="#tab_dim" role="tab" data-toggle="tab">Enrichments</a>
+				</li>
 
+				<!--
 				<li class="dropdown">
 					<a href="#" id="dimension_tabs" class="dropdown-toggle" data-toggle="dropdown">{{activeDimension.label}} <span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu" aria-labelledby="dimension_tabs">
@@ -24,6 +28,7 @@
 						
 					</ul>
 				</li>
+			-->
 
 			</ul>
 
@@ -32,8 +37,9 @@
 					<information-cards-tab></information-cards-tab>
 				</div>
 
-				<div class="tab-pane fade" ng-repeat="d in conf.programmeConfig.dimensions" id="dimension_tab_{{$index}}">
-					<dimension-tab dimension="d"></dimension-tab>
+				<div id="tab_dim" class="tab-pane fade" ng-controller="enrichmentController">
+					<!-- TODO later make somehow multiple dimensions of enrichments -->
+					<dimension-tab></dimension-tab>
 				</div>				
 			</div>
 		</div>

@@ -1,28 +1,26 @@
 <div class="tab-content">
 	
-	<div class="row">
+	<ul class="cards">
+		<li ng-repeat="link in activeChapter.enrichments" ng-click="setActiveLink($index)" ng-dblclick="editLink()">
+			<div class="thumbnail {{isCardSelected($index)}}">
 
-		<div class="col-md-6" ng-controller="entityController">
-			<ul class="entities">
-				<li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
-						
-					<div ng-click="toggleEntity(k);" class="label label-default" title="{{k}}">
-						{{k}}&nbsp;({{v.length}})
-					</div>
-				</li>
-			</ul>
+				<img ng-if="!link.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="...">		      
 
-			<button type="button" id="fetch_enrichments" data-loading-text="Loading..." class="btn btn-primary" ng-click="fetchEnrichments()">
-  				Fetch enrichments
-			</button>
-		</div>
+				<img ng-if="link.poster" ng-src="{{link.poster}}" alt="{{link.label}}">
 
-		<span>Selected entities: {{activeEntities}}</span>
+				<a>
+					<span>{{link.label || 'No label'}}</span>
+		      	</a>
+		    </div>
+		</li>
+		<li ng-click="setActiveLink(enrichments.length)" ng-dblclick="createNewLink()">
+			<div class="thumbnail">
 
-		<div class="col-md-6" ng-controller="enrichmentController">
-			<span>{{dimension.label}}</span>
-		</div>
-	
-	</div>
+				<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="...">		      
+
+				<a>New enrichment</a>
+		    </div>
+		</li>
+	</ul>
 
 </div>
