@@ -1,5 +1,5 @@
 angular.module('linkedtv').controller('chapterController', 
-	function($rootScope, $scope, chapterCollection, chapterService) {
+	function($rootScope, $scope, chapterCollection, chapterService, playerService) {
 	
 	$scope.resourceUri = $rootScope.resourceUri;
 	$scope.chapters = [];
@@ -13,6 +13,7 @@ angular.module('linkedtv').controller('chapterController',
 
 	$scope.setActiveChapter = function(chapter) {
 		chapterCollection.setActiveChapter(chapter);
+		playerService.seek(chapter.start);
 	};
 
 	$scope.isChapterSelected = function(chapter) {
@@ -22,5 +23,12 @@ angular.module('linkedtv').controller('chapterController',
 		return '';
 	};
 
-	$scope.init();
+	$scope.editChapter = function(chapter) {
+
+	}
+
+	$scope.createNewChapter = function() {
+		
+	}
+
 });

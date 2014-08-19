@@ -28,7 +28,10 @@ class Api():
                 data = self.dataLoader.loadMediaResource(resourceUri)
                 self.cache.set(resourceUri, simplejson.dumps(data))
         else:
+            print 'fetching from API'
             data = self.dataLoader.loadMediaResource(resourceUri)
+            print data
+            self.cache.set(resourceUri, simplejson.dumps(data))
         return data
 
 

@@ -1,4 +1,4 @@
-angular.module('linkedtv').factory('entityCollection', [function() {
+angular.module('linkedtv').factory('entityCollection', ['timeUtils', function(timeUtils) {
 	
 	var _entities = [];
 	var _chapterEntities = [];
@@ -17,18 +17,20 @@ angular.module('linkedtv').factory('entityCollection', [function() {
 	}
 
 	function updateChapterEntities(chapter) {
-		//first filter all the entities to be only of the selected chapter
-		var entities = _.filter(_entities, function(item) {
-			if(item.start >= chapter.start && item.end <=  chapter.end) {				
-				return item;
-			}
-		});
+		if(chapter) {
+			//first filter all the entities to be only of the selected chapter
+			var entities = _.filter(_entities, function(item) {
+				if(item.start >= chapter.start && item.end <=  chapter.end) {				
+					return item;
+				}
+			});
 
-		//group all the entities by label
-		_chapterEntities = _.groupBy(entities, function(e) {
-			return e.label;
-		});
-		//TODO sort the entities
+			//group all the entities by label
+			_chapterEntities = _.groupBy(entities, function(e) {
+				return e.label;
+			});
+			//TODO sort the entities
+		}
 	}
 
 	return {

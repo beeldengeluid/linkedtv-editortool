@@ -77,7 +77,7 @@ def resource(request):
         """Get the playout URL"""
         
         vph = VideoPlayoutHandler()
-        playoutURL = 'none'#vph.getPlayoutURL(resourceUri, clientIP)                
+        playoutURL = 'none'#vph.getPlayoutURL(resourceUri, clientIP)
         imgf = ImageFetcher()
         thumbURL =  imgf.getThumbnailLocatorFromAPI(resourceUri)
 
@@ -87,7 +87,6 @@ def resource(request):
             if data:
                 api = Api()
                 mr = api.getEntireResource(resourceUri, True)
-                print 'Loaded data from the SPARL endpoint'
             mr['locator'] = playoutURL
             mr['thumbBaseUrl'] = thumbURL
             resp = simplejson.dumps(mr)

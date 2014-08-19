@@ -6,6 +6,7 @@ import urllib
 import base64
 from linkedtv.text.TextAnalyzer import TextAnalyzer
 from linkedtv.LinkedtvSettings import LTV_SAVE_GRAPH, LTV_SPARQL_ENDPOINT, LTV_STOP_FILE
+from linkedtv.utils.TimeUtils import *
 import logging
 
 logger = logging.getLogger(__name__)
@@ -144,12 +145,13 @@ class DataLoader():
             related = []
             chapters = []                    
             for k in jsonData['results']['bindings']:
-                mfURI = annotationURI = start = end = bodyURI = label = RDFType = DCType = OWLSameAs = r = c = ''
+                mfURI = annotationURI = bodyURI = label = RDFType = DCType = OWLSameAs = r = c = ''
+                start = end = 0
                 if k.has_key('mf'): mfURI = k['mf']['value']
                 if k.has_key('annotation'): annotationURI = k['annotation']['value']
                 if k.has_key('body'): bodyURI = k['body']['value']                
-                if k.has_key('start'): start = k['start']['value']
-                if k.has_key('end'): end = k['end']['value']
+                if k.has_key('start'): start = TimeUtils.toMillis(k['start']['value'])
+                if k.has_key('end'): end = TimeUtils.toMillis(k['end']['value'])
                 if k.has_key('label'): label = k['label']['value']
                 if k.has_key('c'): c = k['c']['value']
                 if k.has_key('r'): r = k['r']['value']
@@ -162,8 +164,8 @@ class DataLoader():
                                      'label' : label, 'link' : OWLSameAs, 'relevance' : r, 'confidence' : c})
                     """
                 elif RDFType == '%sShot' % self.LINKEDTV_ONTOLOGY_PF:
-                    shots.append({'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 'end' : end, 'label' : label,
-                                  'relevance' : r, 'confidence' : c})
+                    shots.append({'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 
+                        'end' : end, 'label' : label, 'relevance' : r, 'confidence' : c})
                 elif RDFType == '%sChapter' % self.LINKEDTV_ONTOLOGY_PF:
                     chapters.append({'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 'end' : end,
                                      'label' : label, 'relevance' : r, 'confidence' : c})      
@@ -234,7 +236,8 @@ class DataLoader():
         if jsonData:
             for k in jsonData['results']['bindings']:
                 uri = entityURI = entityLabel = source = date = creator = deeplink = partOf = DCType = ''
-                socialInteraction = poster = start = end = ''                
+                socialInteraction = poster = ''
+                start = end = 0
                 if k.has_key('body'): uri = k['body']['value']            
                 if k.has_key('entity'): entityURI = k['entity']['value']
                 if k.has_key('entityLabel'): entityLabel = k['entityLabel']['value']
@@ -246,8 +249,8 @@ class DataLoader():
                 if k.has_key('DCType'): DCType = k['DCType']['value']
                 if k.has_key('poster'): poster = k['poster']['value']
                 if k.has_key('socialInteraction'): socialInteraction = k['socialInteraction']['value']
-                if k.has_key('start'): start = k['start']['value']
-                if k.has_key('end'): end = k['end']['value']
+                if k.has_key('start'): start = TimeUtils.toMillis(k['start']['value'])
+                if k.has_key('end'): end = TimeUtils.toMillis(k['end']['value'])
                 #TODO update when there are more!
                 entities = [{'uri' : entityURI, 'label' : entityLabel}]
                 enrichments.append({'uri' : uri, 'source' : source, 'date' : date, 'creator' : creator, 'url' : deeplink, 'partOf' : partOf, 
@@ -282,9 +285,10 @@ class DataLoader():
         if jsonData:
             related = []
             for k in jsonData['results']['bindings']:
-                start = end = bodyURI = ''                        
-                if k.has_key('start'): start = k['start']['value']
-                if k.has_key('end'): end = k['end']['value']
+                bodyURI = ''
+                start = end = 0
+                if k.has_key('start'): start = TimeUtils.toMillis(k['start']['value'])
+                if k.has_key('end'): end = TimeUtils.toMillis(k['end']['value'])
                 if k.has_key('body'): bodyURI = k['body']['value']
                 related.append({'start' : start, 'end' : end, 'bodyURI' : bodyURI})
             return related
@@ -354,8 +358,9 @@ class DataLoader():
             related = []
             chapters = []
             for k in jsonData['results']['bindings']:
-                ETenrichmentURI = mfURI = ETmfURI = annotationURI = ETannotationURI = bodyURI = ETbodyURI = start = end = bodyURI = label = ''
-                RDFType = DCType = OWLSameAs = vocabURL = r = c = segmentType =''
+                ETenrichmentURI = mfURI = ETmfURI = annotationURI = ETannotationURI = bodyURI = ETbodyURI = bodyURI = label = ''
+                RDFType = DCType = OWLSameAs = vocabURL = r = c = segmentType = ''
+                start = end = 0
                 if k.has_key('enrichment'): ETenrichmentURI = k['enrichment']['value']
                 if k.has_key('mf'): ETmfURI = k['mf']['value']
                 if k.has_key('orgMf'): mfURI = k['orgMf']['value']
@@ -363,8 +368,8 @@ class DataLoader():
                 if k.has_key('orgAnnotation'): annotationURI = k['orgAnnotation']['value']
                 if k.has_key('body'): ETbodyURI = k['body']['value']
                 if k.has_key('orgBody'): bodyURI = k['orgBody']['value']                
-                if k.has_key('start'): start = k['start']['value']
-                if k.has_key('end'): end = k['end']['value']
+                if k.has_key('start'): start = TimeUtils.toMillis(k['start']['value'])
+                if k.has_key('end'): end = TimeUtils.toMillis(k['end']['value'])
                 if k.has_key('label'): label = k['label']['value']
                 if k.has_key('c'): c = k['c']['value']
                 if k.has_key('r'): r = k['r']['value']
@@ -455,7 +460,8 @@ class DataLoader():
         if jsonData:
             for k in jsonData['results']['bindings']:
                 bodyURI = annotationURI = entityLabel = source = date = creator = deeplink = partOf = DCType = ''
-                socialInteraction = poster = start = end = bodyProv = ''
+                socialInteraction = poster = bodyProv = ''
+                start = end = 0
                 if k.has_key('body'): bodyURI = k['body']['value']                
                 if k.has_key('prov'): annotationURI = k['prov']['value']
                 if k.has_key('entity'): entityLabel = k['entity']['value']
@@ -467,8 +473,8 @@ class DataLoader():
                 if k.has_key('DCType'): DCType = k['DCType']['value']
                 if k.has_key('poster'): poster = k['poster']['value']
                 if k.has_key('socialInteraction'): socialInteraction = k['socialInteraction']['value']
-                if k.has_key('start'): start = k['start']['value']
-                if k.has_key('end'): end = k['end']['value']
+                if k.has_key('start'): start = TimeUtils.toMillis(k['start']['value'])
+                if k.has_key('end'): end = TimeUtils.toMillis(k['end']['value'])
                 if k.has_key('bodyProv'): bodyProv = k['bodyProv']['value']
                 
                 enrichments.append({'bodyURI' : bodyURI, 'source' : source, 'date' : date, 'creator' : creator, 

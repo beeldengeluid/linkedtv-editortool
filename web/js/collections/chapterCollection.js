@@ -13,17 +13,24 @@ angular.module('linkedtv').factory('chapterCollection',
 			chapters = resourceData.curated.chapters;
 		} else {
 			chapters = resourceData.chapters;
-		}
-		//add all the posters to the chapters (FIXME this should be done on the server!!)
+		}	
+		//convert chapters to client side friendly objects (FIXME should be done on the server!!!)	
 		for(var c in chapters) {
 			var chapter = chapters[c];
-			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, timeUtils.toMillis(chapter.start));			
+			//convert the start and end to ms
+			//chapter.start = timeUtils.toMillis(chapter.start);
+			//chapter.end = timeUtils.toMillis(chapter.end);
+
+			//add all the posters to the chapters 
+			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, chapter.start);
 			//add a default empty collection to hold information cards (TODO load this later from the server!)
 			chapter.cards = [];
 			//add a default empty collection for the curated enrichments (TODO load this later from the server!)
 			chapter.enrichments = [];
 		}
-
+		chapters.sort(function(a, b) {
+			return a.start - b.start;
+		});
 		_chapters = chapters;
 	}
 

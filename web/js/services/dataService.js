@@ -6,7 +6,8 @@ angular.module('linkedtv').factory('dataService', [function(){
 			method: 'GET',
 			dataType : 'json',
 			url : '/resource?id=' + resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
-			success : function(json) {				
+			success : function(json) {
+				console.debug(json);		
 				callback(json);
 			},
 			error : function(err) {

@@ -11,4 +11,8 @@ class TimeUtils():
         if ms > 0:
             return '%d.%d' % (s, ms)
         return '%d' % s
-        
+
+    @staticmethod
+    def toMillis(sec):
+        print sec
+        return int(float(sec) * 1000)

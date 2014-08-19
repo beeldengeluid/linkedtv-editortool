@@ -97,17 +97,24 @@ linkedtv.run(function($rootScope, conf) {
 			chapters = resourceData.curated.chapters;
 		} else {
 			chapters = resourceData.chapters;
-		}
-		//add all the posters to the chapters (FIXME this should be done on the server!!)
+		}	
+		//convert chapters to client side friendly objects (FIXME should be done on the server!!!)	
 		for(var c in chapters) {
 			var chapter = chapters[c];
-			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, timeUtils.toMillis(chapter.start));			
+			//convert the start and end to ms
+			//chapter.start = timeUtils.toMillis(chapter.start);
+			//chapter.end = timeUtils.toMillis(chapter.end);
+
+			//add all the posters to the chapters 
+			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, chapter.start);
 			//add a default empty collection to hold information cards (TODO load this later from the server!)
 			chapter.cards = [];
 			//add a default empty collection for the curated enrichments (TODO load this later from the server!)
 			chapter.enrichments = [];
 		}
-
+		chapters.sort(function(a, b) {
+			return a.start - b.start;
+		});
 		_chapters = chapters;
 	}
 
@@ -179,7 +186,7 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 		addEnrichmentsToActiveChapter : addEnrichmentsToActiveChapter
 	}
 
-}]);;angular.module('linkedtv').factory('entityCollection', [function() {
+}]);;angular.module('linkedtv').factory('entityCollection', ['timeUtils', function(timeUtils) {
 	
 	var _entities = [];
 	var _chapterEntities = [];
@@ -198,18 +205,20 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 	}
 
 	function updateChapterEntities(chapter) {
-		//first filter all the entities to be only of the selected chapter
-		var entities = _.filter(_entities, function(item) {
-			if(item.start >= chapter.start && item.end <=  chapter.end) {				
-				return item;
-			}
-		});
+		if(chapter) {
+			//first filter all the entities to be only of the selected chapter
+			var entities = _.filter(_entities, function(item) {
+				if(item.start >= chapter.start && item.end <=  chapter.end) {				
+					return item;
+				}
+			});
 
-		//group all the entities by label
-		_chapterEntities = _.groupBy(entities, function(e) {
-			return e.label;
-		});
-		//TODO sort the entities
+			//group all the entities by label
+			_chapterEntities = _.groupBy(entities, function(e) {
+				return e.label;
+			});
+			//TODO sort the entities
+		}
 	}
 
 	return {
@@ -250,7 +259,8 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 			method: 'GET',
 			dataType : 'json',
 			url : '/resource?id=' + resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
-			success : function(json) {				
+			success : function(json) {
+				console.debug(json);		
 				callback(json);
 			},
 			error : function(err) {
@@ -337,6 +347,84 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 
 	return {
 		getThumbnail : getThumbnail
+	}
+
+}]);;angular.module('linkedtv').factory('playerService', [function() {
+	
+	var _mediaPlaying = false;
+	var _videoPlayer = null;
+
+	function playFragment(playoutUrl, start) {
+		if(playoutUrl == 'none') {
+			return false;
+		}
+		console.debug('Playing video: ' + playoutUrl);
+		_mediaPlaying = false;
+		_videoPlayer = document.getElementById('html5player');
+		$('#videoSource').attr('src', playoutUrl + '?' + new Date().getTime());
+		_videoPlayer.addEventListener('play', onPlay, false);
+		_videoPlayer.addEventListener('pause', onPause, false);
+		_videoPlayer.addEventListener('loadeddata', onLoadedData, false);
+		_videoPlayer.addEventListener('loadstart', onLoadStart, false);
+		_videoPlayer.addEventListener('error', onError, true);
+		_videoPlayer.addEventListener('stalled', onStalled, false);
+		var canPlayMP3 = (typeof _videoPlayer.canPlayType === "function" && _videoPlayer.canPlayType("video/mp4") !== "");
+		if (canPlayMP3) {
+		    _videoPlayer.pause();
+		    _videoPlayer.load();
+		    return true;
+		} else {
+			alert('Your browser does not support mp3...');
+			return false;
+		}
+	}
+		
+	function getPlayerTime () {		
+		if(_videoPlayer) {
+			return _videoPlayer.currentTime * 1000;
+		}
+		return 0;
+	};
+
+	function seek(millis) {
+		if(_videoPlayer) {
+			_videoPlayer.currentTime = millis / 1000;
+		}
+	}
+
+	/*----------------PLAYER EVENTS----------------*/
+
+		
+	function onLoadedData(e) {
+		console.debug('loaded data...');
+	}
+
+	function onLoadStart(e) {
+		console.debug('loading...');
+	}
+	
+	function onStalled(e) {
+		console.debug('stalled...');
+	}
+	
+	function onError(e) {
+		console.debug('An unknown error occurred.');
+	}
+	
+	function onPlay(e) {
+		_mediaPlaying = true;
+		console.debug('play');
+	}
+	
+	function onPause(e) {		
+		_mediaPlaying = false;
+		console.debug('pause');
+	}
+
+	return {
+		playFragment : playFragment,
+		getPlayerTime : getPlayerTime,
+		seek : seek
 	}
 
 }]);;angular.module('linkedtv').factory('timeUtils', [function(){
@@ -462,7 +550,7 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 
 	$scope.init();
 });;angular.module('linkedtv').controller('chapterController', 
-	function($rootScope, $scope, chapterCollection, chapterService) {
+	function($rootScope, $scope, chapterCollection, chapterService, playerService) {
 	
 	$scope.resourceUri = $rootScope.resourceUri;
 	$scope.chapters = [];
@@ -476,6 +564,7 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 
 	$scope.setActiveChapter = function(chapter) {
 		chapterCollection.setActiveChapter(chapter);
+		playerService.seek(chapter.start);
 	};
 
 	$scope.isChapterSelected = function(chapter) {
@@ -485,7 +574,14 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 		return '';
 	};
 
-	$scope.init();
+	$scope.editChapter = function(chapter) {
+
+	}
+
+	$scope.createNewChapter = function() {
+		
+	}
+
 });;angular.module('linkedtv').controller('editorPanelController', 
 	function($rootScope, $scope, conf, chapterCollection) {
 	
@@ -874,7 +970,179 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 		}
 	};
 
-});;angular.module('linkedtv').controller('informationCardsController', 
+});;angular.module('linkedtv').controller('informationCardModalController', 
+	['$scope', '$modalInstance', 'entityProxyService', 'card', 'entities',
+	function ($scope, $modalInstance, entityProxyService, card, entities) {
+
+	$scope.entityProxyService = entityProxyService;
+	$scope.card = card || {};
+	$scope.entities = entities;
+
+	$scope.POSTER = 'thumb';
+	$scope.thumbs = null;
+	$scope.thumbIndex = 0;
+
+	$scope.fetchedTriples = null;
+
+	$scope.autocompleteId = 'autocomplete_1';
+	$scope.foundEntity = {};
+
+	//state variables
+	$scope.loading = false;
+
+	$scope.initializeCard = function(card) {
+
+	}
+
+	$scope.addToCard = function(triple) {
+		var t = null;
+		if(triple) {
+			//create a triple based on values/uris that are currently selected by the user
+			t = {key : triple.key, value : triple.values[triple.index], uri : triple.uris[triple.index]};
+			//use the key/value to add a property to a card (for convenience)
+			$scope.card[t.key] = t.value;
+		} else {
+			t = {key : null, value : null, uri : null};
+		}
+
+		//Also add the triple to the list of triples (for convencience)
+		if($scope.card.triples) {
+			$scope.card.triples.push(t);
+		} else {
+			$scope.card.triples = [t];
+		}			
+	}
+
+	$scope.removeFromCard = function(index) {
+		if($scope.card.triples[index].key === 'label') {
+			$scope.card.label = null;
+		}
+		$scope.card.triples.splice(index, 1);
+	}
+
+	$scope.nextTriple = function(index) {
+		if($scope.fetchedTriples[index].index + 1 < $scope.fetchedTriples[index].values.length) {
+			$scope.fetchedTriples[index].index++;
+		} else {
+			$scope.fetchedTriples[index].index = 0;
+		}
+	}
+
+	$scope.setCardPoster = function(thumb) {
+		$scope.card.poster = thumb;
+	}
+
+	$scope.nextThumb = function() {
+		if($scope.thumbIndex + 1 < $scope.thumbs.length) {
+			$scope.thumbIndex++;
+		} else {
+			$scope.thumbIndex = 0;
+		}
+	}
+
+	$scope.getThumbsFromTriples = function(triples) {
+		for(var i=0;i<triples.length;i++) {
+			if(triples[i].key == $scope.POSTER) {
+				return triples[i].values;
+			}
+		}
+		return null;
+	}
+
+	$scope.getConfidenceClass = function(entityList) {
+		//really ugly hack: somehow the reduce function screws up when there is one item in the list
+		var confidenceSum = entityList.length == 1 ? entityList[0].confidence : _.reduce(entityList, function(memo, e) {			
+			return memo ? parseFloat(memo.confidence) + parseFloat(e.confidence) : parseFloat(e.confidence);
+		});		
+		var c = confidenceSum / entityList.length;		
+		if(c <= 0) {
+			return 'verylow';
+		} else if (c > 0 && c <= 0.2) {
+			return 'low';
+		} else if (c > 0.2 && c <= 0.4) {
+			return 'fair';
+		} else if (c > 0.4 && c <= 0.6) {
+			return 'medium';
+		} else if (c > 0.6 && c <= 0.8) {
+			return 'high';
+		} else if (c > 0.8) {
+			return 'veryhigh';
+		}
+	};
+
+	$scope.fetchExtraInfoForEntityLabel = function(entitiesOfLabel) {
+		var entityUri = null;
+		for(k in entitiesOfLabel) {
+			var e = entitiesOfLabel[k];
+			entityUri = e.disambiguationURL;
+			if(entityUri) {
+				break;
+			}
+		}
+		$scope.fetchExtraInfo(entityUri);
+	}
+
+	$scope.fetchExtraInfo = function(entityUri) {
+		if(entityUri) {				
+			entityProxyService.getEntityDBPediaInfo(entityUri, $scope.fetchedTriplesLoaded);
+			$scope.loading = true;
+		}
+	}
+
+	$scope.fetchedTriplesLoaded = function(data) {			
+		$scope.fetchedTriples = [];
+		var info = [];
+		for (key in data) {
+			var prop = null;
+			for(k in data[key]) {
+				prop = data[key][k];
+				var values = [];
+				var uris = [];
+				if(prop.length > 0) {
+					for(p in prop) {
+						values.push(prop[p].value || prop[p]);
+						uris.push(prop[p].uri);
+					}
+					if(key !== $scope.POSTER) {
+						info.push({index : 0, key : k, values : values, uris : uris});
+					}
+				}
+			}
+		}
+		info.sort();
+		$scope.$apply(function() {
+			$scope.loading = false;
+			$scope.thumbIndex = 0;
+			$scope.thumbs = $scope.getThumbsFromTriples(info);
+			$scope.fetchedTriples = info;
+		})
+	}
+
+	$scope.isReserved = function(key) {
+		return key === $scope.POSTER;
+	}
+
+	//really ugly, but necessary for now...
+	$scope.updateCardProperties = function() {
+		for(t in $scope.card.triples) {
+			$scope.card[$scope.card.triples[t].key] = $scope.card.triples[t].value;
+		}
+	}
+
+	$scope.ok = function () {
+		$scope.updateCardProperties();
+		if($scope.card.label) {				
+			$modalInstance.close($scope.card);
+		} else {
+			alert('Please add a label');
+		}
+	};
+
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};		
+	
+}]);;angular.module('linkedtv').controller('informationCardsController', 
 	function($rootScope, $scope, $modal, conf, entityProxyService, entityCollection, chapterCollection) {
 
 	/*-------------------------TAB FUNCTIONS---------------------------*/
@@ -914,18 +1182,15 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/informationCardModal.html',
-			controller: editCardDialog,
+			controller: 'informationCardModalController',
 			size: 'lg',
 			//make sure to make a nice separate controller
-			resolve: {
-				entities: function () {
-					return $scope.entities;
-				},
+			resolve: {				
 				card : function () {
 					return card;
 				},
-				entityProxyService : function () {
-					return entityProxyService;
+				entities: function () {
+					return $scope.entities;
 				}
 			}
 		});
@@ -959,278 +1224,19 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 
 	/*-------------------------DIALOG TO EDIT THE CARDS---------------------------*/
 
-	var editCardDialog = function ($scope, $modalInstance, card, entities, entityProxyService) {
-
-		$scope.entityProxyService = entityProxyService;
-		$scope.card = card || {};
-		$scope.entities = entities;
-
-		$scope.POSTER = 'thumb';
-		$scope.thumbs = null;
-		$scope.thumbIndex = 0;
-
-		$scope.fetchedTriples = null;
-
-		$scope.autocompleteId = 'autocomplete_1';
-		$scope.foundEntity = {};
-
-		//state variables
-		$scope.loading = false;
-
-		/*
-		$scope.$watch('foundEntity', function(newValue) {
-			if(newValue) {
-				console.debug(newValue);
-				$scope.fetchExtraInfo(newValue.uri);
-				$('#dbpedia').attr('value', '');
-			}
-		});*/
-
-		$scope.initializeCard = function(card) {
-
-		}
-
-		$scope.addToCard = function(triple) {
-			var t = null;
-			if(triple) {
-				//create a triple based on values/uris that are currently selected by the user
-				t = {key : triple.key, value : triple.values[triple.index], uri : triple.uris[triple.index]};
-				//use the key/value to add a property to a card (for convenience)
-				$scope.card[t.key] = t.value;
-			} else {
-				t = {key : null, value : null, uri : null};
-			}
-
-			//Also add the triple to the list of triples (for convencience)
-			if($scope.card.triples) {
-				$scope.card.triples.push(t);
-			} else {
-				$scope.card.triples = [t];
-			}			
-		}
-
-		$scope.removeFromCard = function(index) {
-			if($scope.card.triples[index].key === 'label') {
-				$scope.card.label = null;
-			}
-			$scope.card.triples.splice(index, 1);
-		}
-
-		$scope.nextTriple = function(index) {
-			if($scope.fetchedTriples[index].index + 1 < $scope.fetchedTriples[index].values.length) {
-				$scope.fetchedTriples[index].index++;
-			} else {
-				$scope.fetchedTriples[index].index = 0;
-			}
-		}
-
-		$scope.setCardPoster = function(thumb) {
-			$scope.card.poster = thumb;
-		}
-
-		$scope.nextThumb = function() {
-			if($scope.thumbIndex + 1 < $scope.thumbs.length) {
-				$scope.thumbIndex++;
-			} else {
-				$scope.thumbIndex = 0;
-			}
-		}
-
-		$scope.getThumbsFromTriples = function(triples) {
-			for(var i=0;i<triples.length;i++) {
-				if(triples[i].key == $scope.POSTER) {
-					return triples[i].values;
-				}
-			}
-			return null;
-		}
-
-		$scope.getConfidenceClass = function(entityList) {
-			//really ugly hack: somehow the reduce function screws up when there is one item in the list
-			var confidenceSum = entityList.length == 1 ? entityList[0].confidence : _.reduce(entityList, function(memo, e) {			
-				return memo ? parseFloat(memo.confidence) + parseFloat(e.confidence) : parseFloat(e.confidence);
-			});		
-			var c = confidenceSum / entityList.length;		
-			if(c <= 0) {
-				return 'verylow';
-			} else if (c > 0 && c <= 0.2) {
-				return 'low';
-			} else if (c > 0.2 && c <= 0.4) {
-				return 'fair';
-			} else if (c > 0.4 && c <= 0.6) {
-				return 'medium';
-			} else if (c > 0.6 && c <= 0.8) {
-				return 'high';
-			} else if (c > 0.8) {
-				return 'veryhigh';
-			}
-		};
-
-		$scope.fetchExtraInfoForEntityLabel = function(entitiesOfLabel) {
-			var entityUri = null;
-			for(k in entitiesOfLabel) {
-				var e = entitiesOfLabel[k];
-				entityUri = e.disambiguationURL;
-				if(entityUri) {
-					break;
-				}
-			}
-			$scope.fetchExtraInfo(entityUri);
-		}
-
-		$scope.fetchExtraInfo = function(entityUri) {
-			if(entityUri) {				
-				entityProxyService.getEntityDBPediaInfo(entityUri, $scope.fetchedTriplesLoaded);
-				$scope.loading = true;
-			}
-		}
-
-		$scope.fetchedTriplesLoaded = function(data) {			
-			$scope.fetchedTriples = [];
-			var info = [];
-			for (key in data) {
-				var prop = null;
-				for(k in data[key]) {
-					prop = data[key][k];
-					var values = [];
-					var uris = [];
-					if(prop.length > 0) {
-						for(p in prop) {
-							values.push(prop[p].value || prop[p]);
-							uris.push(prop[p].uri);
-						}
-						if(key !== $scope.POSTER) {
-							info.push({index : 0, key : k, values : values, uris : uris});
-						}
-					}
-				}
-			}
-			info.sort();
-			$scope.$apply(function() {
-				$scope.loading = false;
-				$scope.thumbIndex = 0;
-				$scope.thumbs = $scope.getThumbsFromTriples(info);
-				$scope.fetchedTriples = info;
-			})
-		}
-
-		$scope.isReserved = function(key) {
-			return key === $scope.POSTER;
-		}
-
-		//really ugly, but necessary for now...
-		$scope.updateCardProperties = function() {
-			for(t in $scope.card.triples) {
-				$scope.card[$scope.card.triples[t].key] = $scope.card.triples[t].value;
-			}
-		}
-
-		$scope.ok = function () {
-			$scope.updateCardProperties();
-			if($scope.card.label) {				
-				$modalInstance.close($scope.card);
-			} else {
-				alert('Please add a label');
-			}
-		};
-
-		$scope.cancel = function () {
-			$modalInstance.dismiss('cancel');
-		};		
-		
-	};
 	
-});;angular.module('linkedtv').controller('playerController', function($sce, $rootScope, $scope){
 	
-	$scope.playoutUrl = null;
-	$scope.videoPlayer = null;
-	//$scope.activeChapter = null;
-
+});;angular.module('linkedtv').controller('playerController', function($sce, $rootScope, $scope, playerService){
+	
+	$scope.canPlayVideo = false;
+	
 	//watch the rootScope that updates once the main resourceData is loaded (it contains also the playoutUrl)
 	$rootScope.$watch('resourceData', function(resourceData){
 		if(resourceData) {			
-			$scope.playoutUrl = $sce.trustAsResourceUrl(resourceData.locator);
-			$scope.playFragment($scope.playoutUrl, 0);
+			var playoutUrl = $sce.trustAsResourceUrl(resourceData.locator);			
+			$scope.canPlayVideo = playerService.playFragment(playoutUrl, 0);
 		}
 	});
-
-	$scope.playFragment = function(playoutUrl, start) {
-		console.debug('Playing video: ' + playoutUrl);
-		$scope.mediaPlaying = false;
-		$scope.videoPlayer = document.getElementById('html5player');
-		$('#videoSource').attr('src', playoutUrl);
-		$scope.videoPlayer.addEventListener('play', $scope.onPlay, false);
-		$scope.videoPlayer.addEventListener('pause', $scope.onPause, false);
-		$scope.videoPlayer.addEventListener('loadeddata', $scope.onLoadedData, false);
-		$scope.videoPlayer.addEventListener('loadstart', $scope.onLoadStart, false);
-		$scope.videoPlayer.addEventListener('error', $scope.onError, true);
-		$scope.videoPlayer.addEventListener('stalled', $scope.onStalled, false);
-		var canPlayMP3 = (typeof $scope.videoPlayer.canPlayType === "function" && $scope.videoPlayer.canPlayType("video/mp4") !== "");
-		if (canPlayMP3) {
-		    $scope.videoPlayer.pause();
-		    $scope.videoPlayer.load();			
-		} else {
-			alert('Your browser does not support mp3...');
-		}
-	}
-
-	/*
-	$scope.playChapter = function () {		
-		this.seek($scope.activeChapter.start);
-	};*/
-		
-	$scope.getPlayerTime = function () {
-		var v = document.getElementById("html5player");
-		return v.currentTime * 1000;
-	};
-
-	$scope.seek = function(millis) {
-		$scope.audioPlayer.currentTime = millis / 1000;
-	}
-
-	/*----------------PLAYER EVENTS----------------*/
-
-		
-	$scope.onLoadStart = function(e) {
-		console.debug('loading...');
-	}
-	
-	$scope.onStalled = function(e) {
-		console.debug('stalled...');
-	}
-	
-	$scope.onError = function(e) {
-		console.debug('An unknown error occurred.');
-	}
-	
-	$scope.onPlay = function(e) {
-		$scope.safeApply(function() {
-			$scope.mediaPlaying = true;
-		});
-		console.debug('play');
-	}
-	
-	$scope.onPause = function(e) {
-		$scope.safeApply(function() {
-			$scope.mediaPlaying = false;
-		});
-		console.debug('pause');
-	}
-
-	/*----------------HELPER FUNCTION----------------*/
-
-	$scope.safeApply = function(fn) {
-		var phase = this.$root.$$phase;
-		if(phase == '$apply' || phase == '$digest') {
-			if(fn && (typeof(fn) === 'function')) {
-				fn();
-			}
-		} else {
-			this.$apply(fn);
-		}
-	};
-	
-	
 
 });;angular.module('linkedtv').controller('videoSelectionController', function($rootScope, $scope, videoSelectionService) {
 		
