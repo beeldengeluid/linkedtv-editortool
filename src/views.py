@@ -77,7 +77,7 @@ def resource(request):
         """Get the playout URL"""
         
         vph = VideoPlayoutHandler()
-        playoutURL = 'none'#vph.getPlayoutURL(resourceUri, clientIP)
+        playoutURL = vph.getPlayoutURL(resourceUri, clientIP)
         imgf = ImageFetcher()
         thumbURL =  imgf.getThumbnailLocatorFromAPI(resourceUri)
 
@@ -95,6 +95,7 @@ def resource(request):
             return HttpResponse("{error: 'no play-out URL found!'}", mimetype='application/json')
 
     return HttpResponse("{error: 'resource does not exist'}", mimetype='application/json')
+
 
 """This is called to fetch the IP of the connecting client"""
 def getClientIP(request):

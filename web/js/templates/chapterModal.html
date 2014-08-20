@@ -1,0 +1,34 @@
+<div class="modal-header">    
+    <h3 class="modal-title">Edit chapter: {{chapter.label}}</h3>
+</div>
+
+<div class="modal-body">
+
+    <div class="row">
+
+		<div class="col-md-12">
+
+		 	<form class="form" role="form">
+				<div class="form-group">
+					<label for="c_label">Label</label>
+					<input id="c_label" class="form-control" ng-model="chapter.label">
+				</div>
+				<div class="form-group">
+					<label for="c_start">Start</label>
+					<input id="c_start" class="form-control" ng-model="chapter.start">
+				</div>	
+				<div class="form-group">
+					<label for="c_end">End</label>
+					<input id="c_end" class="form-control" ng-model="chapter.end">
+				</div>		
+			</form>
+
+		</div>
+	</div>
+
+</div>
+
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()">Save</button>
+    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

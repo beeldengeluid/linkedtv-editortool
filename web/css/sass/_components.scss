@@ -41,15 +41,20 @@
 		float:left;
 		margin:$defaultMargin;
 		text-align:center;
-		width:121px;		
+		width:121px;
 
 		.thumbnail {			
 			border:1px solid white;
+			width:120px;
+			overflow:hidden;
 			&:hover {
 				@include activeSlot;
 			}
 			img {
-				width:121px;
+				height:100px;
+			}
+			.caption {
+				overflow:hidden;
 			}
 		}
 

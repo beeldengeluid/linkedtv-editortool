@@ -6,7 +6,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 			method: 'GET',
 			dataType : 'json',
 			url : '/enrichments?q=' + entities.join(',') + '&p=' + provider,
-			success : function(json) {
+			success : function(json) {				
 				console.debug(json);
 				callback(JSON.parse(json.enrichments));
 			},

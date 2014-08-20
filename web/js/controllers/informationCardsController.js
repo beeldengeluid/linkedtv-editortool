@@ -34,13 +34,13 @@ angular.module('linkedtv').controller('informationCardsController',
 		$scope.openCardDialog($scope.activeChapter.cards[$scope.activeCardIndex]);
 	}
 
+	//TODO make sure the modal is removed after closing
 	$scope.openCardDialog = function(card) {
 
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/informationCardModal.html',
 			controller: 'informationCardModalController',
 			size: 'lg',
-			//make sure to make a nice separate controller
 			resolve: {				
 				card : function () {
 					return card;
@@ -76,10 +76,5 @@ angular.module('linkedtv').controller('informationCardsController',
 	$scope.isCardSelected = function(index) {
 		return $scope.activeCardIndex == index ? 'selected' : '';
 	};
-
-
-	/*-------------------------DIALOG TO EDIT THE CARDS---------------------------*/
-
-	
 	
 });

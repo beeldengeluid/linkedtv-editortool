@@ -5,25 +5,25 @@
 	<div class="panel-body">
 
 		<!-- Horizontal view mode-->
-		<ul class="chapters" ng-show="chapters" ng-dblclick="editChapter(c)">
-			<li ng-repeat="c in chapters" ng-click="setActiveChapter(c)">
+		<ul class="chapters" ng-show="chapters">
+			<li ng-repeat="c in chapters" ng-click="setActiveChapter(c)" ng-dblclick="editChapter(c)" title="{{c.label}}">
 				<div class="thumbnail {{isChapterSelected(c)}}">
 					<img ng-if="!c.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="{{c.start}} - {{c.end}}">
 
-					<img ng-if="c.poster" ng-src="{{c.poster}}" alt="{{c.start}} - {{c.end}}">
+					<img ng-if="c.poster" ng-src="{{c.poster}}" alt="{{c.label}}">
 
 			      	<div class="caption">
-			        	<p>{{c.label}}</p>
-					</div>
+			        	{{c.label | limitTo : 10}}
+					</div>					
 			    </div>
 			</li>
 
-			<li ng-dblclick="createNewChapter(c)">
+			<li ng-dblclick="createNewChapter()" title="Create new chapter">
 				<div class="thumbnail">
-					<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="{{c.start}} - {{c.end}}">
+					<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
 					
 			      	<div class="caption">
-			        	<p>New chapter</p>
+			        	New chapter
 					</div>
 			    </div>
 			</li>

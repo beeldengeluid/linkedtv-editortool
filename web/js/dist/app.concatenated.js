@@ -65,8 +65,8 @@ var config = angular.module('configuration', []).constant('conf', {
 
 linkedtv.run(function($rootScope, conf) {
 
-	var urlParts = window.location.pathname.split('/');
-
+	var urlParts = window.location.pathname.split('/');	
+	
 	//set the provider as a property of the rootScope
 	if(urlParts && urlParts.length >= 2) {
 		$rootScope.provider = urlParts[1];		
@@ -84,26 +84,35 @@ linkedtv.run(function($rootScope, conf) {
    });*/
 });;angular.module('linkedtv').factory('chapterCollection', 
 	['conf', 'timeUtils', 'imageService', 'entityCollection', 'enrichmentCollection',
-	function(conf, timeUtils, imageService, entityCollection, enrichmentCollection) {
-	
+	function(conf, timeUtils, imageService, entityCollection, enrichmentCollection) {	
+
+	var TYPE_AUTO = 'auto';
+	var TYPE_CURATED = 'curated';
 	var _chapters = [];
 	var _activeChapter = null;
+	var observers = [];
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)	
 	function initCollectionData(resourceUri, provider, resourceData) {
 		console.debug('Initializing chapter data');
-		var chapters = null;
-		if(resourceData.chapters.length == 0) {
-			chapters = resourceData.curated.chapters;
-		} else {
-			chapters = resourceData.chapters;
-		}	
+		var chapters = [];
+		//FIXME do this on the server: assign auto/curated type to each chapter
+		var autoChapters = resourceData.chapters;
+		var curatedChapters = resourceData.curated.chapters;
+		for(var c in autoChapters) {
+			var chapter = autoChapters[c];
+			chapter.type = TYPE_AUTO;
+			chapters.push(chapter);
+		}
+		for(var c in curatedChapters) {
+			var chapter = curatedChapters[c];
+			chapter.type = TYPE_CURATED;
+			chapters.push(chapter);
+		}
+
 		//convert chapters to client side friendly objects (FIXME should be done on the server!!!)	
 		for(var c in chapters) {
 			var chapter = chapters[c];
-			//convert the start and end to ms
-			//chapter.start = timeUtils.toMillis(chapter.start);
-			//chapter.end = timeUtils.toMillis(chapter.end);
 
 			//add all the posters to the chapters 
 			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, chapter.start);
@@ -115,7 +124,24 @@ linkedtv.run(function($rootScope, conf) {
 		chapters.sort(function(a, b) {
 			return a.start - b.start;
 		});
+		setChapters(chapters);
+		console.debug(_chapters);
+	}
+
+	function addObserver(observer) {
+		console.debug(observer);
+		observers.push(observer)
+	}
+
+	function notifyObservers() {
+		for (o in observers) {
+			observers[o](_chapters);
+		}
+	}
+
+	function setChapters(chapters) {
 		_chapters = chapters;
+		notifyObservers();
 	}
 
 	function getChapters() {
@@ -146,9 +172,11 @@ linkedtv.run(function($rootScope, conf) {
 	return {
 		initCollectionData : initCollectionData,
 		getChapters : getChapters,
+		setChapters : setChapters,
 		setActiveChapter : setActiveChapter,
 		getActiveChapter : getActiveChapter,
-		saveChapter : saveChapter
+		saveChapter : saveChapter,
+		addObserver : addObserver
 	}
 
 }]);;//todo this should be adapted so it represents the automatically generated enrichments only
@@ -282,7 +310,7 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 			method: 'GET',
 			dataType : 'json',
 			url : '/enrichments?q=' + entities.join(',') + '&p=' + provider,
-			success : function(json) {
+			success : function(json) {				
 				console.debug(json);
 				callback(JSON.parse(json.enrichments));
 			},
@@ -516,25 +544,21 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 	}
 
 }]);;angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection) {
-		
-	//wait for the resourceUri to have been extracted from the application URL
-	$scope.init = function() {
-		//fetch all of this resource's data from the server
-		$rootScope.$watch('resourceUri', function(resourceUri) {
-			dataService.getResourceData(resourceUri, true, $scope.dataLoaded);
-		});
-	};
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection) {	
+	
+	//fetch all of this resource's data from the server
+	$rootScope.$watch('resourceUri', function(resourceUri) {
+		dataService.getResourceData(resourceUri, true, $scope.dataLoaded);
+	});	
 
 	//when the resource data has been loaded, start populating the application data
 	$scope.dataLoaded = function(resourceData) {
 		if(resourceData != null) {
-			console.debug('Loaded data from the server');
+			console.debug('Loaded data from the server!');
 			
 			//FIXME get rid of the resourceData on the rootscope!!
 			$rootScope.resourceData = resourceData;
-
-			
+						
 			//load the chapterCollection with chapter data
 			chapterCollection.initCollectionData($rootScope.resourceUri, $rootScope.provider, resourceData);
 
@@ -548,19 +572,26 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 		}
 	};
 
-	$scope.init();
 });;angular.module('linkedtv').controller('chapterController', 
-	function($rootScope, $scope, chapterCollection, chapterService, playerService) {
+	function($rootScope, $scope, $modal, chapterCollection, chapterService, playerService) {
 	
-	$scope.resourceUri = $rootScope.resourceUri;
-	$scope.chapters = [];
+	$scope.resourceUri = $rootScope.resourceUri;	
+	$scope.chapters = [];	
 
 	//watch the chapterCollection to see when it is loaded
+	/*
 	$scope.$watch(function () { return chapterCollection.getChapters(); }, function(newValue) {
 		console.debug('loaded the chapters');
 		console.debug(newValue);
 		$scope.chapters = newValue;
-	});
+	});*/
+
+	$scope.update = function(chapters) {
+		$scope.$apply(function() {			
+			$scope.chapters = chapters;
+			console.debug($scope.chapters);
+		});
+	}
 
 	$scope.setActiveChapter = function(chapter) {
 		chapterCollection.setActiveChapter(chapter);
@@ -575,14 +606,60 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 	};
 
 	$scope.editChapter = function(chapter) {
-
+		$scope.openChapterDialog(chapter)
 	}
 
 	$scope.createNewChapter = function() {
-		
+		$scope.openChapterDialog(null);
 	}
 
-});;angular.module('linkedtv').controller('editorPanelController', 
+	$scope.openChapterDialog = function(chapter) {
+
+		var modalInstance = $modal.open({
+			templateUrl: '/site_media/js/templates/chapterModal.html',
+			controller: 'chapterModalController',
+			size: 'lg',
+			resolve: {				
+				chapter : function () {
+					return chapter;
+				}
+			}
+		});
+
+		//when the modal is closed (using 'ok', or 'cancel')
+		modalInstance.result.then(function (chapter) {
+			console.debug('I saved a damn chapter yeah!');
+			console.debug(chapter);
+
+			//update the chapter collection (this triggers the $watch at the top)
+			chapterCollection.saveChapter(chapter);
+		}, function () {
+			console.debug('Modal dismissed at: ' + new Date());
+		});
+	};
+
+	//add the update function as an observer to the chapterCollection
+	chapterCollection.addObserver($scope.update);
+
+});;angular.module('linkedtv').controller('chapterModalController', 
+	['$scope', '$modalInstance', 'entityProxyService', 'chapter',
+	function ($scope, $modalInstance, chapterCollection, chapter) {
+	
+	$scope.chapter = chapter || {};
+
+	$scope.ok = function () {
+		if($scope.chapter.label) {
+			$modalInstance.close($scope.chapter);
+		} else {
+			alert('Please add a title');
+		}
+	};
+
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};		
+	
+}]);;angular.module('linkedtv').controller('editorPanelController', 
 	function($rootScope, $scope, conf, chapterCollection) {
 	
 	$scope.activeChapter = null;
@@ -642,21 +719,11 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/enrichmentModal.html',
-			controller: editLinkDialog,
+			controller: 'enrichmentModalController',
 			size: 'lg',
-			//make sure to make a nice separate controller
 			resolve: {
 				entities: function () {
 					return $scope.entities;
-				},
-				entityProxyService : function () {
-					return entityProxyService;
-				},
-				entityProxyService : function () {
-					return entityProxyService;
-				},
-				enrichmentCollection : function () {
-					return enrichmentCollection;
 				}
 			}
 		});
@@ -686,233 +753,250 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 	$scope.isCardSelected = function(index) {
 		return $scope.activeLinkIndex == index ? 'selected' : '';
 	};
+	
+	
+});;angular.module('linkedtv').controller('enrichmentModalController', 
+	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentCollection', 'enrichmentService', 'entities',
+	function ($scope, $modalInstance, $rootScope, entityProxyService, enrichmentCollection, enrichmentService, entities) {
+	
+	$scope.entities = entities;	
 
-	/*-------------------- SHOULD BE PUT MOSTLY IN THE MODAL*/
+	$scope.activeEntities = [];//selected entities
+	$scope.enrichments = [];//fetched & filtered enrichment
+
+	$scope.allEnrichments = null;
+	$scope.enrichmentSources = null; //allEnrichments filtered by link source
+	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
+
+	$scope.selectedEnrichments = [] //this is eventually going to be filled and returned to the dimensionTab
+
+	$scope.activeEnrichmentSource = null; //current source filter
+	$scope.activeEnrichmentEntitySource = null; //current entity source filter
+
+	
+	$scope.$watch(function () { return enrichmentCollection.getEnrichmentsOfActiveChapter(); }, function(newValue) {		
+		console.debug('Updating enrichments');
+		if(newValue) {
+			$scope.updateEnrichments(newValue);
+		}
+	});
 
 
-	var editLinkDialog = function ($scope, $modalInstance, $rootScope, entities, entityProxyService, enrichmentCollection, enrichmentService) {
+	//the actual enrichments will be shown in the enrichment tab
+	$scope.fetchEnrichments = function() {
+		if($scope.activeEntities && $scope.activeEntities.length > 0) {
+			//$('#fetch_enrichments').button('loading');
+			enrichmentService.search($scope.activeEntities, $rootScope.provider, $scope.onSearchEnrichments);
+		} else {
+			alert('Please select a number of entities before triggering the enrichment search');
+		}
+	};
 
-		$scope.entities = entities;
-		$scope.entityProxyService = entityProxyService;
-		$scope.enrichmentService = enrichmentService;
+	$scope.onSearchEnrichments = function(enrichments) {
+		//reset the button and the selected entities
+		//$('#fetch_enrichments').button('reset');
+		$scope.activeEntities = [];
+		console.debug(enrichments);
+		//add the enrichments to the enrichmentCollection
+		enrichmentCollection.addEnrichmentsToActiveChapter(enrichments, true);
+	}
 
-		$scope.activeEntities = [];//selected entities
-		$scope.enrichments = [];//fetched & filtered enrichment
+	/*this part is only relevant for the tvenrichment service*/
 
-		$scope.allEnrichments = null;
-		$scope.enrichmentSources = null; //allEnrichments filtered by link source
-		$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
+	//TODO make sure this function is called by listening to the enrichmentCollection!
+	$scope.updateEnrichments = function(enrichments) {
+		console.debug(enrichments);
+		var temp = [];//will contain enrichments
+		var sources = [];
+		var eSources = [];
+		for (var es in enrichments) {
+			//if not added already, add the entity source to the list of possible sources
+			if(eSources.indexOf(es) == -1) {
+				eSources.push(es);
+			}
+			var entitySources = enrichments[es];
+			for (var s in entitySources) {
+				var enrichmentsOfSource = entitySources[s];
+				//if not added already, add the source to the list of possible sources
+				if(sources.indexOf(s) == -1 && enrichmentsOfSource.length > 0) {
+					sources.push(s);
+				}
+				//loop through the eventual enrichments and add them to temp				
+				for(var e in enrichmentsOfSource) {
+					var enrichment = enrichmentsOfSource[e];
+					//add the source to each enrichment (for filtering)
+					enrichment.source = s;
+					//add the source entities to each enrichment (for filtering)
+					enrichment.entitySource = es;
 
-		$scope.selectedEnrichments = [] //this is eventually going to be filled and returned to the dimensionTab
-
-		$scope.activeEnrichmentSource = null; //current source filter
-		$scope.activeEnrichmentEntitySource = null; //current entity source filter
-
+					temp.push(enrichment);
+				}
+			}
+		}
+		//apply the enrichments to the scope
 		
-		$scope.$watch(function () { return enrichmentCollection.getEnrichmentsOfActiveChapter(); }, function(newValue) {		
-			console.debug('Updating enrichments');
-			if(newValue) {
-				$scope.updateEnrichments(newValue);
+		$scope.enrichmentSources = sources;
+		$scope.enrichmentEntitySources = eSources;
+		$scope.allEnrichments = temp;
+		
+		console.debug($scope.enrichmentEntitySources)
+
+		//by default filter by the first source in the list
+		$scope.filterEnrichmentsBySource(sources[0]);
+	};
+
+	$scope.ok = function () {			
+		if($scope.selectedEnrichments) {				
+			$modalInstance.close($scope.selectedEnrichments);
+		} else {
+			alert('Please add a label');
+		}
+	};
+
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};	
+
+
+	//filters the enrichments by source
+	$scope.filterEnrichmentsBySource = function(source) {
+		$scope.activeEnrichmentSource = source;
+		$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
+			if(e.source === source) {
+				return e;
 			}
 		});
+	}
 
-
-		//the actual enrichments will be shown in the enrichment tab
-		$scope.fetchEnrichments = function() {
-			if($scope.activeEntities && $scope.activeEntities.length > 0) {
-				//$('#fetch_enrichments').button('loading');
-				enrichmentService.search($scope.activeEntities, $rootScope.provider, $scope.onSearchEnrichments);
-			} else {
-				alert('Please select a number of entities before triggering the enrichment search');
+	//filters the enrichments by source
+	$scope.filterEnrichmentsByEntitySource = function(entitySource) {
+		$scope.activeEnrichmentEntitySource = entitySource;
+		$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
+			if(e.entitySource === entitySource) {
+				return e;
 			}
-		};
+		});
+	}
 
-		$scope.onSearchEnrichments = function(enrichments) {
-			//reset the button and the selected entities
-			//$('#fetch_enrichments').button('reset');
-			$scope.activeEntities = [];
-			console.debug(enrichments);
-			//add the enrichments to the enrichmentCollection
-			enrichmentCollection.addEnrichmentsToActiveChapter(enrichments, true);
+	$scope.getPosterUrl = function(enrichment) {
+		if(enrichment.posterUrl && $scope.isValidPosterFormat(enrichment.posterUrl)) {
+			return enrichment.posterUrl;
+		} else if(enrichment.mediaUrl && $scope.isValidPosterFormat(enrichment.mediaUrl)) {
+			return enrichment.mediaUrl;
 		}
+		return null;
+	}
 
-		/*this part is only relevant for the tvenrichment service*/
+	$scope.isValidPosterFormat = function(img) {
+		if(img == null) {
+			return false;
+		}
+		var formats = ['jpg', 'png', 'jpeg', 'JPG', 'PNG', 'gif', 'GIF', 'JPEG', 'bmp', 'BMP']
+		for(i in formats) {
+			if(img.indexOf(formats[i]) != -1) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-		//TODO make sure this function is called by listening to the enrichmentCollection!
-		$scope.updateEnrichments = function(enrichments) {
-			console.debug(enrichments);
-			var temp = [];//will contain enrichments
-			var sources = [];
-			var eSources = [];
-			for (var es in enrichments) {
-				//if not added already, add the entity source to the list of possible sources
-				if(eSources.indexOf(es) == -1) {
-					eSources.push(es);
-				}
-				var entitySources = enrichments[es];
-				for (var s in entitySources) {
-					//if not added already, add the source to the list of possible sources
-					if(sources.indexOf(s) == -1) {
-						sources.push(s);
+
+	//----------------------this should be COPIED TO ANOTHER FILE-----------------
+
+
+	$scope.toggleEntity = function(entityLabel) {
+		var index = $scope.activeEntities.indexOf(entityLabel);
+		if(index == -1) {
+			$scope.activeEntities.push(entityLabel);
+		} else {
+			$scope.activeEntities.splice(index, 1);
+		}
+	}
+
+	$scope.isEntitySelected = function(entityLabel) {
+		return $scope.activeEntities.indexOf(entityLabel) == -1 ? '' : 'selected';
+	}
+
+	$scope.getConfidenceClass = function(entityList) {
+		//really ugly hack: somehow the reduce function screws up when there is one item in the list
+		var confidenceSum = entityList.length == 1 ? entityList[0].confidence : _.reduce(entityList, function(memo, e) {			
+			return memo ? parseFloat(memo.confidence) + parseFloat(e.confidence) : parseFloat(e.confidence);
+		});		
+		var c = confidenceSum / entityList.length;		
+		if(c <= 0) {
+			return 'verylow';
+		} else if (c > 0 && c <= 0.2) {
+			return 'low';
+		} else if (c > 0.2 && c <= 0.4) {
+			return 'fair';
+		} else if (c > 0.4 && c <= 0.6) {
+			return 'medium';
+		} else if (c > 0.6 && c <= 0.8) {
+			return 'high';
+		} else if (c > 0.8) {
+			return 'veryhigh';
+		}
+	};
+
+
+	$scope.fetchExtraInfoForEntityLabel = function(entitiesOfLabel) {
+		var entityUri = null;
+		for(k in entitiesOfLabel) {
+			var e = entitiesOfLabel[k];
+			entityUri = e.disambiguationURL;
+			if(entityUri) {
+				break;
+			}
+		}
+		$scope.fetchExtraInfo(entityUri);
+	}
+
+	$scope.fetchExtraInfo = function(entityUri) {
+		if(entityUri) {				
+			entityProxyService.getEntityDBPediaInfo(entityUri, $scope.fetchedTriplesLoaded);
+			$scope.loading = true;
+		}
+	}
+
+	$scope.fetchedTriplesLoaded = function(data) {			
+		$scope.fetchedTriples = [];
+		var info = [];
+		for (key in data) {
+			var prop = null;
+			for(k in data[key]) {
+				prop = data[key][k];
+				var values = [];
+				var uris = [];
+				if(prop.length > 0) {
+					for(p in prop) {
+						values.push(prop[p].value || prop[p]);
+						uris.push(prop[p].uri);
 					}
-					//loop through the eventual enrichments and add them to temp
-					var enrichmentsOfSource = entitySources[s];
-					for(var e in enrichmentsOfSource){
-						var enrichment = enrichmentsOfSource[e];
-						//add the source to each enrichment (for filtering)
-						enrichment.source = s;
-						//add the source entities to each enrichment (for filtering)
-						enrichment.entitySource = es;
-
-						temp.push(enrichment);
-					}
-				}
-			}
-			//apply the enrichments to the scope
-			
-			$scope.enrichmentSources = sources;
-			$scope.enrichmentEntitySources = eSources;
-			$scope.allEnrichments = temp;
-			
-			console.debug($scope.enrichmentEntitySources)
-
-			//by default filter by the first source in the list
-			$scope.filterEnrichmentsBySource(sources[0]);		
-		};
-
-		$scope.ok = function () {			
-			if($scope.selectedEnrichments) {				
-				$modalInstance.close($scope.selectedEnrichments);
-			} else {
-				alert('Please add a label');
-			}
-		};
-
-		$scope.cancel = function () {
-			$modalInstance.dismiss('cancel');
-		};	
-
-
-		//filters the enrichments by source
-		$scope.filterEnrichmentsBySource = function(source) {
-			$scope.activeEnrichmentSource = source;
-			$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
-				if(e.source === source) {
-					return e;
-				}
-			});
-		}
-
-		//filters the enrichments by source
-		$scope.filterEnrichmentsByEntitySource = function(entitySource) {
-			$scope.activeEnrichmentEntitySource = entitySource;
-			$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
-				if(e.entitySource === entitySource) {
-					return e;
-				}
-			});
-		}
-
-
-		//----------------------this should be COPIED TO ANOTHER FILE-----------------
-
-
-		$scope.toggleEntity = function(entityLabel) {
-			var index = $scope.activeEntities.indexOf(entityLabel);
-			if(index == -1) {
-				$scope.activeEntities.push(entityLabel);
-			} else {
-				$scope.activeEntities.splice(index, 1);
-			}
-		}
-
-		$scope.isEntitySelected = function(entityLabel) {
-			return $scope.activeEntities.indexOf(entityLabel) == -1 ? '' : 'selected';
-		}
-
-		$scope.getConfidenceClass = function(entityList) {
-			//really ugly hack: somehow the reduce function screws up when there is one item in the list
-			var confidenceSum = entityList.length == 1 ? entityList[0].confidence : _.reduce(entityList, function(memo, e) {			
-				return memo ? parseFloat(memo.confidence) + parseFloat(e.confidence) : parseFloat(e.confidence);
-			});		
-			var c = confidenceSum / entityList.length;		
-			if(c <= 0) {
-				return 'verylow';
-			} else if (c > 0 && c <= 0.2) {
-				return 'low';
-			} else if (c > 0.2 && c <= 0.4) {
-				return 'fair';
-			} else if (c > 0.4 && c <= 0.6) {
-				return 'medium';
-			} else if (c > 0.6 && c <= 0.8) {
-				return 'high';
-			} else if (c > 0.8) {
-				return 'veryhigh';
-			}
-		};
-
-
-		$scope.fetchExtraInfoForEntityLabel = function(entitiesOfLabel) {
-			var entityUri = null;
-			for(k in entitiesOfLabel) {
-				var e = entitiesOfLabel[k];
-				entityUri = e.disambiguationURL;
-				if(entityUri) {
-					break;
-				}
-			}
-			$scope.fetchExtraInfo(entityUri);
-		}
-
-		$scope.fetchExtraInfo = function(entityUri) {
-			if(entityUri) {				
-				entityProxyService.getEntityDBPediaInfo(entityUri, $scope.fetchedTriplesLoaded);
-				$scope.loading = true;
-			}
-		}
-
-		$scope.fetchedTriplesLoaded = function(data) {			
-			$scope.fetchedTriples = [];
-			var info = [];
-			for (key in data) {
-				var prop = null;
-				for(k in data[key]) {
-					prop = data[key][k];
-					var values = [];
-					var uris = [];
-					if(prop.length > 0) {
-						for(p in prop) {
-							values.push(prop[p].value || prop[p]);
-							uris.push(prop[p].uri);
-						}
-						if(key !== $scope.POSTER) {
-							info.push({index : 0, key : k, values : values, uris : uris});
-						}
+					if(key !== $scope.POSTER) {
+						info.push({index : 0, key : k, values : values, uris : uris});
 					}
 				}
 			}
-			info.sort();
-			$scope.$apply(function() {
-				$scope.loading = false;
-				$scope.thumbIndex = 0;
-				$scope.thumbs = $scope.getThumbsFromTriples(info);
-				$scope.fetchedTriples = info;
-			})
 		}
+		info.sort();
+		$scope.$apply(function() {
+			$scope.loading = false;
+			$scope.thumbIndex = 0;
+			$scope.thumbs = $scope.getThumbsFromTriples(info);
+			$scope.fetchedTriples = info;
+		})
+	}
 
-		$scope.getThumbsFromTriples = function(triples) {
-			for(var i=0;i<triples.length;i++) {
-				if(triples[i].key == $scope.POSTER) {
-					return triples[i].values;
-				}
+	$scope.getThumbsFromTriples = function(triples) {
+		for(var i=0;i<triples.length;i++) {
+			if(triples[i].key == $scope.POSTER) {
+				return triples[i].values;
 			}
-			return null;
 		}
-
-
+		return null;
 	}
 	
-});;angular.module('linkedtv').controller('entityController', 
+}]);;angular.module('linkedtv').controller('entityController', 
 	function($scope, entityCollection) {
 	
 	$scope.activeEntities = [];
@@ -1178,13 +1262,13 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 		$scope.openCardDialog($scope.activeChapter.cards[$scope.activeCardIndex]);
 	}
 
+	//TODO make sure the modal is removed after closing
 	$scope.openCardDialog = function(card) {
 
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/informationCardModal.html',
 			controller: 'informationCardModalController',
 			size: 'lg',
-			//make sure to make a nice separate controller
 			resolve: {				
 				card : function () {
 					return card;
@@ -1220,11 +1304,6 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 	$scope.isCardSelected = function(index) {
 		return $scope.activeCardIndex == index ? 'selected' : '';
 	};
-
-
-	/*-------------------------DIALOG TO EDIT THE CARDS---------------------------*/
-
-	
 	
 });;angular.module('linkedtv').controller('playerController', function($sce, $rootScope, $scope, playerService){
 	
@@ -1243,7 +1322,7 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 	$scope.provider = $rootScope.provider;
 	$scope.videos = [];
 
-
+	//TODO remove this stupid function
 	$scope.init = function() {
 		videoSelectionService.getVideosOfProvider($scope.provider, $scope.videosLoaded);
 	};
@@ -1262,7 +1341,7 @@ angular.module('linkedtv').factory('enrichmentCollection', [function() {
 		window.location.assign('http://' + location.host + '/' + $scope.provider + '/' + video)
 	};
 
-	$scope.init();
+	//$scope.init();
 });;angular.module('linkedtv').directive('chapterEditor', [function(){
 	
 	return {
