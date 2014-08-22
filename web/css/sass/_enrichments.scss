@@ -1,3 +1,15 @@
+.dimensions {
+	.dimension {
+		header {
+			width:100%;
+		}
+	}
+}
+
 .enrichments {
 	@include mediaSlots;
+}
+
+.enrichment-search input[type='text'] {
+	width:400px;
 }

@@ -1,4 +1,5 @@
 //TODO properly import the programme configs from an external file
+//TODO add templates for partner specific information cards
 
 var rbbConfig = {
 	dimensions : [

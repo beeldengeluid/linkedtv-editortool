@@ -1,37 +1,46 @@
 angular.module('linkedtv').controller('enrichmentModalController', 
-	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentCollection', 'enrichmentService', 'entities',
-	function ($scope, $modalInstance, $rootScope, entityProxyService, enrichmentCollection, enrichmentService, entities) {
+	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentService', 'chapterCollection', 
+	'entityCollection', 'enrichmentUtils', 'dimension', function ($scope, $modalInstance, $rootScope, entityProxyService, 
+		enrichmentService, chapterCollection, entityCollection, enrichmentUtils, dimension) {
 	
-	$scope.entities = entities;	
+	$scope.enrichmentUtils = enrichmentUtils;
+	$scope.dimension = dimension;//currently selected dimension
+	$scope.entities = entityCollection.getChapterEntities();//fetch the entities from the chaptercollection
 
+	$scope.enrichmentQuery = '';//the query that will be sent to the enrichmentService
 	$scope.activeEntities = [];//selected entities
-	$scope.enrichments = [];//fetched & filtered enrichment
+	
 
-	$scope.allEnrichments = null;
+	$scope.allEnrichments = null; //all fetched enrichments (unfiltered)
+	$scope.enrichments = [];//fetched & filtered enrichment
 	$scope.enrichmentSources = null; //allEnrichments filtered by link source
 	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
-
-	$scope.selectedEnrichments = [] //this is eventually going to be filled and returned to the dimensionTab
-
+	
 	$scope.activeEnrichmentSource = null; //current source filter
 	$scope.activeEnrichmentEntitySource = null; //current entity source filter
 
-	
-	$scope.$watch(function () { return enrichmentCollection.getEnrichmentsOfActiveChapter(); }, function(newValue) {		
-		console.debug('Updating enrichments');
-		if(newValue) {
-			$scope.updateEnrichments(newValue);
+	$scope.selectedEnrichments = [] //this is eventually going to be filled and returned to the dimensionTab	
+
+
+	$scope.toggleEntity = function(entityLabel) {
+		var index = $scope.activeEntities.indexOf(entityLabel);
+		if(index == -1) {
+			$scope.activeEntities.push(entityLabel);
+		} else {
+			$scope.activeEntities.splice(index, 1);
 		}
-	});
+		$scope.enrichmentQuery = $scope.activeEntities.join('+');
+	}
+
+	$scope.isEntitySelected = function(entityLabel) {
+		return $scope.activeEntities.indexOf(entityLabel) == -1 ? '' : 'selected';
+	}
 
 
 	//the actual enrichments will be shown in the enrichment tab
 	$scope.fetchEnrichments = function() {
-		if($scope.activeEntities && $scope.activeEntities.length > 0) {
-			//$('#fetch_enrichments').button('loading');
-			enrichmentService.search($scope.activeEntities, $rootScope.provider, $scope.onSearchEnrichments);
-		} else {
-			alert('Please select a number of entities before triggering the enrichment search');
+		if ($scope.enrichmentQuery) {
+			enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.onSearchEnrichments);		
 		}
 	};
 
@@ -39,14 +48,14 @@ angular.module('linkedtv').controller('enrichmentModalController',
 		//reset the button and the selected entities
 		//$('#fetch_enrichments').button('reset');
 		$scope.activeEntities = [];
+		$scope.enrichmentQuery = '';
+		$scope.enrichmentsCollapsed = false;
 		console.debug(enrichments);
-		//add the enrichments to the enrichmentCollection
-		enrichmentCollection.addEnrichmentsToActiveChapter(enrichments, true);
+		$scope.updateEnrichments(enrichments);//maybe later offer an option to save the enrichments to the chapter
 	}
 
 	/*this part is only relevant for the tvenrichment service*/
 
-	//TODO make sure this function is called by listening to the enrichmentCollection!
 	$scope.updateEnrichments = function(enrichments) {
 		console.debug(enrichments);
 		var temp = [];//will contain enrichments
@@ -88,9 +97,17 @@ angular.module('linkedtv').controller('enrichmentModalController',
 		$scope.filterEnrichmentsBySource(sources[0]);
 	};
 
+	$scope.addEnrichment = function(enrichment) {		
+		$scope.selectedEnrichments.push(enrichment);
+	}
+
+	$scope.removeEnrichment = function(index) {
+		$scope.selectedEnrichments.splice(index, 1);
+	}
+
 	$scope.ok = function () {			
-		if($scope.selectedEnrichments) {				
-			$modalInstance.close($scope.selectedEnrichments);
+		if($scope.selectedEnrichments) {			
+			$modalInstance.close({dimension: $scope.dimension, enrichments : $scope.selectedEnrichments});
 		} else {
 			alert('Please add a label');
 		}
@@ -121,44 +138,10 @@ angular.module('linkedtv').controller('enrichmentModalController',
 		});
 	}
 
-	$scope.getPosterUrl = function(enrichment) {
-		if(enrichment.posterUrl && $scope.isValidPosterFormat(enrichment.posterUrl)) {
-			return enrichment.posterUrl;
-		} else if(enrichment.mediaUrl && $scope.isValidPosterFormat(enrichment.mediaUrl)) {
-			return enrichment.mediaUrl;
-		}
-		return null;
-	}
 
-	$scope.isValidPosterFormat = function(img) {
-		if(img == null) {
-			return false;
-		}
-		var formats = ['jpg', 'png', 'jpeg', 'JPG', 'PNG', 'gif', 'GIF', 'JPEG', 'bmp', 'BMP']
-		for(i in formats) {
-			if(img.indexOf(formats[i]) != -1) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-
-	//----------------------this should be COPIED TO ANOTHER FILE-----------------
-
-
-	$scope.toggleEntity = function(entityLabel) {
-		var index = $scope.activeEntities.indexOf(entityLabel);
-		if(index == -1) {
-			$scope.activeEntities.push(entityLabel);
-		} else {
-			$scope.activeEntities.splice(index, 1);
-		}
-	}
-
-	$scope.isEntitySelected = function(entityLabel) {
-		return $scope.activeEntities.indexOf(entityLabel) == -1 ? '' : 'selected';
-	}
+	//********************************THIS SHOULD BE MOVED!!!!!****************************************************	
+	//********************************THIS SHOULD BE MOVED!!!!!****************************************************
+	//********************************THIS SHOULD BE MOVED!!!!!****************************************************
 
 	$scope.getConfidenceClass = function(entityList) {
 		//really ugly hack: somehow the reduce function screws up when there is one item in the list

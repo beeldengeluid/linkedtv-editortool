@@ -20,8 +20,6 @@ angular.module('linkedtv').controller('appController',
 			//load the entityCollection with entity data
 			entityCollection.initCollectionData($rootScope.resourceData.nes);
 
-			//TODO load other stuff (slotCollection & enrichmentCollection)
-
 		} else {
 			// TODO error
 		}

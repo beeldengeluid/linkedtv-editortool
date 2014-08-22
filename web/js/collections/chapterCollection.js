@@ -1,6 +1,5 @@
 angular.module('linkedtv').factory('chapterCollection', 
-	['conf', 'timeUtils', 'imageService', 'entityCollection', 'enrichmentCollection',
-	function(conf, timeUtils, imageService, entityCollection, enrichmentCollection) {	
+	['conf', 'timeUtils', 'imageService', 'entityCollection', function(conf, timeUtils, imageService, entityCollection) {	
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
@@ -35,7 +34,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			//add a default empty collection to hold information cards (TODO load this later from the server!)
 			chapter.cards = [];
 			//add a default empty collection for the curated enrichments (TODO load this later from the server!)
-			chapter.enrichments = [];
+			chapter.dimensions = {};
 		}
 		chapters.sort(function(a, b) {
 			return a.start - b.start;
@@ -46,7 +45,7 @@ angular.module('linkedtv').factory('chapterCollection',
 
 	function addObserver(observer) {
 		console.debug(observer);
-		observers.push(observer)
+		observers.push(observer);
 	}
 
 	function notifyObservers() {
@@ -67,7 +66,6 @@ angular.module('linkedtv').factory('chapterCollection',
 	function setActiveChapter(activeChapter) {
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
-		enrichmentCollection.updateActiveChapter(_activeChapter);
 	}
 
 	function getActiveChapter() {

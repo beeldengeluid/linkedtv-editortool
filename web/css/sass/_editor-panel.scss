@@ -9,6 +9,6 @@
 	display:inline-block;
 }
 
-.vertical-menu {
-	@include verticalMenu($wonderblue, true);
+.horizontal-menu {
+	@include horizontalMenu($wonderblue, true);
 }

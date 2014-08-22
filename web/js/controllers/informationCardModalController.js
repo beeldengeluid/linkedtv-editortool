@@ -1,8 +1,7 @@
 angular.module('linkedtv').controller('informationCardModalController', 
 	['$scope', '$modalInstance', 'entityProxyService', 'card', 'entities',
 	function ($scope, $modalInstance, entityProxyService, card, entities) {
-
-	$scope.entityProxyService = entityProxyService;
+	
 	$scope.card = card || {};
 	$scope.entities = entities;
 

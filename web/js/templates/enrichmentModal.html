@@ -1,79 +1,135 @@
 <div class="modal-header">    
-    <h3 class="modal-title">Find enrichments</h3>
+    <h3 class="modal-title">Add background information</h3>
 </div>
 
 <div class="modal-body">
 
     <!-- display entities -->
     <div class="row">
-        <div class="col-md-12">
-            <h4>Detected entities</h4>
-            <ul class="entities">
-                <li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
-                        
-                    <div ng-click="fetchExtraInfoForEntityLabel(v)" ng-dblclick="toggleEntity(k)" 
-                    class="label label-default entity" title="{{k}}">
-                        {{k}}&nbsp;({{v.length}})
-                    </div>
-                </li>
-            </ul>
+    	
+        <div class="col-md-12">        	
+			<div class="foldable" ng-click="entitiesCollapsed = !entitiesCollapsed">Show entities</div>
+        	<div collapse="entitiesCollapsed">
+	            <h4>Select one or more entities and fetch useful links</h4>
+	            <ul class="entities">
+	                <li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
+	                        
+	                    <div ng-click="fetchExtraInfoForEntityLabel(v)" ng-dblclick="toggleEntity(k)" 
+	                    class="label label-default entity" title="{{k}}">
+	                        {{k}}&nbsp;({{v.length}})
+	                    </div>
+	                </li>
+	            </ul>
+			</div>
         </div>
-    </div>
+    </div>   
 
 	<div class="row">
 		<div class="col-md-12">
-			<button id="fetch_enrichments" class="btn btn-primary" 
-			ng-click="fetchEnrichments()">Fetch enrichments</button>
-		</div>
-	</div>    
-
-
-    <div class="row">
-		<div class="col-md-12">
-			<nav class="tab-menu">
-				<ul class="vertical-menu">
-					<li ng-if="activeEnrichmentSource">
-						{{activeEnrichmentSource}}
-					</li>
-					<li>
-						<div class="dropdown">
-							<button class="btn btn-default dropdown-toggle" type="button" id="menuFilterSource" data-toggle="dropdown">
-								Filter by source
-								<span class="caret"></span>
-							</button>
-							<ul class="dropdown-menu" role="menu" aria-labelledby="menuFilterSource">
-								<li role="presentation" ng-repeat="s in enrichmentSources">
-									<a role="menuitem" tabindex="-1" ng-click="filterEnrichmentsBySource(s)">{{s}}</a>
-								</li>
-								
-								<li role="presentation" class="divider"></li>
-
-								<li role="presentation" ng-repeat="es in enrichmentEntitySources">
-									<a role="menuitem" tabindex="-1" ng-click="filterEnrichmentsByEntitySource(es)">{{es}}</a>
-								</li>
-							</ul>
-						</div>
-					</li>
-				</ul>
-			</nav>
+			<form class="form-inline enrichment-search" role="form">
+                <div class="form-group">
+                    <label>Search</label>
+                    <input type="text" ng-model="enrichmentQuery">
+                </div>
+                <button id="fetch_enrichments" class="btn btn-primary" ng-click="fetchEnrichments()">
+                	Fetch enrichments
+				</button>
+            </form>			
 		</div>
 	</div>
 
-	<div class="row">
-		<div class="col-md-12">
-			<ul class="enrichments">
-				<li ng-repeat="e in enrichments">
-					<div class="thumbnail" ng-if="e.micropostUrl">
-						<a href="{{e.micropostUrl}}" target="_external">
-							<img ng-if="getPosterUrl(e)" ng-src="{{getPosterUrl(e)}}" alt="{{e.micropost.plainText}}">
 
-							<img ng-if="!getPosterUrl(e)" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
-						</a>
-						<div class="caption" ng-if="e.micropost.plainText">{{e.micropost.plainText | limitTo:30}}</div>
-						<div class="caption" ng-if="!e.micropost.plainText">No title</div>
-				    </div>
-				</li>
-			</ul>
+	<!-- The selected enrichments for this dimension selectedEnrichments-->
+	<div class="row">
+		<div class="col-md-12">        	
+			<div class="foldable" ng-click="selectedEnrichmentsCollapsed = !selectedEnrichmentsCollapsed">Saved enrichments</div>
+			<div collapse="selectedEnrichmentsCollapsed">
+				<ul class="enrichments">
+					<li ng-repeat="e in selectedEnrichments track by $index">
+						<div class="thumbnail" ng-if="e.micropostUrl" ng-click="removeEnrichment($index)">									
+							<img ng-if="enrichmentUtils.getPosterUrl(e)" ng-src="{{enrichmentUtils.getPosterUrl(e)}}" alt="{{e.micropost.plainText}}">
+
+							<img ng-if="!enrichmentUtils.getPosterUrl(e)" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
+							
+							<div class="caption" ng-if="e.micropost.plainText">
+								<a href="{{e.micropostUrl}}" target="_external">
+								{{e.micropost.plainText | limitTo:30}}
+								</a>
+							</div>
+							<div class="caption" ng-if="!e.micropost.plainText">
+								<a href="{{e.micropostUrl}}" target="_external">No title</a>
+							</div>
+					    </div>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<!-- The fetched enrichments (make this another template) -->
+	<div class="row">
+    	
+        <div class="col-md-12">        	
+			<div class="foldable" ng-click="enrichmentsCollapsed = !enrichmentsCollapsed">Found enrichments</div>
+        	<div collapse="enrichmentsCollapsed">
+
+        		<!-- The dropdown for filtering the found enrichments -->
+			    <div class="row">
+					<div class="col-md-12">			
+						<nav class="tab-menu">
+							<ul class="horizontal-menu">
+								<li ng-if="activeEnrichmentSource">
+									{{activeEnrichmentSource}}
+								</li>
+								<li>
+									<div class="dropdown">
+										<button class="btn btn-default dropdown-toggle" type="button" id="menuFilterSource">
+											Filter by source
+											<span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu" role="menu" aria-labelledby="menuFilterSource">
+											<li role="presentation" ng-repeat="s in enrichmentSources">
+												<a role="menuitem" tabindex="-1" ng-click="filterEnrichmentsBySource(s)">{{s}}</a>
+											</li>
+											
+											<li role="presentation" class="divider"></li>
+
+											<li role="presentation" ng-repeat="es in enrichmentEntitySources">
+												<a role="menuitem" tabindex="-1" ng-click="filterEnrichmentsByEntitySource(es)">{{es}}</a>
+											</li>
+										</ul>
+									</div>
+								</li>
+							</ul>
+						</nav>
+					</div>
+				</div>
+
+
+				<!-- The found enrichments (filtered by the currently selected filter) -->
+				<div class="row">
+					<div class="col-md-12">
+						<ul class="enrichments">
+							<li ng-repeat="e in enrichments">
+								<div class="thumbnail" ng-if="e.micropostUrl" ng-click="addEnrichment(e)">									
+									<img ng-if="enrichmentUtils.getPosterUrl(e)" ng-src="{{enrichmentUtils.getPosterUrl(e)}}" alt="{{e.micropost.plainText}}">
+
+									<img ng-if="!enrichmentUtils.getPosterUrl(e)" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
+									
+									<div class="caption" ng-if="e.micropost.plainText">
+										<a href="{{e.micropostUrl}}" target="_external">
+										{{e.micropost.plainText | limitTo:30}}
+										</a>
+									</div>
+									<div class="caption" ng-if="!e.micropost.plainText">
+										<a href="{{e.micropostUrl}}" target="_external">No title</a>
+									</div>
+							    </div>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 

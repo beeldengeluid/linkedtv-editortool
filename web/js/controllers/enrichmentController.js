@@ -1,10 +1,11 @@
 angular.module('linkedtv').controller('enrichmentController', 
 	function($rootScope, $scope, $modal, conf, chapterCollection, 
-		entityCollection, enrichmentCollection, enrichmentService, entityProxyService) {
+		entityCollection, enrichmentService, entityProxyService, enrichmentUtils) {
 	
 
 	/*-------------------------TAB FUNCTIONS---------------------------*/
 	
+	$scope.enrichmentUtils = enrichmentUtils;
 	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
 	$scope.activeChapter = null;//holds the up-to-date active chapter
 	$scope.activeLinkIndex = 0;//selected slot
@@ -28,38 +29,33 @@ angular.module('linkedtv').controller('enrichmentController',
 		$scope.entities	= entities;
 	}
 
-	$scope.createNewLink = function() {
-		$scope.openLinkDialog(null);
+	$scope.createNewLink = function(dimension) {
+		$scope.openLinkDialog(dimension);
 	}
 
-	$scope.editLink = function() {
-		$scope.openLinkDialog($scope.activeChapter.enrichments[$scope.activeLinkIndex]);
+	$scope.editLink = function(dimension) {
+		$scope.openLinkDialog(dimension);
 	}
 
-	$scope.openLinkDialog = function() {
-
+	$scope.openLinkDialog = function(dimension) {
+		console.debug('open the dialog for');
+		console.debug(dimension);
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/enrichmentModal.html',
 			controller: 'enrichmentModalController',
 			size: 'lg',
 			resolve: {
-				entities: function () {
-					return $scope.entities;
+				dimension: function () {
+					return dimension;
 				}
 			}
 		});
 
 		//when the modal is closed (using 'ok', or 'cancel')
-		modalInstance.result.then(function (card) {
-			console.debug('I saved a damn card yeah!');
-			console.debug(card);
-			if($scope.activeChapter.cards[$scope.activeLinkIndex]) {
-				$scope.activeChapter.cards[$scope.activeLinkIndex] = card;
-			} else {
-				$scope.activeChapter.cards.push(card);
-			}
-			console.debug($scope.activeChapter);
-
+		modalInstance.result.then(function (data) {
+			console.debug('I saved some enrichments');			
+			$scope.activeChapter.dimensions[data.dimension.$$hashKey] = data.enrichments;
+			
 			//update the chapter collection (this triggers the $watch at the top)
 			chapterCollection.saveChapter($scope.activeChapter);
 		}, function () {

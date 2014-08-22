@@ -8,15 +8,18 @@
     <!-- display entities -->
     <div class="row">
         <div class="col-md-12">
-            <h4>Detected entities</h4>
-            <ul class="entities">
-                <li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
-                        
-                    <div ng-click="fetchExtraInfoForEntityLabel(v)" class="label label-default entity" title="{{k}}">
-                        {{k}}&nbsp;({{v.length}})
-                    </div>
-                </li>
-            </ul>
+            <div class="foldable" ng-click="entitiesCollapsed = !entitiesCollapsed">Show entities</div>
+            <div collapse="entitiesCollapsed">
+                <h4>Detected entities</h4>
+                <ul class="entities">
+                    <li ng-repeat="(k, v) in entities" class="{{getConfidenceClass(v)}} {{isEntitySelected(k)}}">
+                            
+                        <div ng-click="fetchExtraInfoForEntityLabel(v)" class="label label-default entity" title="{{k}}">
+                            {{k}}&nbsp;({{v.length}})
+                        </div>
+                    </li>
+                </ul>
+            </div>
         </div>        
     </div>
 
@@ -41,58 +44,61 @@
 
     <!-- results from proxy -->
     <div class="row">
-        <div ng-show="fetchedTriples" class="card-edit-form">             
+        
+            
+        <div ng-show="fetchedTriples" class="card-edit-form">
             <div class="col-md-12">
-                <h4>Fetched properties</h4>
+                <div class="foldable" ng-click="fetchedDataCollapsed = !fetchedDataCollapsed">Show fetched data</div>
+                <div collapse="fetchedDataCollapsed">
+                    <h4>Fetched properties</h4>
                
-                 <div class="row">
-                    <div class="col-md-10">
-                        <header>
-                            <ul>
-                                <li>Label</li>
-                                <li>Value</li>
-                                <li>Resource</li>
-                            </ul>
-                        </header>
-                        <form class="form-inline" role="form" ng-repeat="triple in fetchedTriples" 
-                            ng-click="nextTriple($index)" ng-if="!isReserved(triple.key)">
-                            <div class="form-group">
-                                <input disabled class="form-control" value="{{triple.key}}">
-                            </div>
-                            <div class="form-group">
-                                <input disabled class="form-control" value="{{triple.values[triple.index]}}">
-                            </div>
-                            <div class="form-group">                        
-                                <div ng-if="triple.uris[triple.index]" ng-click="fetchExtraInfo(triple.uris[triple.index])" 
-                                    class="label label-default entity" title="{{triple.values[triple.index]}}">
-                                    {{triple.values[triple.index]}}
+                    <div class="row">
+                        <div class="col-md-10">
+                            <header>
+                                <ul>
+                                    <li>Label</li>
+                                    <li>Value</li>
+                                    <li>Resource</li>
+                                </ul>
+                            </header>
+                            <form class="form-inline" role="form" ng-repeat="triple in fetchedTriples" 
+                                ng-click="nextTriple($index)" ng-if="!isReserved(triple.key)">
+                                <div class="form-group">
+                                    <input disabled class="form-control" value="{{triple.key}}">
                                 </div>
+                                <div class="form-group">
+                                    <input disabled class="form-control" value="{{triple.values[triple.index]}}">
+                                </div>
+                                <div class="form-group">                        
+                                    <div ng-if="triple.uris[triple.index]" ng-click="fetchExtraInfo(triple.uris[triple.index])" 
+                                        class="label label-default entity" title="{{triple.values[triple.index]}}">
+                                        {{triple.values[triple.index]}}
+                                    </div>
+                                </div>
+                                <i class="glyphicon glyphicon-plus interactive" ng-click="addToCard(triple)"></i>
+                            </form>
+                        </div>
+
+                        <!-- this is the spot where the poster is shown -->
+                        <div class="col-md-2">
+                            <header>
+                                <ul>
+                                    <li>Poster</li>
+                                </ul>
+                            </header>
+                            <!-- when thumbs are available -->
+                            <div ng-show="thumbs" class="thumbnail card-edit-thumb">
+                                <img ng-src="{{thumbs[thumbIndex]}}" ng-click="nextThumb()">
+                                <a ng-click="setCardPoster(thumbs[thumbIndex])">Use as poster</a>
                             </div>
-                            <i class="glyphicon glyphicon-plus interactive" ng-click="addToCard(triple)"></i>
-                        </form>
-                    </div>
-
-                    <!-- this is the spot where the poster is shown -->
-                    <div class="col-md-2">
-                        <header>
-                            <ul>
-                                <li>Poster</li>
-                            </ul>
-                        </header>
-                        <!-- when thumbs are available -->
-                        <div ng-show="thumbs" class="thumbnail card-edit-thumb">
-                            <img ng-src="{{thumbs[thumbIndex]}}" ng-click="nextThumb()">
-                            <a ng-click="setCardPoster(thumbs[thumbIndex])">Use as poster</a>
-                        </div>
-                        <!-- when loading -->
-                        <div ng-show="loading" class="thumbnail card-edit-thumb">
-                            <img src="/site_media/images/loading.gif" alt="...">
+                            <!-- when loading -->
+                            <div ng-show="loading" class="thumbnail card-edit-thumb">
+                                <img src="/site_media/images/loading.gif" alt="...">
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
-            
         </div>
     </div>
 
