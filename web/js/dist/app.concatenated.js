@@ -4,28 +4,13 @@
 var rbbConfig = {
 	dimensions : [
 		{		
-		'label' : 'Background information',
-		'service' : 'TVNewsEnricher',
+		'id' : 'RBB',
+		'label' : 'Background information',		
 		'input' : 'entities'
 		},
 		{
-		'label' : 'Opinions',
-		'service' : 'TVNewsEnricher',
-		'input' : 'entities'
-		},
-		{
-		'label' : 'In depth',
-		'service' : 'TVNewsEnricher',
-		'input' : 'entities'
-		},
-		{
-		'label' : 'Global to local',
-		'service' : 'TVNewsEnricher',
-		'input' : 'entities'
-		},
-		{
+		'id' : 'Solr',
 		'label' : 'Related news',
-		'service' : 'TVNewsEnricher',
 		'input' : 'entities'
 		},
 	]
@@ -34,18 +19,18 @@ var rbbConfig = {
 var tkkConfig = {
 	dimensions : [
 		{
-		'label' : 'Background information',
-		'service' : 'TVEnricher',
+		'id' : 'SV',
+		'label' : 'Background information',		
 		'input' : 'entities'
 		},
 		{
-		'label' : 'Related Europeana objects',
-		'service' : 'TVEnricher',
+		'id' : 'Europeana',
+		'label' : 'Related Europeana objects',		
 		'input' : 'entities'
 		},
 		{
+		'id' : 'Solr',
 		'label' : 'Related fragments',
-		'service' : 'TVEnricher',
 		'input' : 'entities'
 		}
 	]
@@ -268,15 +253,17 @@ linkedtv.run(function($rootScope, conf) {
 
 }]);;angular.module('linkedtv').factory('enrichmentService', [function(){
 	
-	function search(query, provider, callback) {
+	function search(query, provider, dimension, callback) {
 		console.debug('Querying enrichments using ' + query + '['+provider+']');
+		console.debug(dimension);
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/enrichments?q=' + query.split('+').join(',') + '&p=' + provider,
-			success : function(json) {				
+			url : '/enrichments?q=' + query.split('+').join(',') + '&p=' + provider + '&d=' + dimension.id,
+			success : function(json) {
 				console.debug(json);
-				callback(JSON.parse(json.enrichments));
+				//callback(JSON.parse(json.enrichments));
+				callback(json.enrichments);
 			},
 			error : function(err) {
 				console.debug(err);
@@ -745,10 +732,18 @@ linkedtv.run(function($rootScope, conf) {
 	'entityCollection', 'enrichmentUtils', 'dimension', function ($scope, $modalInstance, $rootScope, entityProxyService, 
 		enrichmentService, chapterCollection, entityCollection, enrichmentUtils, dimension) {
 	
+	//collapse states
+	$scope.enrichmentsCollapsed = true;
+	$scope.savedEnrichmentsCollapsed = false;
+	$scope.entitiesCollapsed = true;
+
+	//main variables
 	$scope.enrichmentUtils = enrichmentUtils;
 	$scope.dimension = dimension;//currently selected dimension
 	$scope.entities = entityCollection.getChapterEntities();//fetch the entities from the chaptercollection
+	$scope.savedEnrichments = chapterCollection.getActiveChapter().dimensions[dimension.$$hashKey] || [] //also returned from this modal
 
+	//used to formulate the enrichment query for the TVenricher (or another service)
 	$scope.enrichmentQuery = '';//the query that will be sent to the enrichmentService
 	$scope.activeEntities = [];//selected entities
 	
@@ -759,9 +754,7 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
 	
 	$scope.activeEnrichmentSource = null; //current source filter
-	$scope.activeEnrichmentEntitySource = null; //current entity source filter
-
-	$scope.selectedEnrichments = [] //this is eventually going to be filled and returned to the dimensionTab	
+	$scope.activeEnrichmentEntitySource = null; //current entity source filter	
 
 
 	$scope.toggleEntity = function(entityLabel) {
@@ -771,7 +764,7 @@ linkedtv.run(function($rootScope, conf) {
 		} else {
 			$scope.activeEntities.splice(index, 1);
 		}
-		$scope.enrichmentQuery = $scope.activeEntities.join('+');
+		$('#e_query').attr('value', $scope.activeEntities.join('+'));
 	}
 
 	$scope.isEntitySelected = function(entityLabel) {
@@ -780,9 +773,10 @@ linkedtv.run(function($rootScope, conf) {
 
 
 	//the actual enrichments will be shown in the enrichment tab
-	$scope.fetchEnrichments = function() {
+	$scope.fetchEnrichments = function() {		
+		$scope.enrichmentQuery = $('#e_query').val();//FIXME ugly hack, somehow the ng-model does not work in this form!!!
 		if ($scope.enrichmentQuery) {
-			enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.onSearchEnrichments);		
+			enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.dimension, $scope.onSearchEnrichments);		
 		}
 	};
 
@@ -828,11 +822,12 @@ linkedtv.run(function($rootScope, conf) {
 			}
 		}
 		//apply the enrichments to the scope
-		
-		$scope.enrichmentSources = sources;
-		$scope.enrichmentEntitySources = eSources;
-		$scope.allEnrichments = temp;
-		
+		$scope.$apply(function() {
+			$scope.enrichmentSources = sources;
+			$scope.enrichmentEntitySources = eSources;
+			$scope.allEnrichments = temp;
+			$scope.enrichmentsCollapsed = false;
+		});
 		console.debug($scope.enrichmentEntitySources)
 
 		//by default filter by the first source in the list
@@ -840,16 +835,16 @@ linkedtv.run(function($rootScope, conf) {
 	};
 
 	$scope.addEnrichment = function(enrichment) {		
-		$scope.selectedEnrichments.push(enrichment);
+		$scope.savedEnrichments.push(enrichment);
 	}
 
 	$scope.removeEnrichment = function(index) {
-		$scope.selectedEnrichments.splice(index, 1);
+		$scope.savedEnrichments.splice(index, 1);
 	}
 
 	$scope.ok = function () {			
-		if($scope.selectedEnrichments) {			
-			$modalInstance.close({dimension: $scope.dimension, enrichments : $scope.selectedEnrichments});
+		if($scope.savedEnrichments) {			
+			$modalInstance.close({dimension: $scope.dimension, enrichments : $scope.savedEnrichments});
 		} else {
 			alert('Please add a label');
 		}

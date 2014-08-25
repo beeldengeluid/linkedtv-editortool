@@ -94,6 +94,7 @@ class Api():
 
     """-----------------Enrichments------------------"""
 
-    def getEnrichmentsOnDemand(self, entities, provider, useDummyEnrichments = False):
+    def getEnrichmentsOnDemand(self, entities, provider, dimension, useDummyEnrichments = False):
+        #later fetch the endpoint based on the supplied dimension & provider
         tve = TvEnricher()
-        return tve.getEnrichmentsOnDemand(entities, provider, useDummyEnrichments)
+        return tve.getEnrichmentsOnDemand(entities, provider, dimension, useDummyEnrichments)

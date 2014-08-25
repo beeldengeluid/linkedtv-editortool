@@ -4,29 +4,14 @@
 var rbbConfig = {
 	dimensions : [
 		{		
-		'label' : 'Background information',
-		'service' : 'TVNewsEnricher',
-		'input' : 'entities'
+		'id' : 'RBB',
+		'label' : 'Background information',		
+		'output' : 'object'
 		},
 		{
-		'label' : 'Opinions',
-		'service' : 'TVNewsEnricher',
-		'input' : 'entities'
-		},
-		{
-		'label' : 'In depth',
-		'service' : 'TVNewsEnricher',
-		'input' : 'entities'
-		},
-		{
-		'label' : 'Global to local',
-		'service' : 'TVNewsEnricher',
-		'input' : 'entities'
-		},
-		{
+		'id' : 'Solr',
 		'label' : 'Related news',
-		'service' : 'TVNewsEnricher',
-		'input' : 'entities'
+		'output' : 'literal'
 		},
 	]
 };
@@ -34,19 +19,19 @@ var rbbConfig = {
 var tkkConfig = {
 	dimensions : [
 		{
-		'label' : 'Background information',
-		'service' : 'TVEnricher',
-		'input' : 'entities'
+		'id' : 'SV',
+		'label' : 'Background information',		
+		'output' : 'object'
 		},
 		{
-		'label' : 'Related Europeana objects',
-		'service' : 'TVEnricher',
-		'input' : 'entities'
+		'id' : 'Europeana',
+		'label' : 'Related Europeana objects',		
+		'output' : 'object'
 		},
 		{
+		'id' : 'Solr',
 		'label' : 'Related fragments',
-		'service' : 'TVEnricher',
-		'input' : 'entities'
+		'output' : 'literal'
 		}
 	]
 };

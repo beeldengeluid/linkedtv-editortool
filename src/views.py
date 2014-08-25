@@ -77,9 +77,9 @@ def resource(request):
         """Get the playout URL"""
         
         vph = VideoPlayoutHandler()
-        playoutURL = vph.getPlayoutURL(resourceUri, clientIP)
+        playoutURL = 'none'#vph.getPlayoutURL(resourceUri, clientIP)
         imgf = ImageFetcher()
-        thumbURL =  imgf.getThumbnailLocatorFromAPI(resourceUri)
+        thumbURL =  'none'#imgf.getThumbnailLocatorFromAPI(resourceUri)
 
         """Only if there is a playout URL get the annotation data"""        
         if playoutURL:
@@ -192,7 +192,7 @@ def videos(request):
         resp = api.getVideosOfProvider(p)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')
+    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
 
 def chapters(request):
     r = request.GET.get('r', None)
@@ -201,7 +201,7 @@ def chapters(request):
         resp = api.getChaptersOfResource(r)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')
+    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
 
 #this function should be updated to fetch the entities of a chapter (once the LinkedTV API supports this)
 def entities(request):
@@ -211,18 +211,19 @@ def entities(request):
         resp = api.getEntitiesOfResource(r)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')
+    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
 
 def enrichments(request):
     q = request.GET.get('q', None)
     p = request.GET.get('p', None)
-    if p and q:
+    d = request.GET.get('d', None)
+    if p and q and d:
         p = str(p).upper()
         api = Api()
-        resp = api.getEnrichmentsOnDemand(q.split(','), p, True)
+        resp = api.getEnrichmentsOnDemand(q.split(','), p, d, False)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse("{'error' : 'What a piece of junk'}", mimetype='application/json')
+    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
 
 """ 
 *********************************************************************************************************

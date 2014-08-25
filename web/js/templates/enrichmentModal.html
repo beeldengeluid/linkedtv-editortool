@@ -29,7 +29,7 @@
 			<form class="form-inline enrichment-search" role="form">
                 <div class="form-group">
                     <label>Search</label>
-                    <input type="text" ng-model="enrichmentQuery">
+                    <input id="e_query" type="text">
                 </div>
                 <button id="fetch_enrichments" class="btn btn-primary" ng-click="fetchEnrichments()">
                 	Fetch enrichments
@@ -41,11 +41,11 @@
 
 	<!-- The selected enrichments for this dimension selectedEnrichments-->
 	<div class="row">
-		<div class="col-md-12">        	
-			<div class="foldable" ng-click="selectedEnrichmentsCollapsed = !selectedEnrichmentsCollapsed">Saved enrichments</div>
-			<div collapse="selectedEnrichmentsCollapsed">
+		<div class="col-md-12">
+			<div class="foldable" ng-click="savedEnrichmentsCollapsed = !savedEnrichmentsCollapsed">Saved enrichments</div>
+			<div collapse="savedEnrichmentsCollapsed">
 				<ul class="enrichments">
-					<li ng-repeat="e in selectedEnrichments track by $index">
+					<li ng-repeat="e in savedEnrichments track by $index">
 						<div class="thumbnail" ng-if="e.micropostUrl" ng-click="removeEnrichment($index)">									
 							<img ng-if="enrichmentUtils.getPosterUrl(e)" ng-src="{{enrichmentUtils.getPosterUrl(e)}}" alt="{{e.micropost.plainText}}">
 

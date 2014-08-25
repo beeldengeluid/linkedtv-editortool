@@ -3,10 +3,18 @@ angular.module('linkedtv').controller('enrichmentModalController',
 	'entityCollection', 'enrichmentUtils', 'dimension', function ($scope, $modalInstance, $rootScope, entityProxyService, 
 		enrichmentService, chapterCollection, entityCollection, enrichmentUtils, dimension) {
 	
+	//collapse states
+	$scope.enrichmentsCollapsed = true;
+	$scope.savedEnrichmentsCollapsed = false;
+	$scope.entitiesCollapsed = true;
+
+	//main variables
 	$scope.enrichmentUtils = enrichmentUtils;
 	$scope.dimension = dimension;//currently selected dimension
 	$scope.entities = entityCollection.getChapterEntities();//fetch the entities from the chaptercollection
+	$scope.savedEnrichments = chapterCollection.getActiveChapter().dimensions[dimension.$$hashKey] || [] //also returned from this modal
 
+	//used to formulate the enrichment query for the TVenricher (or another service)
 	$scope.enrichmentQuery = '';//the query that will be sent to the enrichmentService
 	$scope.activeEntities = [];//selected entities
 	
@@ -17,9 +25,7 @@ angular.module('linkedtv').controller('enrichmentModalController',
 	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
 	
 	$scope.activeEnrichmentSource = null; //current source filter
-	$scope.activeEnrichmentEntitySource = null; //current entity source filter
-
-	$scope.selectedEnrichments = [] //this is eventually going to be filled and returned to the dimensionTab	
+	$scope.activeEnrichmentEntitySource = null; //current entity source filter	
 
 
 	$scope.toggleEntity = function(entityLabel) {
@@ -29,7 +35,7 @@ angular.module('linkedtv').controller('enrichmentModalController',
 		} else {
 			$scope.activeEntities.splice(index, 1);
 		}
-		$scope.enrichmentQuery = $scope.activeEntities.join('+');
+		$('#e_query').attr('value', $scope.activeEntities.join('+'));
 	}
 
 	$scope.isEntitySelected = function(entityLabel) {
@@ -38,9 +44,10 @@ angular.module('linkedtv').controller('enrichmentModalController',
 
 
 	//the actual enrichments will be shown in the enrichment tab
-	$scope.fetchEnrichments = function() {
+	$scope.fetchEnrichments = function() {		
+		$scope.enrichmentQuery = $('#e_query').val();//FIXME ugly hack, somehow the ng-model does not work in this form!!!
 		if ($scope.enrichmentQuery) {
-			enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.onSearchEnrichments);		
+			enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.dimension, $scope.onSearchEnrichments);		
 		}
 	};
 
@@ -86,11 +93,12 @@ angular.module('linkedtv').controller('enrichmentModalController',
 			}
 		}
 		//apply the enrichments to the scope
-		
-		$scope.enrichmentSources = sources;
-		$scope.enrichmentEntitySources = eSources;
-		$scope.allEnrichments = temp;
-		
+		$scope.$apply(function() {
+			$scope.enrichmentSources = sources;
+			$scope.enrichmentEntitySources = eSources;
+			$scope.allEnrichments = temp;
+			$scope.enrichmentsCollapsed = false;
+		});
 		console.debug($scope.enrichmentEntitySources)
 
 		//by default filter by the first source in the list
@@ -98,16 +106,16 @@ angular.module('linkedtv').controller('enrichmentModalController',
 	};
 
 	$scope.addEnrichment = function(enrichment) {		
-		$scope.selectedEnrichments.push(enrichment);
+		$scope.savedEnrichments.push(enrichment);
 	}
 
 	$scope.removeEnrichment = function(index) {
-		$scope.selectedEnrichments.splice(index, 1);
+		$scope.savedEnrichments.splice(index, 1);
 	}
 
 	$scope.ok = function () {			
-		if($scope.selectedEnrichments) {			
-			$modalInstance.close({dimension: $scope.dimension, enrichments : $scope.selectedEnrichments});
+		if($scope.savedEnrichments) {			
+			$modalInstance.close({dimension: $scope.dimension, enrichments : $scope.savedEnrichments});
 		} else {
 			alert('Please add a label');
 		}
