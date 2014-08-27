@@ -10,7 +10,7 @@ angular.module('linkedtv').controller('appController',
 	$scope.dataLoaded = function(resourceData) {
 		if(resourceData != null) {
 			console.debug('Loaded data from the server!');
-			
+			console.debug(resourceData);
 			//FIXME get rid of the resourceData on the rootscope!!
 			$rootScope.resourceData = resourceData;
 						

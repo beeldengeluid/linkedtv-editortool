@@ -1,9 +1,8 @@
 angular.module('linkedtv').controller('informationCardsController', 
-	function($rootScope, $scope, $modal, conf, entityProxyService, entityCollection, chapterCollection) {
+	function($rootScope, $scope, $modal, conf, entityProxyService, chapterCollection) {
 
 	/*-------------------------TAB FUNCTIONS---------------------------*/
 	
-	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
 	$scope.activeChapter = null;//holds the up-to-date active chapter
 	$scope.activeCardIndex = 0;
 
@@ -14,17 +13,6 @@ angular.module('linkedtv').controller('informationCardsController',
 		console.debug(newValue);
 		$scope.activeChapter = newValue;
 	});
-
-	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
-		if(newValue) {
-			$scope.updateEntities(newValue);
-		}
-	});
-	
-	//called whenever a chapter is selected
-	$scope.updateEntities = function(entities) {
-		$scope.entities	= entities;
-	}
 
 	$scope.createNewCard = function() {
 		$scope.openCardDialog(null);
@@ -44,9 +32,6 @@ angular.module('linkedtv').controller('informationCardsController',
 			resolve: {				
 				card : function () {
 					return card;
-				},
-				entities: function () {
-					return $scope.entities;
 				}
 			}
 		});

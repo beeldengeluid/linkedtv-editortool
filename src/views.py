@@ -79,7 +79,7 @@ def resource(request):
         vph = VideoPlayoutHandler()
         playoutURL = 'none'#vph.getPlayoutURL(resourceUri, clientIP)
         imgf = ImageFetcher()
-        thumbURL =  'none'#imgf.getThumbnailLocatorFromAPI(resourceUri)
+        thumbURL =  imgf.getThumbnailLocatorFromAPI(resourceUri)
 
         """Only if there is a playout URL get the annotation data"""        
         if playoutURL:
