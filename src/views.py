@@ -71,28 +71,26 @@ For loading a single mediaresource (for populating the main detail page of a vid
 """This is called to fetch the data of a single media resource"""
 def resource(request):
     resourceUri = request.GET.get('id', None)
-    data = request.GET.get('ld', 'false') == 'true'
+    loadData = request.GET.get('ld', 'false') == 'true'
     clientIP = getClientIP(request)
-    if resourceUri:        
-        """Get the playout URL"""
+    if resourceUri:
+        resourceData = {}
+        if loadData:
+            api = Api()
+            resourceData = api.getAllAnnotationsOfResource(resourceUri, True)
+        """Get the mediaresource metadata and the playout URL"""
+        videoMetadata = simplejson.loads(api.getVideoData(resourceUri))
+        if videoMetadata:
+            vph = VideoPlayoutHandler()
+            resourceData['videoMetadata'] = videoMetadata
+            playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)                
+            resourceData['locator'] = playoutURL
+            for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
+                if mrr['relationType'] == 'thumbnail-locator':
+                    resourceData['thumbBaseUrl'] = mrr['relationTarget']
+        resp = simplejson.dumps(resourceData)
+        return HttpResponse(resp, mimetype='application/json')
         
-        vph = VideoPlayoutHandler()
-        playoutURL = 'none'#vph.getPlayoutURL(resourceUri, clientIP)
-        imgf = ImageFetcher()
-        thumbURL =  imgf.getThumbnailLocatorFromAPI(resourceUri)
-
-        """Only if there is a playout URL get the annotation data"""        
-        if playoutURL:
-            mr = {}
-            if data:
-                api = Api()
-                mr = api.getEntireResource(resourceUri, True)
-            mr['locator'] = playoutURL
-            mr['thumbBaseUrl'] = thumbURL
-            resp = simplejson.dumps(mr)
-            return HttpResponse(resp, mimetype='application/json')
-        else:
-            return HttpResponse("{error: 'no play-out URL found!'}", mimetype='application/json')
 
     return HttpResponse("{error: 'resource does not exist'}", mimetype='application/json')
 
@@ -114,15 +112,17 @@ For loading keyframes from the Noterik server
 
 """This is called to fetch an keyframe/thumbnail image from the Noterik server"""
 def image(request):
+    #id = request.GET.get('id', None)
     millis = request.GET.get('ms', None)
-    id = request.GET.get('id', None)
-    if millis:
+    baseUrl = request.GET.get('baseUrl', None)
+    if millis and baseUrl:
         fetcher = ImageFetcher()
-        resp = fetcher.getNoterikThumbnailByMillis(id, millis)
+        resp = fetcher.getNoterikThumbnailByMillis(millis, baseUrl)
         if resp:
             return HttpResponse(resp, mimetype='image/jpeg')
         else:
             return HttpResponseRedirect('/site_media/images/snowscreen.gif')
+    """
     elif id:
         fetcher = ImageFetcher()
         resp = fetcher.getEnrichmentThumb(id)
@@ -130,7 +130,7 @@ def image(request):
             return HttpResponse(resp)
         else:
             return HttpResponseRedirect('/site_media/images/snowscreen.gif')
-        
+    """    
     return HttpResponse("{'error' : 'Please provide the moment in time by milliseconds'}", mimetype='application/json')
 
 """ 
@@ -185,6 +185,15 @@ New API calls
 *********************************************************************************************************
 """
 
+def video(request):
+    r = request.GET.get('r', None)
+    if r:
+        api = Api()
+        resp = api.getVideoData(r)
+        if resp:
+            return HttpResponse(resp, mimetype='application/json')
+    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
+
 def videos(request):
     p = request.GET.get('p', None)
     if p:
@@ -217,10 +226,11 @@ def enrichments(request):
     q = request.GET.get('q', None)
     p = request.GET.get('p', None)
     d = request.GET.get('d', None)
-    if p and q and d:
+    s = request.GET.get('s', None)
+    if p and q and d and s:
         p = str(p).upper()
         api = Api()
-        resp = api.getEnrichmentsOnDemand(q.split(','), p, d, False)
+        resp = api.getEnrichmentsOnDemand(q.split(','), p, d, s, False)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')

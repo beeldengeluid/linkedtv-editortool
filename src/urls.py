@@ -23,6 +23,7 @@ urlpatterns = patterns('',
     url(r'^(?P<pub>\w+)/(?P<id>.*)/$', 'views.provider'),
 
     #new API calls
+    url(r'^video$', 'views.video'),
     url(r'^videos$', 'views.videos'),
     url(r'^chapters$', 'views.chapters'),
     url(r'^entities$', 'views.entities'),

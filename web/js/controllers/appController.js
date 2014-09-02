@@ -1,5 +1,5 @@
 angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection) {	
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, videoModel) {	
 	
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
@@ -12,13 +12,16 @@ angular.module('linkedtv').controller('appController',
 			console.debug('Loaded data from the server!');
 			console.debug(resourceData);
 			//FIXME get rid of the resourceData on the rootscope!!
-			$rootScope.resourceData = resourceData;
+			//$rootScope.resourceData = resourceData;
+
+			//load the videoModel with metadata
+			videoModel.initModelData(resourceData);
 						
 			//load the chapterCollection with chapter data
-			chapterCollection.initCollectionData($rootScope.resourceUri, $rootScope.provider, resourceData);
+			chapterCollection.initCollectionData($rootScope.provider, resourceData);
 
 			//load the entityCollection with entity data
-			entityCollection.initCollectionData($rootScope.resourceData.nes);
+			entityCollection.initCollectionData(resourceData.nes);
 
 		} else {
 			// TODO error

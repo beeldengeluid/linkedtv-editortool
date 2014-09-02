@@ -4,13 +4,39 @@
 var rbbConfig = {
 	dimensions : [
 		{		
-		'id' : 'RBB',
-		'label' : 'Background information',		
+		'id' : 'opinion',
+		'label' : 'Opinion',
+		'service' : 'TVNewsEnricher',
+		'output' : 'object'
+		},
+		{		
+		'id' : 'othermedia',
+		'label' : 'Other media',
+		'service' : 'TVNewsEnricher',
+		'output' : 'object'
+		},
+		{		
+		'id' : 'timeline',
+		'label' : 'Timeline',
+		'service' : 'TVNewsEnricher',
+		'output' : 'object'
+		},
+		{		
+		'id' : 'indepth',
+		'label' : 'In depth',
+		'service' : 'TVNewsEnricher',
+		'output' : 'object'
+		},
+		{		
+		'id' : 'tweets',
+		'label' : 'Tweets',
+		'service' : 'TVNewsEnricher',
 		'output' : 'object'
 		},
 		{
 		'id' : 'Solr',
 		'label' : 'Related news',
+		'service' : 'TVEnricher',
 		'output' : 'literal'
 		},
 	]
@@ -20,17 +46,20 @@ var tkkConfig = {
 	dimensions : [
 		{
 		'id' : 'SV',
-		'label' : 'Background information',		
+		'label' : 'Background information',
+		'service' : 'TVEnricher',
 		'output' : 'object'
 		},
 		{
 		'id' : 'Europeana',
-		'label' : 'Related Europeana objects',		
+		'label' : 'Related Europeana objects',
+		'service' : 'TVEnricher',
 		'output' : 'object'
 		},
 		{
 		'id' : 'Solr',
 		'label' : 'Related fragments',
+		'service' : 'TVEnricher',
 		'output' : 'literal'
 		}
 	]
@@ -78,7 +107,7 @@ linkedtv.run(function($rootScope, conf) {
 	var observers = [];
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)	
-	function initCollectionData(resourceUri, provider, resourceData) {
+	function initCollectionData(provider, resourceData) {
 		console.debug('Initializing chapter data');
 		var chapters = [];
 		//FIXME do this on the server: assign auto/curated type to each chapter
@@ -100,7 +129,7 @@ linkedtv.run(function($rootScope, conf) {
 			var chapter = chapters[c];
 
 			//add all the posters to the chapters 
-			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, chapter.start);
+			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, chapter.start);
 			//add a default empty collection to hold information cards (TODO load this later from the server!)
 			chapter.cards = [];
 			//add a default empty collection for the curated enrichments (TODO load this later from the server!)
@@ -234,7 +263,28 @@ linkedtv.run(function($rootScope, conf) {
 		updateChapterEntities : updateChapterEntities
 	}
 
-}]);;angular.module('linkedtv').factory('chapterService', [function(){
+}]);;angular.module('linkedtv').factory('videoModel', function() {
+	
+	var _video = null;
+
+	function initModelData(resourceData) {
+		_video = {
+			title : resourceData.videoMetadata.mediaResource.titleName,
+			playoutUrl : resourceData.locator
+		}
+		console.debug('Loaded the video data');
+	}
+
+	function getVideo() {
+		return _video;
+	}
+
+	return {
+		initModelData : initModelData,
+		getVideo : getVideo
+	}
+
+});;angular.module('linkedtv').factory('chapterService', [function(){
 	
 	//TODO later on when using this again make sure to fill the chapterCollection
 	function getChaptersOfResource(resourceUri, callback) {
@@ -285,10 +335,12 @@ linkedtv.run(function($rootScope, conf) {
 	function search(query, provider, dimension, callback) {
 		console.debug('Querying enrichments using ' + query + '['+provider+']');
 		console.debug(dimension);
+		var fetchUrl = '/enrichments?q=' + query.split('+').join(',') + '&p=' + provider;
+		fetchUrl += '&d=' + dimension.id + '&s=' + dimension.service;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/enrichments?q=' + query.split('+').join(',') + '&p=' + provider + '&d=' + dimension.id,
+			url : fetchUrl,
 			success : function(json) {
 				console.debug(json);
 				//callback(JSON.parse(json.enrichments));
@@ -358,9 +410,9 @@ linkedtv.run(function($rootScope, conf) {
 
 }]);;angular.module('linkedtv').factory('imageService', [function(){
 	
-	function getThumbnail(thumbBaseUrl, resourceUri, millis) {
-		if (!thumbBaseUrl) {
-			return '/image?ms=' + millis + '&id=' + resourceUri;
+	function getThumbnail(thumbBaseUrl, millis, useImageProxy) {
+		if (useImageProxy) {
+			return '/image?ms=' + millis + '&baseUrl=' + thumbBaseUrl;
 		}
 		var h = m = s = 0;
 		while (millis >= 3600000) {
@@ -551,7 +603,7 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 }]);;angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection) {	
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, videoModel) {	
 	
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
@@ -564,13 +616,16 @@ linkedtv.run(function($rootScope, conf) {
 			console.debug('Loaded data from the server!');
 			console.debug(resourceData);
 			//FIXME get rid of the resourceData on the rootscope!!
-			$rootScope.resourceData = resourceData;
+			//$rootScope.resourceData = resourceData;
+
+			//load the videoModel with metadata
+			videoModel.initModelData(resourceData);
 						
 			//load the chapterCollection with chapter data
-			chapterCollection.initCollectionData($rootScope.resourceUri, $rootScope.provider, resourceData);
+			chapterCollection.initCollectionData($rootScope.provider, resourceData);
 
 			//load the entityCollection with entity data
-			entityCollection.initCollectionData($rootScope.resourceData.nes);
+			entityCollection.initCollectionData(resourceData.nes);
 
 		} else {
 			// TODO error
@@ -1262,14 +1317,15 @@ linkedtv.run(function($rootScope, conf) {
 		return $scope.activeCardIndex == index ? 'selected' : '';
 	};
 	
-});;angular.module('linkedtv').controller('playerController', function($sce, $rootScope, $scope, playerService){
+});;angular.module('linkedtv').controller('playerController', function($sce, $scope, videoModel, playerService){
 	
 	$scope.canPlayVideo = false;
 	
 	//watch the rootScope that updates once the main resourceData is loaded (it contains also the playoutUrl)
-	$rootScope.$watch('resourceData', function(resourceData){
-		if(resourceData) {			
-			var playoutUrl = $sce.trustAsResourceUrl(resourceData.locator);			
+	$scope.$watch(function () { return videoModel.getVideo(); }, function(video) {
+		if(video) {			
+			var playoutUrl = $sce.trustAsResourceUrl(video.playoutUrl);
+			$scope.title = video.title;
 			$scope.canPlayVideo = playerService.playFragment(playoutUrl, 0);
 		}
 	});

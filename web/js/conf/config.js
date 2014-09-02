@@ -4,13 +4,39 @@
 var rbbConfig = {
 	dimensions : [
 		{		
-		'id' : 'RBB',
-		'label' : 'Background information',		
+		'id' : 'opinion',
+		'label' : 'Opinion',
+		'service' : 'TVNewsEnricher',
+		'output' : 'object'
+		},
+		{		
+		'id' : 'othermedia',
+		'label' : 'Other media',
+		'service' : 'TVNewsEnricher',
+		'output' : 'object'
+		},
+		{		
+		'id' : 'timeline',
+		'label' : 'Timeline',
+		'service' : 'TVNewsEnricher',
+		'output' : 'object'
+		},
+		{		
+		'id' : 'indepth',
+		'label' : 'In depth',
+		'service' : 'TVNewsEnricher',
+		'output' : 'object'
+		},
+		{		
+		'id' : 'tweets',
+		'label' : 'Tweets',
+		'service' : 'TVNewsEnricher',
 		'output' : 'object'
 		},
 		{
 		'id' : 'Solr',
 		'label' : 'Related news',
+		'service' : 'TVEnricher',
 		'output' : 'literal'
 		},
 	]
@@ -20,17 +46,20 @@ var tkkConfig = {
 	dimensions : [
 		{
 		'id' : 'SV',
-		'label' : 'Background information',		
+		'label' : 'Background information',
+		'service' : 'TVEnricher',
 		'output' : 'object'
 		},
 		{
 		'id' : 'Europeana',
-		'label' : 'Related Europeana objects',		
+		'label' : 'Related Europeana objects',
+		'service' : 'TVEnricher',
 		'output' : 'object'
 		},
 		{
 		'id' : 'Solr',
 		'label' : 'Related fragments',
+		'service' : 'TVEnricher',
 		'output' : 'literal'
 		}
 	]

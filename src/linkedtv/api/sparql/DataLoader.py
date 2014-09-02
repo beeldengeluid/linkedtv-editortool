@@ -142,7 +142,6 @@ class DataLoader():
             concepts = []
             nes = []
             shots = []
-            related = []
             chapters = []                    
             for k in jsonData['results']['bindings']:
                 mfURI = annotationURI = bodyURI = label = RDFType = DCType = OWLSameAs = r = c = ''
@@ -174,10 +173,9 @@ class DataLoader():
                                 'type' : self.getNEType(DCType, RDFType, OWLSameAs), 'subTypes' : self.getDCTypes(DCType),
                                 'disambiguationURL' : OWLSameAs, 'relevance' : r, 'confidence' : c})
                     
-            related = [] #self.loadRelatedContent(mediaResourceID)
             enrichments = self.loadComputatedEnrichmentsOfMediaResource(mediaResourceID)            
             mediaResource = {'concepts' : concepts, 'nes' : self.filterStopWordNEs(nes),
-                             'shots' : shots, 'chapters' : chapters, 'related' : related, 'enrichments' : enrichments}
+                             'shots' : shots, 'chapters' : chapters, 'enrichments' : enrichments}
             
             return mediaResource
         return None
@@ -258,42 +256,6 @@ class DataLoader():
                                         'derivedFrom' : entities})
         return enrichments
     
-    def loadRelatedContent(self, mediaResourceID):
-        query = []
-        query.append('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ')
-        query.append('PREFIX oa: <http://www.w3.org/ns/oa#> ')
-        query.append('PREFIX ma: <http://www.w3.org/ns/ma-ont#> ')
-        query.append('PREFIX nsa: <http://multimedialab.elis.ugent.be/organon/ontologies/ninsuna#> ')        
-        query.append('SELECT DISTINCT ?start ?end ?body ')
-        query.append('FROM <%s> ' % self.GRAPH)
-        query.append('WHERE { ')
-        query.append('?mf ma:isFragmentOf <%s%s> . ' % (self.LINKEDTV_MEDIA_RESOURCE_PF, mediaResourceID))        
-        query.append('?mf nsa:temporalStart ?start . ')
-        query.append('?mf nsa:temporalEnd ?end . ')
-        query.append('?annotation oa:hasTarget ?mf . ')
-        query.append('?annotation rdf:type <http://www.w3.org/ns/oa#Annotation> . ')
-        query.append('?annotation oa:hasBody ?body . ')
-        query.append('?body rdf:type <http://data.linkedtv.eu/ontology/RelatedContent> ')
-        query.append('}')
-        logger.debug(''.join(query))
-        resp = self.sendSearchRequest(''.join(query))
-        jsonData = None
-        try:
-            jsonData = simplejson.loads(resp)
-        except JSONDecodeError, e:
-            logger.error(e)
-        if jsonData:
-            related = []
-            for k in jsonData['results']['bindings']:
-                bodyURI = ''
-                start = end = 0
-                if k.has_key('start'): start = TimeUtils.toMillis(k['start']['value'])
-                if k.has_key('end'): end = TimeUtils.toMillis(k['end']['value'])
-                if k.has_key('body'): bodyURI = k['body']['value']
-                related.append({'start' : start, 'end' : end, 'bodyURI' : bodyURI})
-            return related
-        return None
-    
     def loadCuratedMediaResourceData (self, mediaResourceID):
         """Check if the media resource is in the cache"""
         mediaResource = None
@@ -355,7 +317,6 @@ class DataLoader():
             concepts = []
             nes = []
             shots = []
-            related = []
             chapters = []
             for k in jsonData['results']['bindings']:
                 ETenrichmentURI = mfURI = ETmfURI = annotationURI = ETannotationURI = bodyURI = ETbodyURI = bodyURI = label = ''
@@ -400,7 +361,7 @@ class DataLoader():
                                 'end' : end, 'label' : label, 'type' : self.getNEType(DCType, RDFType, OWLSameAs),
                                 'subTypes' : self.getDCTypes(DCType), 'disambiguationURL' : OWLSameAs, 'relevance' : r, 'confidence' : c,
                                 'url' : vocabURL})
-            #TODO what to do with related content & enrichments?
+
             enrichments = self.loadCuratedEnrichmentsOfMediaResource(mediaResourceID)
             mediaResource = {'concepts' : concepts, 'nes' : self.filterStopWordNEs(nes),
                              'shots' : shots, 'chapters' : chapters, 'enrichments' : enrichments}

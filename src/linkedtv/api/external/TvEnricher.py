@@ -16,7 +16,7 @@ class TvEnricher():
         self.BASE_URL = 'http://linkedtv.eurecom.fr/tvenricher/api'
         self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
     
-    def getEnrichmentsOnDemand(self, entities, provider, dimension, useDummyCache = False):
+    def search(self, entities, provider, dimension, useDummyCache = False):
         #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v
         print 'Getting enrichments on demand'
         print useDummyCache
@@ -33,8 +33,7 @@ class TvEnricher():
             #if useDummyCache and not self.cache.exists('dummyEnrichments'):
             #self.cache.set('dummyEnrichments', simplejson.dumps({ 'enrichments' : content }))
             return self.formatResponse(content, entities, provider, dimension)
-        else:
-            print stderr
+        else:            
             return None 
 
     def getServiceUrl(self, entities, provider, dimension):

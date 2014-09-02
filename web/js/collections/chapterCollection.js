@@ -8,7 +8,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	var observers = [];
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)	
-	function initCollectionData(resourceUri, provider, resourceData) {
+	function initCollectionData(provider, resourceData) {
 		console.debug('Initializing chapter data');
 		var chapters = [];
 		//FIXME do this on the server: assign auto/curated type to each chapter
@@ -30,7 +30,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			var chapter = chapters[c];
 
 			//add all the posters to the chapters 
-			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, resourceUri, chapter.start);
+			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, chapter.start);
 			//add a default empty collection to hold information cards (TODO load this later from the server!)
 			chapter.cards = [];
 			//add a default empty collection for the curated enrichments (TODO load this later from the server!)

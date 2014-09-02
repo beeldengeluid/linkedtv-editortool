@@ -28,10 +28,9 @@ class VideoPlayoutHandler():
     TODO make sure that it does not wait forever for the NTK server to reply
     """
     #@timecall(immediate=True)
-    def getPlayoutURL(self, mediaResourceID, clientIP):
-        logger.debug('getting playoutURL for: %s (%s)' % (mediaResourceID, clientIP))        
-        playoutURL = None
-        locator = self.getLocatorFromAPI(mediaResourceID)        
+    def getPlayoutURL(self, locator, clientIP):
+        #logger.debug('getting playoutURL for: %s (%s)' % (mediaResourceID, clientIP))        
+        playoutURL = None        
         ticket = self.generateUniqueTicket(clientIP)        
         ms = int(datetime.datetime.now().strftime("%s"))
                 
@@ -61,7 +60,7 @@ class VideoPlayoutHandler():
                 if status and len(status) > 0:
                     st = status[0].text                    
                     if st == 'Successfully added':
-                        playoutURL = self.unshorten_url('%s?ticket=%s' % (locator, ticket))
+                        playoutURL = self.getRedirectUrl('%s?ticket=%s' % (locator, ticket))
             except lxml.etree.XMLSyntaxError, e:
                 print 'Could not parse the response XML'
                 print e
@@ -70,12 +69,12 @@ class VideoPlayoutHandler():
         return playoutURL
     
         
-    def unshorten_url(self, url):
+    def getRedirectUrl(self, url):
         #print 'getting redirect URL'
         cmd_arr = []
         cmd_arr.append('curl')
         cmd_arr.append('-I')
-        cmd_arr.append(url)                 
+        cmd_arr.append(url)
         p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p1.communicate()
         try:
@@ -91,42 +90,8 @@ class VideoPlayoutHandler():
             return url
         else:
             logger.error(stderr)
-            return None
-    
-    
-    def getLocatorFromAPI(self, mediaResourceID):
-        pw = base64.b64encode(b'admin:linkedtv')
-        url = 'http://api.linkedtv.eu/mediaresource/%s' % mediaResourceID
-        print url
-        cmd_arr = []
-        cmd_arr.append('curl')
-        cmd_arr.append(url)
-        cmd_arr.append('-H')
-        cmd_arr.append('Authorization: Basic %s' % pw)
-        cmd_arr.append('-H')
-        cmd_arr.append('Accept: application/xml')
-        p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p1.communicate()
-        print stdout
-        try:
-            p1.stdout.close()
-        except IOError, e:
-            print "stdout after failure: %s" % p1.stdout
-            
-        if stdout:
-            xml = None
-            try:
-                xml = etree.fromstring(stdout)
-            except lxml.etree.XMLSyntaxError, e:
-                logger.error('Could not parse XML, probably the LinkedTV API is down')
-            if xml is not None:
-                locs = xml.xpath('//locator')
-                if locs and len(locs) > 0:
-                    return locs[0].text
-        else:
-            logger.error(stderr)
-        return None
-    
+            return None    
+
     
     def generateUniqueTicket(self, clientIP):
         t = datetime.datetime.now().time()        

@@ -9,8 +9,6 @@ import urllib
 import urlparse
 import requests
 
-from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS
-
 """
 TODO soms werkt het niet goed met het teruggeven van de plaatjes... (kan de server het niet aan?)
 
@@ -20,68 +18,35 @@ OVER REQUESTS!!
 """
 
 class ImageFetcher():
-       
-    def __init__(self):
-        #self.redisCache = redis.StrictRedis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
-        print 'initializing'
-    
-    def getThumbnailLocatorFromAPI(self, mediaResourceID):
-        pw = base64.b64encode(b'admin:linkedtv')
-        url = 'http://api.linkedtv.eu/mediaresource/%s/mediaresourcerelation' % mediaResourceID
-        cmd_arr = []
-        cmd_arr.append('curl')
-        cmd_arr.append(url)
-        cmd_arr.append('-H')
-        cmd_arr.append('Authorization: Basic %s' % pw)
-        cmd_arr.append('-H')        
-        cmd_arr.append('Accept: application/xml')        
-        p1 = Popen(cmd_arr, stdout=PIPE)
-        resp = p1.communicate()[0]        
-        if resp:
-            print resp
-            xml = etree.fromstring(resp)
-            rels = xml.xpath('//mediaresourcerelation')
-            for rel in rels:
-                if rel.xpath('./relationType')[0].text == 'thumbnail-locator':
-                    return rel.xpath('./relationTarget')[0].text
-        return None
     
     """This function returns image data from the Noterik image server
     @param id: the id of the mediaResource/video
     @param second: the desired timepoint from the mediaResource/video in seconds
     """
-    def getNoterikThumbnailByMillis(self, mediaResourceID, millis):
-        baseURL = None#self.redisCache.get('thumb.%s' % mediaResourceID)
-        if not baseURL:
-            baseURL = self.getThumbnailLocatorFromAPI(mediaResourceID)     
-        if baseURL:
-            tt = self.millisToTimeTuple(millis)
-            url = '%sh/%d/m/%d/sec%d.jpg' % (baseURL, tt[0], tt[1], tt[2])            
-            """Call the Noterik API and fetch the image"""
-            try:
-                u = urllib2.urlopen(url)
-                #l = u.info()['Content-Length']
-            except urllib2.HTTPError, e:
-                print 'Error getting %s' % url
-                print e
-                return None
-            except urllib2.URLError, u:
-                print 'Error getting %s' % url
-                print u
-                return None
-            
-            """Read the image and resize it, so it is more suitable for the Editor tool UI"""
-            x = u.read()
-            img = Image.open(StringIO.StringIO(x))
-            output = StringIO.StringIO()
-            img = img.resize([105, 79])
-            img.save(output, 'JPEG', quality=90)
-            
-            """Save the thumbnail-locator in the cache"""
-            #self.redisCache.set('thumb.%s' % mediaResourceID, baseURL)
-            
-            return output.getvalue()
-        return None
+    def getNoterikThumbnailByMillis(self, millis, baseUrl):
+        tt = self.millisToTimeTuple(millis)
+        url = '%sh/%d/m/%d/sec%d.jpg' % (baseUrl, tt[0], tt[1], tt[2])            
+        """Call the Noterik API and fetch the image"""
+        try:
+            u = urllib2.urlopen(url)
+            #l = u.info()['Content-Length']
+        except urllib2.HTTPError, e:
+            print 'Error getting %s' % url
+            print e
+            return None
+        except urllib2.URLError, u:
+            print 'Error getting %s' % url
+            print u
+            return None
+        
+        """Read the image and resize it, so it is more suitable for the Editor tool UI"""
+        x = u.read()
+        img = Image.open(StringIO.StringIO(x))
+        output = StringIO.StringIO()
+        img = img.resize([105, 79])
+        img.save(output, 'JPEG', quality=90)
+        
+        return output.getvalue()        
     
     """ TODO dit moet gefixed worden!!! irritant gedoe!"""
     def getEnrichmentThumb(self, url):

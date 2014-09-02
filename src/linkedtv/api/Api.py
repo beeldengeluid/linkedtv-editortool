@@ -4,6 +4,7 @@ from subprocess import Popen, PIPE
 from linkedtv.LinkedtvSettings import LTV_API_ENDPOINT, LTV_DATA_ENDPOINT, LTV_REDIS_SETTINGS
 from linkedtv.api.sparql.DataLoader import *
 from linkedtv.api.external.TvEnricher import *
+from linkedtv.api.external.TvNewsEnricher import *
 
 class Api():
     
@@ -15,8 +16,22 @@ class Api():
 
     """-----------------Resource (replace later on)------------------"""
 
-    #this function should be replaced when the LinkedTV API has been updated   
-    def getEntireResource(self, resourceUri, fetchFromCache=False):
+    #directly uses the linkedTV platform
+    def getVideoData(self, resourceUri):        
+        pw = base64.b64encode(b'admin:linkedtv')
+        http = httplib2.Http()      
+        url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri        
+        headers = {
+            'Accept' : 'application/json',
+            'Authorization' : 'Basic %s' % pw,
+        }
+        resp, content = http.request(url, 'GET', headers=headers)
+        if resp and resp['status'] == '200':
+            return content
+        return None
+
+    #uses the SPARQL dataloader to fetch all annotations
+    def getAllAnnotationsOfResource(self, resourceUri, fetchFromCache=False):
         print 'Getting %s from the API or cache' % resourceUri
         data = None
         if fetchFromCache:
@@ -94,7 +109,13 @@ class Api():
 
     """-----------------Enrichments------------------"""
 
-    def getEnrichmentsOnDemand(self, entities, provider, dimension, useDummyEnrichments = False):
+    def getEnrichmentsOnDemand(self, entities, provider, dimension, service, useDummyEnrichments = False):
         #later fetch the endpoint based on the supplied dimension & provider
-        tve = TvEnricher()
-        return tve.getEnrichmentsOnDemand(entities, provider, dimension, useDummyEnrichments)
+        if service == 'TvEnricher':
+            print 'Fetching stuff from the TVEnricher'
+            tve = TvEnricher()
+            return tve.search(entities, provider, dimension, useDummyEnrichments)
+        elif service == 'TVNewsEnricher':
+            print 'Fetching stuff from the TVNewsEnricher'
+            tvne = TvNewsEnricher()
+            return tvne.search(entities, provider, dimension, useDummyEnrichments)
