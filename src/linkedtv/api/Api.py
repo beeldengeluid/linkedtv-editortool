@@ -119,3 +119,4 @@ class Api():
             print 'Fetching stuff from the TVNewsEnricher'
             tvne = TvNewsEnricher()
             return tvne.search(entities, provider, dimension, useDummyEnrichments)
+        return None

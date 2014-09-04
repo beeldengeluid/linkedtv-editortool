@@ -30,9 +30,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			var chapter = chapters[c];
 
 			//add all the posters to the chapters 
-			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, chapter.start);
-			//add a default empty collection to hold information cards (TODO load this later from the server!)
-			chapter.cards = [];
+			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, chapter.start);			
 			//add a default empty collection for the curated enrichments (TODO load this later from the server!)
 			chapter.dimensions = {};
 		}
@@ -83,6 +81,24 @@ angular.module('linkedtv').factory('chapterCollection',
 		}
 	}
 
+	function saveChapterLink(dimension, link) {
+		if(_activeChapter.dimensions[dimension.id]) {
+			var exists = false;
+			for(var i=0;i<_activeChapter.dimensions[dimension.id].length;i++){
+				if(_activeChapter.dimensions[dimension.id][i].uri == link.uri) {
+					_activeChapter.dimensions[dimension.id][i] = link;
+					exists = true;
+				}
+			}
+			if (!exists) {
+				_activeChapter.dimensions[dimension.id].push(link);
+			}
+		} else {
+			_activeChapter.dimensions[dimension.id] = [link];
+		}
+		saveChapter(_activeChapter);
+	}
+
 	return {
 		initCollectionData : initCollectionData,
 		getChapters : getChapters,
@@ -90,6 +106,7 @@ angular.module('linkedtv').factory('chapterCollection',
 		setActiveChapter : setActiveChapter,
 		getActiveChapter : getActiveChapter,
 		saveChapter : saveChapter,
+		saveChapterLink : saveChapterLink,
 		addObserver : addObserver
 	}
 

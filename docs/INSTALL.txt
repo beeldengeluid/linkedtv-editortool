@@ -2,9 +2,13 @@
 TODO
 --------------------------------------------------------------------------------
 Investigate annotation players
-http://www.openvideoannotation.org/
+
+	http://www.openvideoannotation.org/
 
 
+TKK art object
+
+	http://www.linkedtv.eu/wiki/index.php/Creating_rich_descriptions_of_cultural_artefacts_out_of_a_TV_program
 --------------------------------------------------------------------------------
 INSTALL
 --------------------------------------------------------------------------------

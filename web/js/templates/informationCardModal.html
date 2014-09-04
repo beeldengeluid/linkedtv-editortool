@@ -5,6 +5,82 @@
 
 <div class="modal-body">
 
+    <!-- select the card type (see types in config) -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <label>Select type</label>
+                <select ng-model="activeTemplate" ng-options="t.label for t in templates">                    
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <form role="form">
+                    <div class="form-group" ng-repeat="p in activeTemplate.properties">
+                        <label>{{p}}</label>
+                        <input class="form-control">
+                    </div>                    
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- for new cards, or cards without entities -->
+    <div class="row" ng-show="!card.triples && !card.poster">
+        <div class="col-md-12">
+             <h4>Saved to card</h4>
+            <div class="alert alert-info">Please select a number of properties to save to this card</div>
+        </div>
+    </div>    
+
+    <!-- saved entities -->
+    <div class="row">
+        <div class="card-edit-form">
+            <div class="col-md-12">
+                <h4 ng-if="card.triples">Saved to card</h4>
+                <div class="row">
+                    <div ng-if="card.triples" class="col-md-10">
+                        <header>
+                            <ul>
+                                <li>Label</li>
+                                <li>Value</li>
+                            </ul>
+                        </header>
+                        <form class="form-inline" role="form" ng-repeat="triple in card.triples">
+                            <div class="form-group">
+                                <input class="form-control" ng-model="card.triples[$index].key">
+                            </div>
+                            <div class="form-group">
+                                <input class="form-control" ng-model="card.triples[$index].value" title="{{card.triples[$index].uri}}">
+                            </div>                            
+                            <i class="glyphicon glyphicon-minus interactive" ng-click="removeFromCard($index)"></i>
+                        </form>
+                    </div>
+
+                    <!-- this is the spot where the poster is shown -->
+                    <div ng-if="card.poster" class="col-md-2">
+                        <header>
+                            <ul>
+                                <li>Poster</li>
+                            </ul>
+                        </header>
+                        <!-- when thumbs are available -->
+                        <div ng-show="card.poster" class="thumbnail card-edit-thumb">
+                            <img ng-src="{{card.poster}}" >
+                        </div>
+                    </div>
+
+                </div>
+                <button class="btn btn-primary" ng-click="addToCard()">New</button>
+            </div>
+            
+        </div>
+    </div>
+
     <!-- display entities -->
     <div class="row">
         <div class="col-md-12">
@@ -58,7 +134,6 @@
                                 <ul>
                                     <li>Label</li>
                                     <li>Value</li>
-                                    <li>Resource</li>
                                 </ul>
                             </header>
                             <form class="form-inline" role="form" ng-repeat="triple in fetchedTriples" 
@@ -67,14 +142,13 @@
                                     <input disabled class="form-control" value="{{triple.key}}">
                                 </div>
                                 <div class="form-group">
-                                    <input disabled class="form-control" value="{{triple.values[triple.index]}}">
-                                </div>
-                                <div class="form-group">                        
+                                    <div class="textarea" ng-if="!triple.uris[triple.index]">{{triple.values[triple.index]}}</div>
                                     <div ng-if="triple.uris[triple.index]" ng-click="fetchExtraInfo(triple.uris[triple.index])" 
                                         class="label label-default entity" title="{{triple.values[triple.index]}}">
                                         {{triple.values[triple.index]}}
                                     </div>
                                 </div>
+                                
                                 <i class="glyphicon glyphicon-plus interactive" ng-click="addToCard(triple)"></i>
                             </form>
                         </div>
@@ -99,64 +173,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-
-    <!-- for new cards, or cards without entities -->
-    <div class="row" ng-show="!card.triples && !card.poster">
-        <div class="col-md-12">
-             <h4>Saved to card</h4>
-            <div class="alert alert-info">Please select a number of properties to save to this card</div>
-        </div>
-    </div>
-
-
-    <!-- saved entities -->
-    <div class="row">
-        <div class="card-edit-form">
-            <div class="col-md-12">
-                <h4 ng-if="card.triples">Saved to card</h4>
-                <div class="row">
-                    <div ng-if="card.triples" class="col-md-10">
-                        <header>
-                            <ul>
-                                <li>Label</li>
-                                <li>Value</li>
-                                <li>Resource</li>
-                            </ul>
-                        </header>
-                        <form class="form-inline" role="form" ng-repeat="triple in card.triples">
-                            <div class="form-group">
-                                <input class="form-control" ng-model="card.triples[$index].key">
-                            </div>
-                            <div class="form-group">
-                                <input class="form-control" ng-model="card.triples[$index].value">
-                            </div>
-                            <div class="form-group">
-                                <input class="form-control" ng-model="card.triples[$index].uri">
-                            </div>
-                            <i class="glyphicon glyphicon-minus interactive" ng-click="removeFromCard($index)"></i>
-                        </form>
-                    </div>
-
-                    <!-- this is the spot where the poster is shown -->
-                    <div ng-if="card.poster" class="col-md-2">
-                        <header>
-                            <ul>
-                                <li>Poster</li>
-                            </ul>
-                        </header>
-                        <!-- when thumbs are available -->
-                        <div ng-show="card.poster" class="thumbnail card-edit-thumb">
-                            <img ng-src="{{card.poster}}" >
-                        </div>
-                    </div>
-
-                </div>
-                <button class="btn btn-primary" ng-click="addToCard()">New</button>
-            </div>
-            
         </div>
     </div>
     

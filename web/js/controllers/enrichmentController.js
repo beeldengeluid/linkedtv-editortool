@@ -29,39 +29,13 @@ angular.module('linkedtv').controller('enrichmentController',
 		$scope.entities	= entities;
 	}
 
-	$scope.createNewLink = function(dimension) {
-		$scope.openLinkDialog(dimension);
+	$scope.editLink = function(dimension, link) {
+		if(dimension.service != 'informationCards') {
+			enrichmentUtils.openLinkDialog(dimension, link);
+		} else {
+			enrichmentUtils.openCardDialog(dimension, link);
+		}
 	}
-
-	$scope.editLink = function(dimension) {
-		$scope.openLinkDialog(dimension);
-	}
-
-	$scope.openLinkDialog = function(dimension) {
-		console.debug('open the dialog for');
-		console.debug(dimension);
-		var modalInstance = $modal.open({
-			templateUrl: '/site_media/js/templates/enrichmentModal.html',
-			controller: 'enrichmentModalController',
-			size: 'lg',
-			resolve: {
-				dimension: function () {
-					return dimension;
-				}
-			}
-		});
-
-		//when the modal is closed (using 'ok', or 'cancel')
-		modalInstance.result.then(function (data) {
-			console.debug('I saved some enrichments');			
-			$scope.activeChapter.dimensions[data.dimension.$$hashKey] = data.enrichments;
-			
-			//update the chapter collection (this triggers the $watch at the top)
-			chapterCollection.saveChapter($scope.activeChapter);
-		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
-		});
-	};
 
 	$scope.setActiveCard = function(index) {
 		$scope.activeLinkIndex = index;

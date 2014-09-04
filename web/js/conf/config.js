@@ -1,43 +1,91 @@
 //TODO properly import the programme configs from an external file
-//TODO add templates for partner specific information cards
+//RBB types => http://www.linkedtv.eu/wiki/index.php/Annotation_types_in_RBB#Proposal_for_common_entity_types
+//TKK types => http://www.linkedtv.eu/wiki/index.php/Creating_rich_descriptions_of_cultural_artefacts_out_of_a_TV_program
+
+var informationCardTemplates = {
+	rbb : [//FIXME the RBB types are directly taken from the DBpedia types
+		{ 
+			label : 'Film',			
+			properties : ['Cinematography', 'Director',
+				'Music composer', 'Starring']
+		},
+		{ 
+			label : 'Organization',			
+			properties : ['Chairman', 'Focus',
+				'Formation year', 'Founder',
+				'Founding year', 'industry',
+				'Location', 'City',
+				'Number of employees', 'Founding date']
+		},
+		{
+			label : 'Political party',		
+			properties : ['Headquarters', 'Second leader',
+				'Orientation', 'General director',
+				'EU parlement', 'Founding date', 
+				'Founding location', 'Chairman']
+		},
+		{
+			label : 'Politicians and other office holders',			
+			properties : ['Active since', 'Active till', 
+				'Office', 'Party', 'Before',
+				'After']
+		},
+		{
+			label : 'Places',			
+			properties : ['Owner', 'Opening', 
+				'Stand place', 'Architect', 
+				'Builder', 'Building year', 
+				'Style', 'Place', 
+				'Leader', 'Title of leader', 
+				'Unemployment rate', 'Foreign immigrants',
+				'Party']
+		}
+	],
+
+	sv : [
+		{
+			label : 'Art object',
+			properties : ['Creator', 'Styles', 'Period', 'Materials', 'Container']
+		},
+		{
+			label : 'Person/artist/creator',
+			properties : ['Name', 'Description', 'Profession', 'Birth place', 'Death place', 'Born', 'Deceased']
+		}
+	]
+
+}
 
 var rbbConfig = {
 	dimensions : [
-		{		
+		{
 		'id' : 'opinion',
 		'label' : 'Opinion',
-		'service' : 'TVNewsEnricher',
-		'output' : 'object'
+		'service' : 'TvNewsEnricher'
 		},
 		{		
 		'id' : 'othermedia',
 		'label' : 'Other media',
-		'service' : 'TVNewsEnricher',
-		'output' : 'object'
+		'service' : 'TvNewsEnricher'
 		},
 		{		
 		'id' : 'timeline',
 		'label' : 'Timeline',
-		'service' : 'TVNewsEnricher',
-		'output' : 'object'
+		'service' : 'TvNewsEnricher'
 		},
 		{		
 		'id' : 'indepth',
 		'label' : 'In depth',
-		'service' : 'TVNewsEnricher',
-		'output' : 'object'
+		'service' : 'TvNewsEnricher'
 		},
 		{		
 		'id' : 'tweets',
 		'label' : 'Tweets',
-		'service' : 'TVNewsEnricher',
-		'output' : 'object'
+		'service' : 'TvNewsEnricher'
 		},
 		{
-		'id' : 'Solr',
+		'id' : 'related',
 		'label' : 'Related news',
-		'service' : 'TVEnricher',
-		'output' : 'literal'
+		'service' : 'TvEnricher'
 		},
 	]
 };
@@ -45,30 +93,32 @@ var rbbConfig = {
 var tkkConfig = {
 	dimensions : [
 		{
-		'id' : 'SV',
+		'id' : 'maintopic',
+		'label' : 'The art object',
+		'service' : 'informationCards'
+		},
+		{
+		'id' : 'whitelist',
 		'label' : 'Background information',
-		'service' : 'TVEnricher',
-		'output' : 'object'
+		'service' : 'TvEnricher'
 		},
 		{
-		'id' : 'Europeana',
+		'id' : 'europeana',
 		'label' : 'Related Europeana objects',
-		'service' : 'TVEnricher',
-		'output' : 'object'
+		'service' : 'TvEnricher'
 		},
 		{
-		'id' : 'Solr',
+		'id' : 'related',
 		'label' : 'Related fragments',
-		'service' : 'TVEnricher',
-		'output' : 'literal'
+		'service' : 'TvEnricher'
 		}
 	]
 };
 
 //make sure to map this to the provider part in the ET URL
 var programmeConfigs = {
-	'sv' : tkkConfig,
-	'rbb' : rbbConfig
+	sv : tkkConfig,
+	rbb : rbbConfig
 }
 
 

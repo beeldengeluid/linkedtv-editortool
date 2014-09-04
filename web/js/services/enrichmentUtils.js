@@ -1,4 +1,4 @@
-angular.module('linkedtv').factory('enrichmentUtils', [function(){
+angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', function($modal, chapterCollection) {
 
 	function getPosterUrl(enrichment) {
 		if(enrichment.posterUrl && isValidPosterFormat(enrichment.posterUrl)) {
@@ -20,9 +20,83 @@ angular.module('linkedtv').factory('enrichmentUtils', [function(){
 			}
 		}
 		return false;
-	}	
+	}
 
-	return {
-		getPosterUrl : getPosterUrl
+	function toETLinks(tveLinks) {
+		var links = [];
+		for(var i=0;i<tveLinks.length;i++) {
+			links.push(tvEnricherToLink(tveLinks[i]));
+		}
+	}
+
+	function tvEnricherToETLink (tveLink) {
+		var link = {label : 'No title'}
+		link.uri = e.microPostUrl;
+		link.poster = getPosterUrl(tveLink);
+		if(e.micropost.plainText) {
+			link.label = tveLink.micropost.plainText;
+		}
+		//TODO fill the link.triples with the rest of the properties
+		return link;
+	}
+
+	function openLinkDialog(dimension, link) {
+		console.debug(dimension);
+		var modalInstance = $modal.open({
+			templateUrl: '/site_media/js/templates/enrichmentModal.html',
+			controller: 'enrichmentModalController',
+			size: 'lg',
+			resolve: {
+				dimension: function () {
+					return dimension;
+				},
+				link: function() {
+					return link;
+				}
+			}
+		});
+
+		//when the modal is closed (using 'ok', or 'cancel')
+		modalInstance.result.then(function (data) {
+			console.debug('I saved some enrichments');
+			var activeChapter = chapterCollection.getActiveChapter();
+			activeChapter.dimensions[data.dimension.id] = toETLinks(data.enrichments);
+			
+			//update the chapter collection (this triggers the $watch at the top)
+			chapterCollection.saveChapter(activeChapter);
+		}, function () {
+			console.debug('Modal dismissed at: ' + new Date());
+		});
+	};
+
+	function openCardDialog(dimension, link) {		
+		var modalInstance = $modal.open({
+			templateUrl: '/site_media/js/templates/informationCardModal.html',
+			controller: 'informationCardModalController',
+			size: 'lg',
+			resolve: {				
+				dimension : function () {
+					return dimension;
+				},
+				link: function() {
+					return link;
+				}
+			}
+		});
+
+		//when the modal is closed (using 'ok', or 'cancel')
+		modalInstance.result.then(function (data) {
+			console.debug('I saved a damn card yeah!');
+			console.debug(data);
+			chapterCollection.saveChapterLink(data.dimension, data.link);
+		}, function () {
+			console.debug('Modal dismissed at: ' + new Date());
+		});
+	};
+
+	return {		
+		getPosterUrl : getPosterUrl,
+		openLinkDialog : openLinkDialog,
+		openCardDialog : openCardDialog
 	}
 }]);

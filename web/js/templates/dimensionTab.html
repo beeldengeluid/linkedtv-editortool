@@ -8,24 +8,19 @@
 				<div class="dimension" collapse="collapsed">
 
 					<ul class="enrichments">
-						<li ng-repeat="e in activeChapter.dimensions[d.$$hashKey] track by $index" ng-click="setActiveLink($index)" 
-						ng-dblclick="editLink(d)" title="{{e.label}}">
-							<div class="thumbnail" ng-if="e.micropostUrl" ng-click="addEnrichment(e)">									
-								<img ng-if="enrichmentUtils.getPosterUrl(e)" ng-src="{{enrichmentUtils.getPosterUrl(e)}}" alt="{{e.micropost.plainText}}">
+						<li ng-repeat="e in activeChapter.dimensions[d.id] track by $index" ng-click="setActiveLink($index)" 
+						ng-dblclick="editLink(d, e)" title="{{e.label}}">
+							<div class="thumbnail" ng-if="e.uri">
+								<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
-								<img ng-if="!enrichmentUtils.getPosterUrl(e)" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
-								
-								<div class="caption" ng-if="e.micropost.plainText">
-									<a href="{{e.micropostUrl}}" target="_external">
-									{{e.micropost.plainText | limitTo:30}}
-									</a>
-								</div>
-								<div class="caption" ng-if="!e.micropost.plainText">
-									<a href="{{e.micropostUrl}}" target="_external">No title</a>
+								<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
+	
+								<div class="caption">
+									<a href="{{e.uri}}" target="_external">{{e.label}}</a>
 								</div>
 						    </div>
 						</li>
-						<li ng-click="setActiveLink(enrichments.length)" ng-dblclick="createNewLink(d)" title="Add new enrichment">
+						<li ng-click="setActiveLink(enrichments.length)" ng-dblclick="editLink(d)" title="Add new enrichment">
 							<div class="thumbnail">
 
 								<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="...">		      

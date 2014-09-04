@@ -230,7 +230,8 @@ def enrichments(request):
     if p and q and d and s:
         p = str(p).upper()
         api = Api()
-        resp = api.getEnrichmentsOnDemand(q.split(','), p, d, s, False)
+        resp = api.getEnrichmentsOnDemand(q.split(','), p, d, s, True)
+        print resp
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')

@@ -22,7 +22,7 @@ class TvEnricher():
         print useDummyCache
         if useDummyCache and self.cache.exists('dummyEnrichments'):
             print 'Loading dummy enrichments from cache!'
-            return simplejson.loads(self.cache.get('dummyEnrichments'))
+            return { 'enrichments' : simplejson.loads(self.cache.get('dummyEnrichments'))}
         http = httplib2.Http()
         url = self.getServiceUrl(entities, provider, dimension)
         print url
