@@ -98,17 +98,17 @@ var tkkConfig = {
 		'service' : 'informationCards'
 		},
 		{
-		'id' : 'whitelist',
+		'id' : 'SV',
 		'label' : 'Background information',
 		'service' : 'TvEnricher'
 		},
 		{
-		'id' : 'europeana',
+		'id' : 'Europeana',//TODO add some service specific params here
 		'label' : 'Related Europeana objects',
 		'service' : 'TvEnricher'
 		},
 		{
-		'id' : 'related',
+		'id' : 'Solr',
 		'label' : 'Related fragments',
 		'service' : 'TvEnricher'
 		}
@@ -149,7 +149,8 @@ linkedtv.run(function($rootScope, conf) {
 		$templateCache.removeAll();
    });*/
 });;angular.module('linkedtv').factory('chapterCollection', 
-	['conf', 'timeUtils', 'imageService', 'entityCollection', function(conf, timeUtils, imageService, entityCollection) {	
+	['conf', 'timeUtils', 'imageService', 'entityCollection', 'dataService',
+	 function(conf, timeUtils, imageService, entityCollection, dataService) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
@@ -158,10 +159,36 @@ linkedtv.run(function($rootScope, conf) {
 	var observers = [];
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)	
-	function initCollectionData(provider, resourceData) {
+	function initCollectionData(provider, resourceData, curatedData) {
 		console.debug('Initializing chapter data');
 		var chapters = [];
-		//FIXME do this on the server: assign auto/curated type to each chapter
+		//old curations take precedence over v2.0 curations (for now)		
+		if(resourceData.curated.chapters && resourceData.curated.chapters.length > 0) {
+			console.debug('Loading v1.0 curations...');
+			chapters = initCollectionWithRDFData(resourceData);
+		} else if(curatedData) {
+			console.debug('Loading v2.0 curations...');
+			chapters = curatedData.chapters;
+			var autoChapters = resourceData.chapters;
+			for(var c in autoChapters) {
+				var chapter = autoChapters[c];
+				chapter.type = TYPE_AUTO;
+				chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, chapter.start);
+				chapter.dimensions = {};
+				chapters.push(chapter);
+			}
+		} else {
+			console.debug('No curations found...');
+			chapters = initCollectionWithRDFData(resourceData);
+		}
+		
+		setChapters(chapters);
+		console.debug(_chapters);
+	}
+
+	//This function must be used once all the curated data is saved in the LinkedTV graph
+	function initCollectionWithRDFData(resourceData) {
+		var chapters = [];
 		var autoChapters = resourceData.chapters;
 		var curatedChapters = resourceData.curated.chapters;
 		for(var c in autoChapters) {
@@ -169,6 +196,7 @@ linkedtv.run(function($rootScope, conf) {
 			chapter.type = TYPE_AUTO;
 			chapters.push(chapter);
 		}
+		//TODO test if this works good enough for the ET sources that are actually saved in the old way!
 		for(var c in curatedChapters) {
 			var chapter = curatedChapters[c];
 			chapter.type = TYPE_CURATED;
@@ -187,12 +215,10 @@ linkedtv.run(function($rootScope, conf) {
 		chapters.sort(function(a, b) {
 			return a.start - b.start;
 		});
-		setChapters(chapters);
-		console.debug(_chapters);
+		return chapters;
 	}
 
 	function addObserver(observer) {
-		console.debug(observer);
 		observers.push(observer);
 	}
 
@@ -224,11 +250,15 @@ linkedtv.run(function($rootScope, conf) {
 		console.debug('Saving chapter');
 		console.debug(chapter);
 		_activeChapter = chapter;
+		_activeChapter.type = TYPE_CURATED; //if a user saves anything to a chapter, it means it approves of the whole chapter
 		for(c in _chapters) {
 			if(_chapters[c].$$hashKey == _activeChapter.$$hashKey) {
 				_chapters[c] = _activeChapter;
 			}
 		}
+		dataService.saveResource(_.filter(_chapters, function(c) {
+			return c.type == TYPE_CURATED;
+		}));//save the entire resource on the server
 	}
 
 	function saveChapterLink(dimension, link) {
@@ -375,16 +405,16 @@ linkedtv.run(function($rootScope, conf) {
 		getChaptersOfResource : getChaptersOfResource
 	}
 
-}]);;angular.module('linkedtv').factory('dataService', [function(){
+}]);;angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootScope) {
 	
-	function getResourceData(resourceUri, loadData, callback) {
-		console.debug('Getting combined data of resource: ' + resourceUri);
+	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
+	function getResourceData(loadData, callback) {		
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/resource?id=' + resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
+			url : '/resource?id=' + $rootScope.resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
 			success : function(json) {
-				console.debug(json);		
+				console.debug(json);
 				callback(json);
 			},
 			error : function(err) {
@@ -394,8 +424,45 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	function getCuratedData(callback) {
+		$.ajax({
+			method: 'GET',
+			dataType : 'json',
+			url : '/curatedresource?id=' + $rootScope.resourceUri,
+			success : function(json) {
+				callback(json.error ? null : json);
+			},
+			error : function(err) {
+				console.debug(err);
+				callback(null);
+			}
+		});
+	}
+
+	function saveResource(chapters, action) {
+		console.debug('Saving resource...');
+		action = action == undefined ? 'save' : action; //not used on the server (yet?)
+		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
+		$.ajax({
+			type: 'POST',
+			url: '/saveresource?action=' + action,
+			data: JSON.stringify(saveData),
+			dataType : 'json',
+			success: function(json) {
+				//TODO check for errors
+				console.debug(json);
+			},
+			error: function(err) {
+	    		console.debug(err);	    		
+			},
+			dataType: 'json'
+		});
+	}
+
 	return {
-		getResourceData : getResourceData
+		getResourceData : getResourceData,
+		getCuratedData : getCuratedData,
+		saveResource : saveResource
 	}
 
 }]);;angular.module('linkedtv').factory('enrichmentService', [function(){
@@ -409,10 +476,8 @@ linkedtv.run(function($rootScope, conf) {
 			method: 'GET',
 			dataType : 'json',
 			url : fetchUrl,
-			success : function(json) {
-				//console.debug(JSON.parse(json));
-				//callback(JSON.parse(json.enrichments));
-				callback(json.enrichments);
+			success : function(json) {				
+				callback(json.error ? null : json.enrichments);
 			},
 			error : function(err) {
 				console.debug(err);
@@ -452,15 +517,16 @@ linkedtv.run(function($rootScope, conf) {
 	function toETLinks(tveLinks) {
 		var links = [];
 		for(var i=0;i<tveLinks.length;i++) {
-			links.push(tvEnricherToLink(tveLinks[i]));
+			links.push(tvEnricherToETLink(tveLinks[i]));
 		}
+		return links;
 	}
 
 	function tvEnricherToETLink (tveLink) {
 		var link = {label : 'No title'}
-		link.uri = e.microPostUrl;
+		link.uri = tveLink.micropostUrl;
 		link.poster = getPosterUrl(tveLink);
-		if(e.micropost.plainText) {
+		if(tveLink.micropost.plainText) {
 			link.label = tveLink.micropost.plainText;
 		}
 		//TODO fill the link.triples with the rest of the properties
@@ -747,32 +813,35 @@ linkedtv.run(function($rootScope, conf) {
 }]);;angular.module('linkedtv').controller('appController',
 	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, videoModel) {	
 	
+	$scope.resourceData = null;
+
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
-		dataService.getResourceData(resourceUri, true, $scope.dataLoaded);
+		dataService.getResourceData(true, $scope.dataLoaded);
 	});	
 
 	//when the resource data has been loaded, start populating the application data
 	$scope.dataLoaded = function(resourceData) {
-		if(resourceData != null) {
-			console.debug('Loaded data from the server!');
-			console.debug(resourceData);
-			//FIXME get rid of the resourceData on the rootscope!!
-			//$rootScope.resourceData = resourceData;
-
-			//load the videoModel with metadata
-			videoModel.initModelData(resourceData);
-						
-			//load the chapterCollection with chapter data
-			chapterCollection.initCollectionData($rootScope.provider, resourceData);
-
-			//load the entityCollection with entity data
-			entityCollection.initCollectionData(resourceData.nes);
-
-		} else {
-			// TODO error
-		}
+		console.debug('Loaded the SPARQL data from the server');
+		console.debug(resourceData);
+		$scope.resourceData = resourceData;
+		dataService.getCuratedData($scope.curatedDataLoaded);
 	};
+
+	//TODO finish testing this!!!
+	$scope.curatedDataLoaded = function(curatedData) {					
+		console.debug('Loaded the curated/Redis data from the server');
+		console.debug(curatedData);
+
+		//load the videoModel with metadata
+		videoModel.initModelData($scope.resourceData);
+					
+		//load the chapterCollection with chapter data
+		chapterCollection.initCollectionData($rootScope.provider, $scope.resourceData, curatedData);
+
+		//load the entityCollection with entity data
+		entityCollection.initCollectionData($scope.resourceData.nes);		
+	}
 
 });;angular.module('linkedtv').controller('chapterController', 
 	function($rootScope, $scope, $modal, chapterCollection, chapterService, playerService) {
@@ -894,8 +963,6 @@ linkedtv.run(function($rootScope, conf) {
 
 	//watch for changes in the active chapter
 	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {
-		console.debug('the active chapter has changed: ');
-		console.debug(newValue);
 		$scope.activeChapter = newValue;
 	});
 

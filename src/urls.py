@@ -29,4 +29,8 @@ urlpatterns = patterns('',
     url(r'^entities$', 'views.entities'),
     url(r'^enrichments$', 'views.enrichments'),
 
+    #new save/load calls (communicates with Redis)
+    url(r'^saveresource$', 'views.saveresource'),
+    url(r'^curatedresource$', 'views.curatedresource'),
+
 )

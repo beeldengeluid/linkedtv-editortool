@@ -9,10 +9,8 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 			method: 'GET',
 			dataType : 'json',
 			url : fetchUrl,
-			success : function(json) {
-				//console.debug(JSON.parse(json));
-				//callback(JSON.parse(json.enrichments));
-				callback(json.enrichments);
+			success : function(json) {				
+				callback(json.error ? null : json.enrichments);
 			},
 			error : function(err) {
 				console.debug(err);

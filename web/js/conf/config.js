@@ -98,17 +98,17 @@ var tkkConfig = {
 		'service' : 'informationCards'
 		},
 		{
-		'id' : 'whitelist',
+		'id' : 'SV',
 		'label' : 'Background information',
 		'service' : 'TvEnricher'
 		},
 		{
-		'id' : 'europeana',
+		'id' : 'Europeana',//TODO add some service specific params here
 		'label' : 'Related Europeana objects',
 		'service' : 'TvEnricher'
 		},
 		{
-		'id' : 'related',
+		'id' : 'Solr',
 		'label' : 'Related fragments',
 		'service' : 'TvEnricher'
 		}

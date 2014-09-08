@@ -1,5 +1,12 @@
+/*
+The chapter collection contains all of the curated data:
+- annotations (consisting of: 'entities' & 'enrichments' & 'information cards')
+- timing information per annotation
+*/
+
 angular.module('linkedtv').factory('chapterCollection', 
-	['conf', 'timeUtils', 'imageService', 'entityCollection', function(conf, timeUtils, imageService, entityCollection) {	
+	['conf', 'timeUtils', 'imageService', 'entityCollection', 'dataService',
+	 function(conf, timeUtils, imageService, entityCollection, dataService) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
@@ -8,10 +15,36 @@ angular.module('linkedtv').factory('chapterCollection',
 	var observers = [];
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)	
-	function initCollectionData(provider, resourceData) {
+	function initCollectionData(provider, resourceData, curatedData) {
 		console.debug('Initializing chapter data');
 		var chapters = [];
-		//FIXME do this on the server: assign auto/curated type to each chapter
+		//old curations take precedence over v2.0 curations (for now)		
+		if(resourceData.curated.chapters && resourceData.curated.chapters.length > 0) {
+			console.debug('Loading v1.0 curations...');
+			chapters = initCollectionWithRDFData(resourceData);
+		} else if(curatedData) {
+			console.debug('Loading v2.0 curations...');
+			chapters = curatedData.chapters;
+			var autoChapters = resourceData.chapters;
+			for(var c in autoChapters) {
+				var chapter = autoChapters[c];
+				chapter.type = TYPE_AUTO;
+				chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, chapter.start);
+				chapter.dimensions = {};
+				chapters.push(chapter);
+			}
+		} else {
+			console.debug('No curations found...');
+			chapters = initCollectionWithRDFData(resourceData);
+		}
+		
+		setChapters(chapters);
+		console.debug(_chapters);
+	}
+
+	//This function must be used once all the curated data is saved in the LinkedTV graph
+	function initCollectionWithRDFData(resourceData) {
+		var chapters = [];
 		var autoChapters = resourceData.chapters;
 		var curatedChapters = resourceData.curated.chapters;
 		for(var c in autoChapters) {
@@ -19,6 +52,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			chapter.type = TYPE_AUTO;
 			chapters.push(chapter);
 		}
+		//TODO test if this works good enough for the ET sources that are actually saved in the old way!
 		for(var c in curatedChapters) {
 			var chapter = curatedChapters[c];
 			chapter.type = TYPE_CURATED;
@@ -37,12 +71,10 @@ angular.module('linkedtv').factory('chapterCollection',
 		chapters.sort(function(a, b) {
 			return a.start - b.start;
 		});
-		setChapters(chapters);
-		console.debug(_chapters);
+		return chapters;
 	}
 
 	function addObserver(observer) {
-		console.debug(observer);
 		observers.push(observer);
 	}
 
@@ -74,11 +106,15 @@ angular.module('linkedtv').factory('chapterCollection',
 		console.debug('Saving chapter');
 		console.debug(chapter);
 		_activeChapter = chapter;
+		_activeChapter.type = TYPE_CURATED; //if a user saves anything to a chapter, it means it approves of the whole chapter
 		for(c in _chapters) {
 			if(_chapters[c].$$hashKey == _activeChapter.$$hashKey) {
 				_chapters[c] = _activeChapter;
 			}
 		}
+		dataService.saveResource(_.filter(_chapters, function(c) {
+			return c.type == TYPE_CURATED;
+		}));//save the entire resource on the server
 	}
 
 	function saveChapterLink(dimension, link) {

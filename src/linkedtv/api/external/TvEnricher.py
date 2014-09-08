@@ -29,6 +29,7 @@ class TvEnricher():
         headers = {'Content-type': 'application/json'}
         resp, content = http.request(url, 'GET', headers=headers)
         print resp
+        print content
         if content:
             #if useDummyCache and not self.cache.exists('dummyEnrichments'):
             #self.cache.set('dummyEnrichments', simplejson.dumps({ 'enrichments' : content }))

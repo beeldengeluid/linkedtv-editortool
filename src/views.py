@@ -20,7 +20,11 @@ from linkedtv.api.external.MediaCollector import MediaCollector
 from linkedtv.api.external.UnstructuredSearch import UnstructuredSearch
 from linkedtv.api.external.TvEnricher import TvEnricher
 
+from linkedtv.api import SaveEndpoint as ET
 from linkedtv.api.Api import *
+
+def getErrorMessage(msg):
+    return "{\"error\" : \"%s\"}" % msg;
 
 """ 
 *********************************************************************************************************
@@ -38,7 +42,7 @@ For loading the main page
 *********************************************************************************************************
 """
 
-def main(request): 
+def main(request):
     return render_to_response('index.html', {'user' : request.user})
 
 """ 
@@ -68,15 +72,15 @@ For loading a single mediaresource (for populating the main detail page of a vid
 *********************************************************************************************************
 """
 
-"""This is called to fetch the data of a single media resource"""
+"""This is called to fetch the data of a single media resource (including the curated data from SPARQL!!!)"""
 def resource(request):
     resourceUri = request.GET.get('id', None)
     loadData = request.GET.get('ld', 'false') == 'true'
     clientIP = getClientIP(request)
     if resourceUri:
         resourceData = {}
-        if loadData:
-            api = Api()
+        api = Api()
+        if loadData:            
             resourceData = api.getAllAnnotationsOfResource(resourceUri, True)
         """Get the mediaresource metadata and the playout URL"""
         videoMetadata = simplejson.loads(api.getVideoData(resourceUri))
@@ -85,14 +89,26 @@ def resource(request):
             resourceData['videoMetadata'] = videoMetadata
             playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)                
             resourceData['locator'] = playoutURL
-            for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
-                if mrr['relationType'] == 'thumbnail-locator':
-                    resourceData['thumbBaseUrl'] = mrr['relationTarget']
+            if videoMetadata['mediaResource']['mediaResourceRelationSet']:
+                for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
+                    if mrr['relationType'] == 'thumbnail-locator':
+                        resourceData['thumbBaseUrl'] = mrr['relationTarget']
         resp = simplejson.dumps(resourceData)
         return HttpResponse(resp, mimetype='application/json')
         
 
-    return HttpResponse("{error: 'resource does not exist'}", mimetype='application/json')
+    return HttpResponse(getErrorMessage('The resource does not exist'), mimetype='application/json')
+
+"""This is called to fetched the curated data from the Redis store (which should later be synched with the SPARQL?)"""
+def curatedresource(request):
+    resourceUri = request.GET.get('id', None)
+    if resourceUri:
+        sep = ET.SaveEndpoint()
+        resp = sep.loadCuratedResource(resourceUri)
+        print resp
+        if resp:
+            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+    return HttpResponse(getErrorMessage('Could not load curated data'), mimetype='application/json')
 
 
 """This is called to fetch the IP of the connecting client"""
@@ -135,7 +151,7 @@ def image(request):
 
 """ 
 *********************************************************************************************************
-Saving functions
+Old Saving functions
 *********************************************************************************************************
 """
 
@@ -162,6 +178,24 @@ def saveannotation(request):
         return HttpResponse("{'error' : 'malformed save data'}", mimetype='application/json')
     return HttpResponse(simplejson.dumps(saveURIs), mimetype='application/json')
 
+""" 
+*********************************************************************************************************
+New Saving functions
+*********************************************************************************************************
+"""
+
+@csrf_exempt
+def saveresource(request):
+    action = request.GET.get('action', None)
+    saveData = request.body
+    print 'Got the shit'
+    sep = ET.SaveEndpoint()
+    #TODO check the action
+    try:
+        resp = sep.saveVideo(simplejson.loads(saveData))
+    except JSONDecodeError, e:
+        return HttpResponse("{'error' : 'malformed save data'}", mimetype='application/json')
+    return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 
 """ 
 *********************************************************************************************************
@@ -223,18 +257,18 @@ def entities(request):
     return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
 
 def enrichments(request):
-    q = request.GET.get('q', None)
-    p = request.GET.get('p', None)
-    d = request.GET.get('d', None)
-    s = request.GET.get('s', None)
-    if p and q and d and s:
-        p = str(p).upper()
+    query = request.GET.get('q', None)
+    provider = request.GET.get('p', None)
+    dimension = request.GET.get('d', None)
+    service = request.GET.get('s', None)
+    if provider and query and dimension and service:
+        provider = str(provider).upper()
         api = Api()
-        resp = api.getEnrichmentsOnDemand(q.split(','), p, d, s, True)
+        resp = api.getEnrichmentsOnDemand(query.split(','), provider, dimension, service, False)
         print resp
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
+    return HttpResponse(getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
 """ 
 *********************************************************************************************************

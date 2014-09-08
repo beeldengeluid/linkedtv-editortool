@@ -25,15 +25,16 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 	function toETLinks(tveLinks) {
 		var links = [];
 		for(var i=0;i<tveLinks.length;i++) {
-			links.push(tvEnricherToLink(tveLinks[i]));
+			links.push(tvEnricherToETLink(tveLinks[i]));
 		}
+		return links;
 	}
 
 	function tvEnricherToETLink (tveLink) {
 		var link = {label : 'No title'}
-		link.uri = e.microPostUrl;
+		link.uri = tveLink.micropostUrl;
 		link.poster = getPosterUrl(tveLink);
-		if(e.micropost.plainText) {
+		if(tveLink.micropost.plainText) {
 			link.label = tveLink.micropost.plainText;
 		}
 		//TODO fill the link.triples with the rest of the properties
