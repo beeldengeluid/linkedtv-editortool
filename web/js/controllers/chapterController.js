@@ -2,7 +2,9 @@ angular.module('linkedtv').controller('chapterController',
 	function($rootScope, $scope, $modal, chapterCollection, chapterService, playerService) {
 	
 	$scope.resourceUri = $rootScope.resourceUri;	
-	$scope.chapters = [];	
+	$scope.allChapters = [];
+	$scope.chapters = [];
+	$scope.showCuratedOnly = false;
 
 	//watch the chapterCollection to see when it is loaded
 	/*
@@ -10,14 +12,26 @@ angular.module('linkedtv').controller('chapterController',
 		console.debug('loaded the chapters');
 		console.debug(newValue);
 		$scope.chapters = newValue;
-	});*/
+	});*/	
 
 	$scope.update = function(chapters) {
-		$scope.$apply(function() {			
+		$scope.$apply(function() {
+			$scope.allChapters = chapters;
 			$scope.chapters = chapters;
 			console.debug($scope.chapters);
 		});
-	}
+	};
+
+	$scope.toggleShowCuratedOnly = function() {
+		$scope.showCuratedOnly = !$scope.showCuratedOnly;
+		if($scope.showCuratedOnly) {
+			$scope.chapters = _.filter($scope.allChapters, function(c) {
+				return c.type == 'curated';
+			})
+		} else {
+			$scope.chapters = $scope.allChapters;
+		}
+	};
 
 	$scope.setActiveChapter = function(chapter) {
 		chapterCollection.setActiveChapter(chapter);
@@ -53,12 +67,15 @@ angular.module('linkedtv').controller('chapterController',
 		});
 
 		//when the modal is closed (using 'ok', or 'cancel')
-		modalInstance.result.then(function (chapter) {
-			console.debug('I saved a damn chapter yeah!');
+		modalInstance.result.then(function (chapter) {			
 			console.debug(chapter);
-
-			//update the chapter collection
-			chapterCollection.saveChapter(chapter);
+			if(chapter.remove) {
+				chapterCollection.removeChapter(chapter);
+			} else {
+				//update the chapter collection
+				chapterCollection.saveChapter(chapter);
+			}
+			
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());
 		});

@@ -1,11 +1,19 @@
 
-<div class="panel panel-default" ng-show="chapters">
+<div class="panel panel-default">
 
-	<div class="panel-heading">Chapters of: {{resourceUri}}</div>
+	<div class="panel-heading">
+		Video chapters
+		<ul class="chapter-menu">
+			<li title="Show curated only / show all" ng-click="toggleShowCuratedOnly()">
+				<a>Filter</a>
+				<i class="glyphicon glyphicon-filter {{showCuratedOnly ? 'selected' : ''}}"></i>
+			</li>
+		</ul>
+	</div>
 	<div class="panel-body">
 
 		<!-- Horizontal view mode-->
-		<ul class="chapters" ng-show="chapters">
+		<ul class="chapters">
 			<li ng-repeat="c in chapters track by $index" ng-click="setActiveChapter(c)" ng-dblclick="editChapter(c)" title="{{c.label}}">
 				<div class="thumbnail {{isChapterSelected(c)}}">
 					<img ng-if="!c.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="{{c.start}} - {{c.end}}">

@@ -4,3 +4,6 @@
 	@include mediaSlots;
 }
 
+.chapter-menu {
+	@include horizontalMenu('#fff');
+}

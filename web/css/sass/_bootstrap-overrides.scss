@@ -1,9 +1,18 @@
 $panel-default-heading-bg: $lightmustard;
 $panel-heading-padding: 5px 10px;
+$panel-border-radius: 0px;
 
 $icon-font-path: "../bower_components/bootstrap-sass-official/assets/fonts/bootstrap/" !default;
 
 
 .interactive.glyphicon {
 	cursor:pointer;
+}
+	
+.selected.glyphicon {
+	color:$wonderblue;
+}
+
+.modal-content {
+	border-radius:0px !important;
 }

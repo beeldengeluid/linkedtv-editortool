@@ -256,12 +256,13 @@ def entities(request):
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
 
-def enrichments(request):
+def enrichments(request):    
     query = request.GET.get('q', None)
     provider = request.GET.get('p', None)
     dimension = request.GET.get('d', None)
     service = request.GET.get('s', None)
     if provider and query and dimension and service:
+        print 'GOing to fetch enrichments!'
         provider = str(provider).upper()
         api = Api()
         resp = api.getEnrichmentsOnDemand(query.split(','), provider, dimension, service, False)
@@ -294,6 +295,5 @@ def entityproxy(request):
     if uri:
         ep = EntityProxy()
         resp = ep.fetch(uri, lang)
-        print resp
         return HttpResponse(resp, mimetype='application/json')
     return HttpResponse("{'error' : 'Please provide a DBPedia URI'}", mimetype='application/json')

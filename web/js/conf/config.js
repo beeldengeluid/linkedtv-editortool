@@ -2,6 +2,7 @@
 //RBB types => http://www.linkedtv.eu/wiki/index.php/Annotation_types_in_RBB#Proposal_for_common_entity_types
 //TKK types => http://www.linkedtv.eu/wiki/index.php/Creating_rich_descriptions_of_cultural_artefacts_out_of_a_TV_program
 
+//FIXME this is not used yet
 var informationCardTemplates = {
 	rbb : [//FIXME the RBB types are directly taken from the DBpedia types
 		{ 
@@ -61,7 +62,7 @@ var rbbConfig = {
 		'id' : 'opinion',
 		'label' : 'Opinion',
 		'service' : 'TvNewsEnricher'
-		},
+		},		
 		{		
 		'id' : 'othermedia',
 		'label' : 'Other media',
@@ -77,7 +78,7 @@ var rbbConfig = {
 		'label' : 'In depth',
 		'service' : 'TvNewsEnricher'
 		},
-		{		
+		{
 		'id' : 'tweets',
 		'label' : 'Tweets',
 		'service' : 'TvNewsEnricher'

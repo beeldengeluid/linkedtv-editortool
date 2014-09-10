@@ -7,7 +7,7 @@
     <!-- display entities -->
     <div class="row">
     	
-        <div class="col-md-12">        	
+        <div class="col-md-12">
 			<div class="foldable" ng-click="entitiesCollapsed = !entitiesCollapsed">Choose entities</div>
         	<div collapse="entitiesCollapsed">
 
@@ -15,7 +15,7 @@
 
 	            <ul class="nav nav-tabs" role="tablist">
 					<li class="active">
-						<a data-target="#tab_e_cards" role="tab" data-toggle="tab">Cards</a>
+						<a data-target="#tab_e_curated" role="tab" data-toggle="tab">Curated</a>
 					</li>
 					<li>
 						<a data-target="#tab_e_expanded" role="tab" data-toggle="tab">Expanded</a>
@@ -28,17 +28,17 @@
 	            <div class="tab-content">
 
 	            	<!-- INFORMATION CARDS -->
-					<div id="tab_e_cards" class="tab-pane active" ng-controller="informationCardsController">
+					<div id="tab_e_curated" class="tab-pane active" ng-controller="informationCardsController">
 						<ul class="cards">
-							<li ng-repeat="card in cards" title="{{card.label}}">
+							<li ng-repeat="e in combinedEnrichments track by $index" title="{{e.label}}">
 								<div class="thumbnail">
 
-									<img ng-if="!card.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="...">		      
+									<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="...">		      
 
-									<img ng-if="card.poster" ng-src="{{card.poster}}" alt="{{card.label}}">
+									<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
 									<div class="caption">
-										{{card.label | limitTo : 10 || 'No label' | limitTo : 10}}
+										{{e.label | limitTo : 10 || 'No label' | limitTo : 10}}
 									</div>
 							    </div>
 							</li>
@@ -91,18 +91,13 @@
 			<div collapse="savedEnrichmentsCollapsed">
 				<ul class="enrichments">
 					<li ng-repeat="e in savedEnrichments track by $index">
-						<div class="thumbnail" ng-if="e.micropostUrl" ng-click="removeEnrichment($index)">									
-							<img ng-if="enrichmentUtils.getPosterUrl(e)" ng-src="{{enrichmentUtils.getPosterUrl(e)}}" alt="{{e.micropost.plainText}}">
+						<div class="thumbnail" ng-if="e.uri" ng-click="removeEnrichment($index)" title="{{e.description}}">
+							<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
-							<img ng-if="!enrichmentUtils.getPosterUrl(e)" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
+							<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
 							
-							<div class="caption" ng-if="e.micropost.plainText">
-								<a href="{{e.micropostUrl}}" target="_external">
-								{{e.micropost.plainText | limitTo:30}}
-								</a>
-							</div>
-							<div class="caption" ng-if="!e.micropost.plainText">
-								<a href="{{e.micropostUrl}}" target="_external">No title</a>
+							<div class="caption">
+								<a href="{{e.uri}}" target="_external">{{e.label}}</a>
 							</div>
 					    </div>
 					</li>
@@ -118,9 +113,15 @@
 			<div class="foldable" ng-click="enrichmentsCollapsed = !enrichmentsCollapsed">Found enrichments</div>
         	<div collapse="enrichmentsCollapsed">
 
+        		<div class="row" ng-show="nothingFound">
+        			<div class="col-md-12">
+        				<span class="alert alert-info">No links were found, please try again with different parameters</span>
+        			</div>
+        		</div>
+
         		<!-- The dropdown for filtering the found enrichments -->
-			    <div class="row">
-					<div class="col-md-12">			
+			    <div class="row" ng-show="!nothingFound">
+					<div class="col-md-12">
 						<nav class="tab-menu">
 							<ul class="horizontal-menu">
 								<li ng-if="activeEnrichmentSource">
@@ -152,28 +153,26 @@
 
 
 				<!-- The found enrichments (filtered by the currently selected filter) -->
-				<div class="row">
+				<div class="row" ng-show="!nothingFound">
 					<div class="col-md-12">
 						<ul class="enrichments">
 							<li ng-repeat="e in enrichments">
-								<div class="thumbnail" ng-if="e.micropostUrl" ng-click="addEnrichment(e)">									
-									<img ng-if="enrichmentUtils.getPosterUrl(e)" ng-src="{{enrichmentUtils.getPosterUrl(e)}}" alt="{{e.micropost.plainText}}">
+								<div class="thumbnail" ng-if="e.uri" ng-click="addEnrichment(e)" title="{{e.description}}">						
+									<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
-									<img ng-if="!enrichmentUtils.getPosterUrl(e)" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
+									<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
 									
-									<div class="caption" ng-if="e.micropost.plainText">
-										<a href="{{e.micropostUrl}}" target="_external">
-										{{e.micropost.plainText | limitTo:30}}
+									<div class="caption">
+										<a href="{{e.label}}" target="_external">
+										{{e.label | limitTo:30}}
 										</a>
-									</div>
-									<div class="caption" ng-if="!e.micropost.plainText">
-										<a href="{{e.micropostUrl}}" target="_external">No title</a>
 									</div>
 							    </div>
 							</li>
 						</ul>
-					</div>
+					</div>					
 				</div>
+
 			</div>
 		</div>
 	</div>

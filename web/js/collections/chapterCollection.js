@@ -96,13 +96,33 @@ angular.module('linkedtv').factory('chapterCollection',
 	}
 
 	function setActiveChapter(activeChapter) {
-		_activeChapter = activeChapter;
-		console.debug(_activeChapter);
+		_activeChapter = activeChapter;		
 		entityCollection.updateChapterEntities(_activeChapter);
 	}
 
 	function getActiveChapter() {
 		return _activeChapter;
+	}
+
+	function getAllEnrichmentsOfChapter(chapter) {
+		if(!chapter) {
+			chapter = _activeChapter;
+		}
+		var dimensions = chapter.dimensions;
+		var all = [];
+		_.each(dimensions, function(d) {
+			all.push.apply(all, d);
+		});
+		return all;
+	};
+
+	function removeChapter(chapter) {
+		_.each(_chapters, function(c, index){
+			if(c.guid == chapter.guid) {
+				_chapters.splice(index, 1);
+			}
+		});
+		saveOnServer();	
 	}
 
 	function saveChapter(chapter) {
@@ -125,10 +145,8 @@ angular.module('linkedtv').factory('chapterCollection',
 		_chapters.sort(function(a, b) {
 			return a.start - b.start;
 		});
-
-		dataService.saveResource(_.filter(_chapters, function(c) {
-			return c.type == TYPE_CURATED;
-		}));//save the entire resource on the server
+		//update the entire resource on the server
+		saveOnServer();
 	}
 
 	function saveChapterLink(dimension, link) {
@@ -149,12 +167,20 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveChapter(_activeChapter);
 	}
 
+	function saveOnServer() {
+		dataService.saveResource(_.filter(_chapters, function(c) {
+			return c.type == TYPE_CURATED;
+		}));
+	}
+
 	return {
 		initCollectionData : initCollectionData,
 		getChapters : getChapters,
 		setChapters : setChapters,
 		setActiveChapter : setActiveChapter,
 		getActiveChapter : getActiveChapter,
+		getAllEnrichmentsOfChapter : getAllEnrichmentsOfChapter,
+		removeChapter : removeChapter,
 		saveChapter : saveChapter,
 		saveChapterLink : saveChapterLink,
 		addObserver : addObserver

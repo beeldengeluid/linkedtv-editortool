@@ -2,6 +2,7 @@
 //RBB types => http://www.linkedtv.eu/wiki/index.php/Annotation_types_in_RBB#Proposal_for_common_entity_types
 //TKK types => http://www.linkedtv.eu/wiki/index.php/Creating_rich_descriptions_of_cultural_artefacts_out_of_a_TV_program
 
+//FIXME this is not used yet
 var informationCardTemplates = {
 	rbb : [//FIXME the RBB types are directly taken from the DBpedia types
 		{ 
@@ -61,7 +62,7 @@ var rbbConfig = {
 		'id' : 'opinion',
 		'label' : 'Opinion',
 		'service' : 'TvNewsEnricher'
-		},
+		},		
 		{		
 		'id' : 'othermedia',
 		'label' : 'Other media',
@@ -77,7 +78,7 @@ var rbbConfig = {
 		'label' : 'In depth',
 		'service' : 'TvNewsEnricher'
 		},
-		{		
+		{
 		'id' : 'tweets',
 		'label' : 'Tweets',
 		'service' : 'TvNewsEnricher'
@@ -240,13 +241,33 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	function setActiveChapter(activeChapter) {
-		_activeChapter = activeChapter;
-		console.debug(_activeChapter);
+		_activeChapter = activeChapter;		
 		entityCollection.updateChapterEntities(_activeChapter);
 	}
 
 	function getActiveChapter() {
 		return _activeChapter;
+	}
+
+	function getAllEnrichmentsOfChapter(chapter) {
+		if(!chapter) {
+			chapter = _activeChapter;
+		}
+		var dimensions = chapter.dimensions;
+		var all = [];
+		_.each(dimensions, function(d) {
+			all.push.apply(all, d);
+		});
+		return all;
+	};
+
+	function removeChapter(chapter) {
+		_.each(_chapters, function(c, index){
+			if(c.guid == chapter.guid) {
+				_chapters.splice(index, 1);
+			}
+		});
+		saveOnServer();	
 	}
 
 	function saveChapter(chapter) {
@@ -269,10 +290,8 @@ linkedtv.run(function($rootScope, conf) {
 		_chapters.sort(function(a, b) {
 			return a.start - b.start;
 		});
-
-		dataService.saveResource(_.filter(_chapters, function(c) {
-			return c.type == TYPE_CURATED;
-		}));//save the entire resource on the server
+		//update the entire resource on the server
+		saveOnServer();
 	}
 
 	function saveChapterLink(dimension, link) {
@@ -293,12 +312,20 @@ linkedtv.run(function($rootScope, conf) {
 		saveChapter(_activeChapter);
 	}
 
+	function saveOnServer() {
+		dataService.saveResource(_.filter(_chapters, function(c) {
+			return c.type == TYPE_CURATED;
+		}));
+	}
+
 	return {
 		initCollectionData : initCollectionData,
 		getChapters : getChapters,
 		setChapters : setChapters,
 		setActiveChapter : setActiveChapter,
 		getActiveChapter : getActiveChapter,
+		getAllEnrichmentsOfChapter : getAllEnrichmentsOfChapter,
+		removeChapter : removeChapter,
 		saveChapter : saveChapter,
 		saveChapterLink : saveChapterLink,
 		addObserver : addObserver
@@ -534,25 +561,6 @@ linkedtv.run(function($rootScope, conf) {
 		return false;
 	}
 
-	function toETLinks(tveLinks) {
-		var links = [];
-		for(var i=0;i<tveLinks.length;i++) {
-			links.push(tvEnricherToETLink(tveLinks[i]));
-		}
-		return links;
-	}
-
-	function tvEnricherToETLink (tveLink) {
-		var link = {label : 'No title'}
-		link.uri = tveLink.micropostUrl;
-		link.poster = getPosterUrl(tveLink);
-		if(tveLink.micropost.plainText) {
-			link.label = tveLink.micropost.plainText;
-		}
-		//TODO fill the link.triples with the rest of the properties
-		return link;
-	}
-
 	function openLinkDialog(dimension, link) {
 		console.debug(dimension);
 		var modalInstance = $modal.open({
@@ -573,7 +581,7 @@ linkedtv.run(function($rootScope, conf) {
 		modalInstance.result.then(function (data) {
 			console.debug('I saved some enrichments');
 			var activeChapter = chapterCollection.getActiveChapter();
-			activeChapter.dimensions[data.dimension.id] = toETLinks(data.enrichments);
+			activeChapter.dimensions[data.dimension.id] = data.enrichments;
 			
 			//update the chapter collection (this triggers the $watch at the top)
 			chapterCollection.saveChapter(activeChapter);
@@ -607,10 +615,127 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	};
 
-	return {		
+	/*------------------------formatting service specific functions (could also be done on server...)---------------------*/
+
+	function toETLink (link, service) {
+		if(service == 'TvEnricher') {
+			return formatTvEnricherLink(link);
+		} else if (service == 'TvNewsEnricher') {
+			return formatTvNewsEnricherLink(link);
+		}
+		return null;
+	}
+
+	function formatTvEnricherLink(link) {
+		var l = {label : 'No title'}
+		l.uri = link.micropostUrl;
+		l.poster = getPosterUrl(link);
+		l.label = 'No title';
+		if(link.micropost && link.micropost.plainText) {
+			l.label = link.micropost.plainText;
+		}
+		//TODO fill the link.triples with the rest of the properties
+		return l;
+	}
+
+	function formatTvNewsEnricherLink(link) {
+		return null;
+	}
+
+	function formatServiceResponse(data, dimension) {		
+		if(dimension.service == 'TvEnricher') {
+			return formatTvEnricherResponse(data, dimension);
+		} else if(dimension.service == 'TvNewsEnricher') {
+			return formatTvNewsEnricherResponse(data, dimension);
+		}
+		return null;
+	}
+
+	function formatTvEnricherResponse(data, dimension) {
+		var temp = [];//will contain enrichments
+		var sources = [];
+		var eSources = [];		
+		for (var es in data) {
+			//if not added already, add the entity source to the list of possible sources
+			if(eSources.indexOf(es) == -1) {
+				eSources.push(es);
+			}
+			var entitySources = data[es];
+			for (var s in entitySources) {
+				var enrichmentsOfSource = entitySources[s];
+				//if not added already, add the source to the list of possible sources
+				if(sources.indexOf(s) == -1 && enrichmentsOfSource.length > 0) {
+					sources.push(s);
+				}
+				//loop through the eventual enrichments and add them to temp				
+				_.each(enrichmentsOfSource, function(e) {
+					//set what you can right away
+					var enrichment = {
+						label : 'No title',
+						description : 'No description',//TODO if it's there fetch it from the data
+						uri : e.micropostUrl,
+						source : s, //add the source to each enrichment (for filtering)
+						entitySource : es //add the source entities to each enrichment (for filtering)
+					};
+					//find the right poster
+					if(e.posterUrl && isValidPosterFormat(e.posterUrl)) {
+						enrichment.poster = e.posterUrl;
+					} else if(e.mediaUrl && isValidPosterFormat(e.mediaUrl)) {
+						enrichment.poster = e.mediaUrl;						
+					}					
+					//set the correct label
+					if(e.micropost && e.micropost.plainText) {
+						enrichment.label = e.micropost.plainText;
+					}
+					temp.push(enrichment);
+				});
+			}
+		}
+		if(temp.length == 0) {
+			return null;
+		}
+		return {enrichmentSources : sources, enrichmentEntitySources : eSources, allEnrichments : temp}
+	}
+
+	function formatTvNewsEnricherResponse(data, dimension) {
+		console.debug('Formatting data from the TvNewsEnricher');
+		console.debug(data);
+		var temp = [];//will contain enrichments
+		var sources = [];//sometimes available in the data
+		var eSources = [];//always empty in this case
+		if(dimension.id != 'tweets') { //TODO make sure that Tweets can also be shown (build another formatXXX function)
+			_.each(data, function(e){
+				var enrichment = {
+					label : e.title,
+					uri : e.url,
+					description : e.text
+				}
+				//add the source to the list of possible sources and attach it to the retrieved enrichment
+				if(e.source && e.source.name && sources.indexOf(e.source.name) == -1) {
+					sources.push(e.source.name);
+					enrichment.source = e.source.name;
+				}
+				if (e.media) {
+					enrichment.poster = e.media.thumbnail;
+					enrichment.mediaType = e.media.type;
+					enrichment.mediaUrl = e.media.url;
+				}
+				temp.push(enrichment);
+				//TODO add  more data to the enrichment
+			});
+		}
+		if(temp.length == 0) {
+			return null;
+		}
+		return {enrichmentSources : sources, enrichmentEntitySources : eSources, allEnrichments : temp};
+	}
+
+	return {
 		getPosterUrl : getPosterUrl,
 		openLinkDialog : openLinkDialog,
-		openCardDialog : openCardDialog
+		openCardDialog : openCardDialog,
+		formatServiceResponse : formatServiceResponse,
+		toETLink : toETLink
 	}
 }]);;angular.module('linkedtv').factory('entityProxyService', ['$rootScope', 'conf', function($rootScope, conf){
 	
@@ -867,7 +992,9 @@ linkedtv.run(function($rootScope, conf) {
 	function($rootScope, $scope, $modal, chapterCollection, chapterService, playerService) {
 	
 	$scope.resourceUri = $rootScope.resourceUri;	
-	$scope.chapters = [];	
+	$scope.allChapters = [];
+	$scope.chapters = [];
+	$scope.showCuratedOnly = false;
 
 	//watch the chapterCollection to see when it is loaded
 	/*
@@ -875,14 +1002,26 @@ linkedtv.run(function($rootScope, conf) {
 		console.debug('loaded the chapters');
 		console.debug(newValue);
 		$scope.chapters = newValue;
-	});*/
+	});*/	
 
 	$scope.update = function(chapters) {
-		$scope.$apply(function() {			
+		$scope.$apply(function() {
+			$scope.allChapters = chapters;
 			$scope.chapters = chapters;
 			console.debug($scope.chapters);
 		});
-	}
+	};
+
+	$scope.toggleShowCuratedOnly = function() {
+		$scope.showCuratedOnly = !$scope.showCuratedOnly;
+		if($scope.showCuratedOnly) {
+			$scope.chapters = _.filter($scope.allChapters, function(c) {
+				return c.type == 'curated';
+			})
+		} else {
+			$scope.chapters = $scope.allChapters;
+		}
+	};
 
 	$scope.setActiveChapter = function(chapter) {
 		chapterCollection.setActiveChapter(chapter);
@@ -918,12 +1057,15 @@ linkedtv.run(function($rootScope, conf) {
 		});
 
 		//when the modal is closed (using 'ok', or 'cancel')
-		modalInstance.result.then(function (chapter) {
-			console.debug('I saved a damn chapter yeah!');
+		modalInstance.result.then(function (chapter) {			
 			console.debug(chapter);
-
-			//update the chapter collection
-			chapterCollection.saveChapter(chapter);
+			if(chapter.remove) {
+				chapterCollection.removeChapter(chapter);
+			} else {
+				//update the chapter collection
+				chapterCollection.saveChapter(chapter);
+			}
+			
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());
 		});
@@ -938,12 +1080,18 @@ linkedtv.run(function($rootScope, conf) {
 	
 	$scope.chapter = chapter || {};
 
-	$scope.ok = function () {
+	$scope.saveChapter = function () {
 		if($scope.chapter.label) {
 			$modalInstance.close($scope.chapter);
 		} else {
 			alert('Please add a title');
 		}
+	};
+
+	$scope.deleteChapter = function () {		
+		$scope.chapter.remove = true;
+		$modalInstance.close($scope.chapter);
+		
 	};
 
 	$scope.cancel = function () {
@@ -1023,17 +1171,18 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.enrichmentsCollapsed = true;
 	$scope.savedEnrichmentsCollapsed = false;
 	$scope.entitiesCollapsed = false;
+	$scope.nothingFound = true;
 
 	//main variables
 	$scope.enrichmentUtils = enrichmentUtils;
 	$scope.dimension = dimension;//currently selected dimension
 
 	//populate the 3 levels of entities
-	$scope.cards = chapterCollection.getActiveChapter().cards || []; //
+	$scope.combinedEnrichments =  chapterCollection.getAllEnrichmentsOfChapter() || []; //get the combined enrichments from all dimensions
 	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection	
 	$scope.expandedEntities = chapterCollection.getActiveChapter().expandedEntities || [];
 
-	$scope.savedEnrichments = chapterCollection.getActiveChapter().dimensions[dimension.$$hashKey] || [] //also returned from this modal
+	$scope.savedEnrichments = chapterCollection.getActiveChapter().dimensions[dimension.id] || [] //also returned from this modal
 
 	//used to formulate the enrichment query for the TVenricher (or another service)
 	$scope.enrichmentQuery = '';//the query that will be sent to the enrichmentService
@@ -1046,8 +1195,7 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
 	
 	$scope.activeEnrichmentSource = null; //current source filter
-	$scope.activeEnrichmentEntitySource = null; //current entity source filter	
-
+	$scope.activeEnrichmentEntitySource = null; //current entity source filter			
 
 	$scope.toggleEntity = function(entityLabel) {
 		var index = $scope.activeEntities.indexOf(entityLabel);
@@ -1079,54 +1227,33 @@ linkedtv.run(function($rootScope, conf) {
 		$scope.enrichmentQuery = '';
 		$scope.enrichmentsCollapsed = false;
 		console.debug(enrichments);
-		$scope.updateEnrichments(enrichments);//maybe later offer an option to save the enrichments to the chapter
+		$scope.updateEnrichments(enrichments);
 	}
 
 	/*this part is only relevant for the tvenrichment service*/
 
 	$scope.updateEnrichments = function(enrichments) {
 		console.debug(enrichments);
-		var temp = [];//will contain enrichments
-		var sources = [];
-		var eSources = [];
-		for (var es in enrichments) {
-			//if not added already, add the entity source to the list of possible sources
-			if(eSources.indexOf(es) == -1) {
-				eSources.push(es);
-			}
-			var entitySources = enrichments[es];
-			for (var s in entitySources) {
-				var enrichmentsOfSource = entitySources[s];
-				//if not added already, add the source to the list of possible sources
-				if(sources.indexOf(s) == -1 && enrichmentsOfSource.length > 0) {
-					sources.push(s);
-				}
-				//loop through the eventual enrichments and add them to temp				
-				for(var e in enrichmentsOfSource) {
-					var enrichment = enrichmentsOfSource[e];
-					//add the source to each enrichment (for filtering)
-					enrichment.source = s;
-					//add the source entities to each enrichment (for filtering)
-					enrichment.entitySource = es;
+		var formattedEnrichments = enrichmentUtils.formatServiceResponse(enrichments, $scope.dimension);
+		if(formattedEnrichments) {
+			//apply the enrichments to the scope
+			$scope.$apply(function() {
+				$scope.enrichmentSources = formattedEnrichments.enrichmentSources;
+				$scope.enrichmentEntitySources = formattedEnrichments.enrichmentEntitySources;
+				$scope.allEnrichments = formattedEnrichments.allEnrichments;
+				$scope.enrichmentsCollapsed = false;
+				$scope.nothingFound = false;
+			});
 
-					temp.push(enrichment);
-				}
-			}
-		}
-		//apply the enrichments to the scope
-		$scope.$apply(function() {
-			$scope.enrichmentSources = sources;
-			$scope.enrichmentEntitySources = eSources;
-			$scope.allEnrichments = temp;
+			//by default filter by the first source in the list
+			$scope.filterEnrichmentsBySource($scope.enrichmentSources[0]);
+		} else {
 			$scope.enrichmentsCollapsed = false;
-		});
-		console.debug($scope.enrichmentEntitySources)
-
-		//by default filter by the first source in the list
-		$scope.filterEnrichmentsBySource(sources[0]);
+			$scope.nothingFound = true;
+		}
 	};
 
-	$scope.addEnrichment = function(enrichment) {		
+	$scope.addEnrichment = function(enrichment) {
 		$scope.savedEnrichments.push(enrichment);
 	}
 
@@ -1474,8 +1601,6 @@ linkedtv.run(function($rootScope, conf) {
 
 	//watch for changes in the active chapter
 	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {
-		console.debug('the active chapter has changed: ');
-		console.debug(newValue);
 		$scope.activeChapter = newValue;
 	});
 

@@ -20,7 +20,7 @@
 				<div class="form-group">
 					<label for="c_end">End</label>
 					<input id="c_end" class="form-control" ng-model="chapter.end">
-				</div>		
+				</div>
 			</form>
 
 		</div>
@@ -28,7 +28,8 @@
 
 </div>
 
-<div class="modal-footer">
-    <button class="btn btn-primary" ng-click="ok()">Save</button>
-    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+<div class="modal-footer">	
+	<button class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-click="saveChapter()">Save</button>
+    <button class="btn btn-danger" ng-click="deleteChapter()">Delete</button>
 </div>

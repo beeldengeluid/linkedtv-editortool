@@ -112,11 +112,11 @@ class Api():
     def getEnrichmentsOnDemand(self, entities, provider, dimension, service, useDummyEnrichments = False):
         #later fetch the endpoint based on the supplied dimension & provider
         if service == 'TvEnricher':
-            print 'Fetching stuff from the TVEnricher'
+            print 'Fetching stuff from the TvEnricher'
             tve = TvEnricher()
             return tve.search(entities, provider, dimension, useDummyEnrichments)
-        elif service == 'TVNewsEnricher':
-            print 'Fetching stuff from the TVNewsEnricher'
+        elif service == 'TvNewsEnricher':
+            print 'Fetching stuff from the TvNewsEnricher'
             tvne = TvNewsEnricher()
             return tvne.search(entities, provider, dimension, useDummyEnrichments)
         return None
