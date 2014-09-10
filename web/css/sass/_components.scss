@@ -56,12 +56,17 @@
 			}
 			.caption {
 				overflow:hidden;
+
+				.status-icon {
+					float:left;					
+				}
 			}
+			
 		}
 
 		.selected.thumbnail {
 			@include activeSlot;
-		}
+		}		
 		
 	}	
 

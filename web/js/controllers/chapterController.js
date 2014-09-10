@@ -57,7 +57,7 @@ angular.module('linkedtv').controller('chapterController',
 			console.debug('I saved a damn chapter yeah!');
 			console.debug(chapter);
 
-			//update the chapter collection (this triggers the $watch at the top)
+			//update the chapter collection
 			chapterCollection.saveChapter(chapter);
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());

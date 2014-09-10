@@ -80,7 +80,7 @@ def resource(request):
     if resourceUri:
         resourceData = {}
         api = Api()
-        if loadData:            
+        if loadData:
             resourceData = api.getAllAnnotationsOfResource(resourceUri, True)
         """Get the mediaresource metadata and the playout URL"""
         videoMetadata = simplejson.loads(api.getVideoData(resourceUri))
@@ -194,7 +194,7 @@ def saveresource(request):
     try:
         resp = sep.saveVideo(simplejson.loads(saveData))
     except JSONDecodeError, e:
-        return HttpResponse("{'error' : 'malformed save data'}", mimetype='application/json')
+        return HttpResponse(getErrorMessage('Malformed POST data'), mimetype='application/json')
     return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 
 """ 

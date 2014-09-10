@@ -156,66 +156,68 @@ linkedtv.run(function($rootScope, conf) {
 	var TYPE_CURATED = 'curated';
 	var _chapters = [];
 	var _activeChapter = null;
-	var observers = [];
+	var _thumbBaseUrl = null;
+	var observers = [];	
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)	
 	function initCollectionData(provider, resourceData, curatedData) {
 		console.debug('Initializing chapter data');
+		_thumbBaseUrl = resourceData.thumbBaseUrl;
 		var chapters = [];
 		//old curations take precedence over v2.0 curations (for now)		
-		if(resourceData.curated.chapters && resourceData.curated.chapters.length > 0) {
-			console.debug('Loading v1.0 curations...');
-			chapters = initCollectionWithRDFData(resourceData);
-		} else if(curatedData) {
+		if (curatedData) {
 			console.debug('Loading v2.0 curations...');
 			chapters = curatedData.chapters;
 			var autoChapters = resourceData.chapters;
-			for(var c in autoChapters) {
-				var chapter = autoChapters[c];
-				chapter.type = TYPE_AUTO;
-				chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, chapter.start);
-				chapter.dimensions = {};
-				chapters.push(chapter);
-			}
+			_.each(autoChapters, function(c) {	
+				c.type = TYPE_AUTO;
+				chapters.push(c);
+			});
+		} else if(resourceData.curated.chapters && resourceData.curated.chapters.length > 0) {
+			console.debug('Loading v1.0 curations...');		
+			chapters = initCollectionWithRDFData(resourceData);
 		} else {
 			console.debug('No curations found...');
 			chapters = initCollectionWithRDFData(resourceData);
 		}
-		
-		setChapters(chapters);
-		console.debug(_chapters);
-	}
-
-	//This function must be used once all the curated data is saved in the LinkedTV graph
-	function initCollectionWithRDFData(resourceData) {
-		var chapters = [];
-		var autoChapters = resourceData.chapters;
-		var curatedChapters = resourceData.curated.chapters;
-		for(var c in autoChapters) {
-			var chapter = autoChapters[c];
-			chapter.type = TYPE_AUTO;
-			chapters.push(chapter);
-		}
-		//TODO test if this works good enough for the ET sources that are actually saved in the old way!
-		for(var c in curatedChapters) {
-			var chapter = curatedChapters[c];
-			chapter.type = TYPE_CURATED;
-			chapters.push(chapter);
-		}
-
-		//convert chapters to client side friendly objects (FIXME should be done on the server!!!)	
-		for(var c in chapters) {
-			var chapter = chapters[c];
-
-			//add all the posters to the chapters 
-			chapter.poster = imageService.getThumbnail(resourceData.thumbBaseUrl, chapter.start);			
-			//add a default empty collection for the curated enrichments (TODO load this later from the server!)
-			chapter.dimensions = {};
-		}
+		//sort the chapters by start time
 		chapters.sort(function(a, b) {
 			return a.start - b.start;
 		});
+
+		//make sure all the basic properties are added to each chapter
+		_.each(chapters, function(c){
+			setBasicProperties(c, true);
+		});
+
+		setChapters(chapters);
+	}
+
+	//This function must be used once all the curated data is saved in the LinkedTV graph
+	function initCollectionWithRDFData(resourceData) {		
+		var chapters = [];
+		var autoChapters = resourceData.chapters;
+		var curatedChapters = resourceData.curated.chapters;
+		_.each(autoChapters, function(c) {
+			c.type = TYPE_AUTO;
+			chapters.push(c);
+		});
+		//TODO test if this works good enough for the ET sources that are actually saved in the old way!
+		_.each(curatedChapters, function(c) {
+			c.type = TYPE_CURATED;
+			chapters.push(c);
+		});
 		return chapters;
+	}
+
+	function setBasicProperties(chapter, updateGuid) {
+		if(updateGuid) {
+			chapter.guid = _.uniqueId('chapter_');
+		}
+		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
+		if(!chapter.dimensions) {
+			chapter.dimensions = {};
+		}
 	}
 
 	function addObserver(observer) {
@@ -239,6 +241,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	function setActiveChapter(activeChapter) {
 		_activeChapter = activeChapter;
+		console.debug(_activeChapter);
 		entityCollection.updateChapterEntities(_activeChapter);
 	}
 
@@ -249,13 +252,24 @@ linkedtv.run(function($rootScope, conf) {
 	function saveChapter(chapter) {
 		console.debug('Saving chapter');
 		console.debug(chapter);
-		_activeChapter = chapter;
-		_activeChapter.type = TYPE_CURATED; //if a user saves anything to a chapter, it means it approves of the whole chapter
+		chapter.type = TYPE_CURATED;
+		var exists = false;
 		for(c in _chapters) {
-			if(_chapters[c].$$hashKey == _activeChapter.$$hashKey) {
-				_chapters[c] = _activeChapter;
+			if(_chapters[c].guid == chapter.guid) {
+				setBasicProperties(chapter, false);
+				_chapters[c] = chapter;
+				exists = true;
 			}
 		}
+		if(!exists) { //if it's a new chapter add it
+			setBasicProperties(chapter, true);
+			_chapters.push(chapter);
+		}
+		//sort the chapters again
+		_chapters.sort(function(a, b) {
+			return a.start - b.start;
+		});
+
 		dataService.saveResource(_.filter(_chapters, function(c) {
 			return c.type == TYPE_CURATED;
 		}));//save the entire resource on the server
@@ -439,8 +453,10 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
 	function saveResource(chapters, action) {
 		console.debug('Saving resource...');
+		console.debug(chapters);
 		action = action == undefined ? 'save' : action; //not used on the server (yet?)
 		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
 		$.ajax({
@@ -449,8 +465,12 @@ linkedtv.run(function($rootScope, conf) {
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {
-				//TODO check for errors
 				console.debug(json);
+				if(json.error) {
+					alert('Could not save data');
+				} else {
+					alert('Save succesfull');
+				}
 			},
 			error: function(err) {
 	    		console.debug(err);	    		
@@ -902,7 +922,7 @@ linkedtv.run(function($rootScope, conf) {
 			console.debug('I saved a damn chapter yeah!');
 			console.debug(chapter);
 
-			//update the chapter collection (this triggers the $watch at the top)
+			//update the chapter collection
 			chapterCollection.saveChapter(chapter);
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());

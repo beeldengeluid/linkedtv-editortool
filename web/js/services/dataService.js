@@ -32,8 +32,10 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		});
 	}
 
+	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
 	function saveResource(chapters, action) {
 		console.debug('Saving resource...');
+		console.debug(chapters);
 		action = action == undefined ? 'save' : action; //not used on the server (yet?)
 		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
 		$.ajax({
@@ -42,8 +44,12 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {
-				//TODO check for errors
 				console.debug(json);
+				if(json.error) {
+					alert('Could not save data');
+				} else {
+					alert('Save succesfull');
+				}
 			},
 			error: function(err) {
 	    		console.debug(err);	    		

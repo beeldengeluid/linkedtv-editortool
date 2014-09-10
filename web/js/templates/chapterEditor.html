@@ -14,8 +14,12 @@
 
 			      	<div class="caption">
 			        	{{c.label | limitTo : 10}}
-					</div>
-			    </div>
+			        	<div class="status-icon">
+					    	<i ng-if="c.type=='auto'" class="glyphicon glyphicon-cog"></i>
+					    	<i ng-if="c.type=='curated'" class="glyphicon glyphicon-user"></i>
+					    </div>
+					</div>					
+			    </div>			    
 			</li>
 
 			<li ng-dblclick="createNewChapter()" title="Create new chapter">
