@@ -1,4 +1,4 @@
-angular.module('linkedtv').controller('enrichmentModalController', 
+angular.module('linkedtv').controller('multipleLinkModalController', 
 	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentService', 'chapterCollection', 
 	'entityCollection', 'enrichmentUtils', 'entityUtils', 'dimension', 
 	function ($scope, $modalInstance, $rootScope, entityProxyService, enrichmentService, chapterCollection,

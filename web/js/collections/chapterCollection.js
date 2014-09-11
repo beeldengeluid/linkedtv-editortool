@@ -5,15 +5,15 @@ The chapter collection contains all of the curated data:
 */
 
 angular.module('linkedtv').factory('chapterCollection', 
-	['conf', 'timeUtils', 'imageService', 'entityCollection', 'dataService',
-	 function(conf, timeUtils, imageService, entityCollection, dataService) {
+	['conf', 'imageService', 'entityCollection', 'dataService',
+	 function(conf, imageService, entityCollection, dataService) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
 	var _chapters = [];
 	var _activeChapter = null;
 	var _thumbBaseUrl = null;
-	var observers = [];	
+	var _observers = [];
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)	
 	function initCollectionData(provider, resourceData, curatedData) {
@@ -78,12 +78,12 @@ angular.module('linkedtv').factory('chapterCollection',
 	}
 
 	function addObserver(observer) {
-		observers.push(observer);
+		_observers.push(observer);
 	}
 
 	function notifyObservers() {
-		for (o in observers) {
-			observers[o](_chapters);
+		for (o in _observers) {
+			_observers[o](_chapters);
 		}
 	}
 
@@ -97,7 +97,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	}
 
 	function setActiveChapter(activeChapter) {
-		_activeChapter = activeChapter;		
+		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
 	}
 
@@ -158,7 +158,7 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveOnServer();
 	}
 
-	//only used to save an information card (this might be integrated with the saving of enrichments later...)
+	//works for both information cards and enrichments
 	function saveChapterLink(dimension, link) {
 		if(link.remove) {
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].length;i++){

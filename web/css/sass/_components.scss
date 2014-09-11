@@ -53,7 +53,7 @@
 				@include activeSlot;
 			}
 			img {
-				height:100px;
+				height:$imageHeight;
 			}
 			.caption {
 				overflow:hidden;

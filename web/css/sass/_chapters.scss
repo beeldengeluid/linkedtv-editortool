@@ -7,3 +7,38 @@
 .chapter-menu {
 	@include horizontalMenu('#fff');
 }
+
+.shot-selector {
+	list-style:none;
+	margin:0px;
+	padding:0px;
+	height:$imageHeight*6 / 2;
+	overflow:auto;
+	li {
+		display:inline-block;
+		margin:1px;
+		border:2px solid white;		
+		cursor:pointer;
+		img {
+			height:$imageHeight / 2;
+		}
+		&:hover {
+			opacity:0.5;
+			border:2px solid red;
+		}
+	}
+	.in-range {
+		opacity:0.5;
+		border:2px solid red;
+		&:hover {			
+			border:2px solid green;
+		}
+	}
+	.starting-point {
+		opacity:0.5;
+		border:2px solid green;
+		&:hover {			
+			border:2px solid green;
+		}
+	}
+}

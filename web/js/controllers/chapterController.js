@@ -5,6 +5,7 @@ angular.module('linkedtv').controller('chapterController',
 	$scope.allChapters = [];
 	$scope.chapters = [];
 	$scope.showCuratedOnly = false;
+	$scope.shotsCollapsed = true;
 
 	//watch the chapterCollection to see when it is loaded
 	/*
@@ -18,7 +19,6 @@ angular.module('linkedtv').controller('chapterController',
 		$scope.$apply(function() {
 			$scope.allChapters = chapters;
 			$scope.chapters = chapters;
-			console.debug($scope.chapters);
 		});
 	};
 

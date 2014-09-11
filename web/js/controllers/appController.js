@@ -1,5 +1,5 @@
 angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, videoModel) {	
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, shotCollection, videoModel) {	
 	
 	$scope.resourceData = null;
 
@@ -31,6 +31,9 @@ angular.module('linkedtv').controller('appController',
 
 		//load the entityCollection with entity data
 		entityCollection.initCollectionData($scope.resourceData.nes);		
+
+		//load the shotCollection with shot data
+		shotCollection.initCollectionData($scope.resourceData);
 	}
 
 });
