@@ -5,7 +5,9 @@ angular.module('linkedtv').controller('appController',
 
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
-		dataService.getResourceData(true, $scope.dataLoaded);
+		if(resourceUri) {
+			dataService.getResourceData(true, $scope.dataLoaded);
+		}
 	});	
 
 	//when the resource data has been loaded, start populating the application data

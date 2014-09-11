@@ -69,6 +69,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	function setBasicProperties(chapter, updateGuid) {
 		if(updateGuid) {
 			chapter.guid = _.uniqueId('chapter_');
+			chapter.label = chapter.label.replace(/ /g,'');
 		}
 		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
 		if(!chapter.dimensions) {
@@ -116,6 +117,14 @@ angular.module('linkedtv').factory('chapterCollection',
 		return all;
 	};
 
+	function getSavedEnrichmentsOfDimension(dimension, chapter) {
+		if(!chapter) {
+			chapter = _activeChapter;
+		}
+		var enrichments = chapter.dimensions[dimension.id];
+		return enrichments ? enrichments.slice(0) : [];
+	}
+
 	function removeChapter(chapter) {
 		_.each(_chapters, function(c, index){
 			if(c.guid == chapter.guid) {
@@ -149,8 +158,15 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveOnServer();
 	}
 
+	//only used to save an information card (this might be integrated with the saving of enrichments later...)
 	function saveChapterLink(dimension, link) {
-		if(_activeChapter.dimensions[dimension.id]) {
+		if(link.remove) {
+			for(var i=0;i<_activeChapter.dimensions[dimension.id].length;i++){
+				if(_activeChapter.dimensions[dimension.id][i].uri == link.uri) {
+					_activeChapter.dimensions[dimension.id].splice(i, 1);
+				}
+			}
+		} else if(_activeChapter.dimensions[dimension.id]) {
 			var exists = false;
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].length;i++){
 				if(_activeChapter.dimensions[dimension.id][i].uri == link.uri) {
@@ -180,6 +196,7 @@ angular.module('linkedtv').factory('chapterCollection',
 		setActiveChapter : setActiveChapter,
 		getActiveChapter : getActiveChapter,
 		getAllEnrichmentsOfChapter : getAllEnrichmentsOfChapter,
+		getSavedEnrichmentsOfDimension : getSavedEnrichmentsOfDimension,
 		removeChapter : removeChapter,
 		saveChapter : saveChapter,
 		saveChapterLink : saveChapterLink,

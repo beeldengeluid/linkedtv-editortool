@@ -5,7 +5,7 @@ angular.module('linkedtv').controller('videoSelectionController', function($root
 
 	//TODO remove this stupid function
 	$scope.init = function() {
-		//videoSelectionService.getVideosOfProvider($scope.provider, $scope.videosLoaded);
+		videoSelectionService.getVideosOfProvider($scope.provider, $scope.videosLoaded);
 	};
 
 	$scope.videosLoaded = function(videos) {
@@ -22,5 +22,5 @@ angular.module('linkedtv').controller('videoSelectionController', function($root
 		window.location.assign('http://' + location.host + '/' + $scope.provider + '/' + video)
 	};
 
-	//$scope.init();
+	$scope.init();
 });

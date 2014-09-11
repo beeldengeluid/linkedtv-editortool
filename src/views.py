@@ -277,18 +277,6 @@ External APIs from LinkedTV WP2
 *********************************************************************************************************
 """
 
-def tvenricher(request):
-    call = request.GET.get('call', None)
-    uuid = request.GET.get('id', None)
-    resp = 'Nothing to see here'
-    tve = TvEnricher()
-    if call == 'list':  
-        resp = tve.getProcessedResources()
-    elif id:
-        resp = tve.getProcessedResource(uuid)
-    print resp
-    return HttpResponse(resp, mimetype='application/json')
-
 def entityproxy(request):
     uri = request.GET.get('uri', None)
     lang = request.GET.get('lang', None)
@@ -296,4 +284,4 @@ def entityproxy(request):
         ep = EntityProxy()
         resp = ep.fetch(uri, lang)
         return HttpResponse(resp, mimetype='application/json')
-    return HttpResponse("{'error' : 'Please provide a DBPedia URI'}", mimetype='application/json')
+    return HttpResponse(getErrorMessage('Please provide a DBPedia URI'), mimetype='application/json')

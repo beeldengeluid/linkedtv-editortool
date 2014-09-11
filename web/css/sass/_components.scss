@@ -77,7 +77,7 @@
 .foldable {
 	width:100%;
 	border: 1px solid $wonderblue;
-	margin:$defaultMargin*2 0px;
+	margin:$defaultMargin 0px;
 	cursor: pointer;
 	padding: 5px;
 	font-weight: bold;
@@ -86,4 +86,11 @@
 	&:hover {
 		background-color: white;	
 	}
+}
+
+.alert-custom {
+	display:block;
+	margin-top:$defaultMargin;
+	background-color:$warningRed;
+	border-radius:0px !important;
 }

@@ -21,7 +21,7 @@
 					<img ng-if="c.poster" ng-src="{{c.poster}}" alt="{{c.label}}">
 
 			      	<div class="caption">
-			        	{{c.label | limitTo : 10}}
+			        	{{c.label | limitTo : 8}}
 			        	<div class="status-icon">
 					    	<i ng-if="c.type=='auto'" class="glyphicon glyphicon-cog"></i>
 					    	<i ng-if="c.type=='curated'" class="glyphicon glyphicon-user"></i>

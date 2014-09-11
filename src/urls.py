@@ -14,8 +14,7 @@ urlpatterns = patterns('',
     url(r'^login$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     url(r'^logout$', 'views.logout_user'),
     
-    #external/partner APIs   
-    url(r'^tvenricher$', 'views.tvenricher'),
+    #external/partner APIs 
     url(r'^entityproxy$', 'views.entityproxy'),    
     
     #refactored navigation

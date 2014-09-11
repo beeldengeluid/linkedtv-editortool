@@ -58,6 +58,11 @@ var informationCardTemplates = {
 
 var rbbConfig = {
 	dimensions : [
+		{//temporary
+		'id' : 'maintopic',
+		'label' : 'The art object',
+		'service' : 'informationCards'
+		},
 		{
 		'id' : 'opinion',
 		'label' : 'Opinion',

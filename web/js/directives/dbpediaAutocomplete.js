@@ -39,7 +39,6 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 			};
 
 			$scope.init = function() {
-				console.debug($element);
 				$scope.setAutocompleteRendering('dbpedia');
 				var url = '/autocomplete';
 				$('#dbpedia').autocomplete({

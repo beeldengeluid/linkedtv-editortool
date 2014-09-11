@@ -58,6 +58,11 @@ var informationCardTemplates = {
 
 var rbbConfig = {
 	dimensions : [
+		{//temporary
+		'id' : 'maintopic',
+		'label' : 'The art object',
+		'service' : 'informationCards'
+		},
 		{
 		'id' : 'opinion',
 		'label' : 'Opinion',
@@ -149,7 +154,97 @@ linkedtv.run(function($rootScope, conf) {
 	$rootScope.$on('$viewContentLoaded', function() {
 		$templateCache.removeAll();
    });*/
-});;angular.module('linkedtv').factory('chapterCollection', 
+});;angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', function($modal, chapterCollection) {
+
+	function openLinkDialog(dimension, link) {
+		console.debug(dimension);
+		var modalInstance = $modal.open({
+			templateUrl: '/site_media/js/templates/enrichmentModal.html',
+			controller: 'enrichmentModalController',
+			size: 'lg',
+			resolve: {
+				dimension: function () {
+					return dimension;
+				},
+				link: function() {
+					return link;
+				}
+			}
+		});
+
+		//when the modal is closed (using 'ok', or 'cancel')
+		modalInstance.result.then(function (data) {
+			console.debug('I saved some enrichments');
+			var activeChapter = chapterCollection.getActiveChapter();
+			activeChapter.dimensions[data.dimension.id] = data.enrichments;
+			
+			//update the chapter collection
+			chapterCollection.saveChapter(activeChapter);
+		}, function () {
+			console.debug('Modal dismissed at: ' + new Date());
+		});
+	};
+
+	function openCardDialog(dimension, link) {		
+		var modalInstance = $modal.open({
+			templateUrl: '/site_media/js/templates/informationCardModal.html',
+			controller: 'informationCardModalController',
+			size: 'lg',
+			resolve: {				
+				dimension : function () {
+					return dimension;
+				},
+				link: function() {
+					return link;
+				}
+			}
+		});
+
+		//when the modal is closed (using 'ok', or 'cancel')
+		modalInstance.result.then(function (data) {
+			console.debug('I saved a damn card yeah!');
+			console.debug(data);
+			chapterCollection.saveChapterLink(data.dimension, data.link);
+		}, function () {
+			console.debug('Modal dismissed at: ' + new Date());
+		});
+	};
+
+	/*------------------------formatting service specific functions (could also be done on server...)---------------------*/
+
+	
+
+	return {		
+		openLinkDialog : openLinkDialog,
+		openCardDialog : openCardDialog
+	}
+}]);;angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterCollection', 
+	function(entityCollection, chapterCollection) {
+
+
+	function getConfidenceClass(entity) {
+		var c = parseFloat(entity.confidence);
+		if(c <= 0) {
+			return 'verylow';
+		} else if (c > 0 && c <= 0.2) {
+			return 'low';
+		} else if (c > 0.2 && c <= 0.4) {
+			return 'fair';
+		} else if (c > 0.4 && c <= 0.6) {
+			return 'medium';
+		} else if (c > 0.6 && c <= 0.8) {
+			return 'high';
+		} else if (c > 0.8) {
+			return 'veryhigh';
+		}
+	};
+
+	
+
+	return {		
+		getConfidenceClass : getConfidenceClass
+	}
+}]);;angular.module('linkedtv').factory('chapterCollection', 
 	['conf', 'timeUtils', 'imageService', 'entityCollection', 'dataService',
 	 function(conf, timeUtils, imageService, entityCollection, dataService) {
 
@@ -214,6 +309,7 @@ linkedtv.run(function($rootScope, conf) {
 	function setBasicProperties(chapter, updateGuid) {
 		if(updateGuid) {
 			chapter.guid = _.uniqueId('chapter_');
+			chapter.label = chapter.label.replace(/ /g,'');
 		}
 		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
 		if(!chapter.dimensions) {
@@ -261,6 +357,14 @@ linkedtv.run(function($rootScope, conf) {
 		return all;
 	};
 
+	function getSavedEnrichmentsOfDimension(dimension, chapter) {
+		if(!chapter) {
+			chapter = _activeChapter;
+		}
+		var enrichments = chapter.dimensions[dimension.id];
+		return enrichments ? enrichments.slice(0) : [];
+	}
+
 	function removeChapter(chapter) {
 		_.each(_chapters, function(c, index){
 			if(c.guid == chapter.guid) {
@@ -294,8 +398,15 @@ linkedtv.run(function($rootScope, conf) {
 		saveOnServer();
 	}
 
+	//only used to save an information card (this might be integrated with the saving of enrichments later...)
 	function saveChapterLink(dimension, link) {
-		if(_activeChapter.dimensions[dimension.id]) {
+		if(link.remove) {
+			for(var i=0;i<_activeChapter.dimensions[dimension.id].length;i++){
+				if(_activeChapter.dimensions[dimension.id][i].uri == link.uri) {
+					_activeChapter.dimensions[dimension.id].splice(i, 1);
+				}
+			}
+		} else if(_activeChapter.dimensions[dimension.id]) {
 			var exists = false;
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].length;i++){
 				if(_activeChapter.dimensions[dimension.id][i].uri == link.uri) {
@@ -325,6 +436,7 @@ linkedtv.run(function($rootScope, conf) {
 		setActiveChapter : setActiveChapter,
 		getActiveChapter : getActiveChapter,
 		getAllEnrichmentsOfChapter : getAllEnrichmentsOfChapter,
+		getSavedEnrichmentsOfDimension : getSavedEnrichmentsOfDimension,
 		removeChapter : removeChapter,
 		saveChapter : saveChapter,
 		saveChapterLink : saveChapterLink,
@@ -523,123 +635,15 @@ linkedtv.run(function($rootScope, conf) {
 			method: 'GET',
 			dataType : 'json',
 			url : fetchUrl,
-			success : function(json) {				
-				callback(json.error ? null : json.enrichments);
+			success : function(json) {
+				var enrichments = json.error ? null : json.enrichments;	
+				callback(formatServiceResponse(enrichments, dimension));
 			},
 			error : function(err) {
 				console.debug(err);
 				callback(null);
 			}
 		});
-	}	
-
-	return {
-		search : search
-	}
-
-}]);;angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', function($modal, chapterCollection) {
-
-	function getPosterUrl(enrichment) {
-		if(enrichment.posterUrl && isValidPosterFormat(enrichment.posterUrl)) {
-			return enrichment.posterUrl;
-		} else if(enrichment.mediaUrl && isValidPosterFormat(enrichment.mediaUrl)) {
-			return enrichment.mediaUrl;
-		}
-		return null;
-	}
-
-	function isValidPosterFormat(img) {
-		if(img == null) {
-			return false;
-		}
-		var formats = ['jpg', 'png', 'jpeg', 'JPG', 'PNG', 'gif', 'GIF', 'JPEG', 'bmp', 'BMP'];
-		for(i in formats) {
-			if(img.indexOf(formats[i]) != -1) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	function openLinkDialog(dimension, link) {
-		console.debug(dimension);
-		var modalInstance = $modal.open({
-			templateUrl: '/site_media/js/templates/enrichmentModal.html',
-			controller: 'enrichmentModalController',
-			size: 'lg',
-			resolve: {
-				dimension: function () {
-					return dimension;
-				},
-				link: function() {
-					return link;
-				}
-			}
-		});
-
-		//when the modal is closed (using 'ok', or 'cancel')
-		modalInstance.result.then(function (data) {
-			console.debug('I saved some enrichments');
-			var activeChapter = chapterCollection.getActiveChapter();
-			activeChapter.dimensions[data.dimension.id] = data.enrichments;
-			
-			//update the chapter collection (this triggers the $watch at the top)
-			chapterCollection.saveChapter(activeChapter);
-		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
-		});
-	};
-
-	function openCardDialog(dimension, link) {		
-		var modalInstance = $modal.open({
-			templateUrl: '/site_media/js/templates/informationCardModal.html',
-			controller: 'informationCardModalController',
-			size: 'lg',
-			resolve: {				
-				dimension : function () {
-					return dimension;
-				},
-				link: function() {
-					return link;
-				}
-			}
-		});
-
-		//when the modal is closed (using 'ok', or 'cancel')
-		modalInstance.result.then(function (data) {
-			console.debug('I saved a damn card yeah!');
-			console.debug(data);
-			chapterCollection.saveChapterLink(data.dimension, data.link);
-		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
-		});
-	};
-
-	/*------------------------formatting service specific functions (could also be done on server...)---------------------*/
-
-	function toETLink (link, service) {
-		if(service == 'TvEnricher') {
-			return formatTvEnricherLink(link);
-		} else if (service == 'TvNewsEnricher') {
-			return formatTvNewsEnricherLink(link);
-		}
-		return null;
-	}
-
-	function formatTvEnricherLink(link) {
-		var l = {label : 'No title'}
-		l.uri = link.micropostUrl;
-		l.poster = getPosterUrl(link);
-		l.label = 'No title';
-		if(link.micropost && link.micropost.plainText) {
-			l.label = link.micropost.plainText;
-		}
-		//TODO fill the link.triples with the rest of the properties
-		return l;
-	}
-
-	function formatTvNewsEnricherLink(link) {
-		return null;
 	}
 
 	function formatServiceResponse(data, dimension) {		
@@ -730,24 +734,34 @@ linkedtv.run(function($rootScope, conf) {
 		return {enrichmentSources : sources, enrichmentEntitySources : eSources, allEnrichments : temp};
 	}
 
-	return {
-		getPosterUrl : getPosterUrl,
-		openLinkDialog : openLinkDialog,
-		openCardDialog : openCardDialog,
-		formatServiceResponse : formatServiceResponse,
-		toETLink : toETLink
+	function isValidPosterFormat(img) {
+		if(img == null) {
+			return false;
+		}
+		var formats = ['jpg', 'png', 'jpeg', 'JPG', 'PNG', 'gif', 'GIF', 'JPEG', 'bmp', 'BMP'];
+		for(i in formats) {
+			if(img.indexOf(formats[i]) != -1) {
+				return true;
+			}
+		}
+		return false;
 	}
+
+	return {
+		search : search
+	}
+
 }]);;angular.module('linkedtv').factory('entityProxyService', ['$rootScope', 'conf', function($rootScope, conf){
 	
 
-	function getEntityDBPediaInfo(dbpediaUri, callback) {
+	function fetch(dbpediaUri, callback) {
 		console.debug('Getting entity info for: ' + dbpediaUri);
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
 			url : '/entityproxy?uri=' + dbpediaUri + '&lang=' + conf.languageMap[$rootScope.provider],
 			success : function(json) {				
-				callback(json);
+				callback(json.error ? null : formatResponse(json));
 			},
 			error : function(err) {
 				console.debug(err);
@@ -756,9 +770,44 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	function formatResponse(data) {		
+		console.debug(data);
+		var info = [];
+		var thumbs = [];
+		for (key in data) {
+			var prop = null;
+			for(k in data[key]) {
+				prop = data[key][k];
+				var values = [];
+				var uris = [];
+				if(prop.length > 0) {
+					for(p in prop) {
+						values.push(prop[p].value || prop[p]);
+						uris.push(prop[p].uri);
+					}
+					if(key !== 'thumb') {
+						info.push({index : 0, key : k, values : values, uris : uris});
+					}
+				}
+			}
+		}
+		info.sort();
+		thumbs = getThumbs(info);
+		return {info : info, thumbs : thumbs};
+	}
+
+	function getThumbs(info) {
+		for(var i=0;i<info.length;i++) {
+			if(info[i].key == 'thumb') {
+				return info[i].values;
+			}
+		}
+		return null;
+	}
+
 
 	return {
-		getEntityDBPediaInfo : getEntityDBPediaInfo
+		fetch : fetch
 	}
 
 }]);;angular.module('linkedtv').factory('imageService', [function(){
@@ -962,7 +1011,9 @@ linkedtv.run(function($rootScope, conf) {
 
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
-		dataService.getResourceData(true, $scope.dataLoaded);
+		if(resourceUri) {
+			dataService.getResourceData(true, $scope.dataLoaded);
+		}
 	});	
 
 	//when the resource data has been loaded, start populating the application data
@@ -1164,8 +1215,9 @@ linkedtv.run(function($rootScope, conf) {
 	
 });;angular.module('linkedtv').controller('enrichmentModalController', 
 	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentService', 'chapterCollection', 
-	'entityCollection', 'enrichmentUtils', 'dimension', function ($scope, $modalInstance, $rootScope, entityProxyService, 
-		enrichmentService, chapterCollection, entityCollection, enrichmentUtils, dimension) {
+	'entityCollection', 'enrichmentUtils', 'entityUtils', 'dimension', 
+	function ($scope, $modalInstance, $rootScope, entityProxyService, enrichmentService, chapterCollection,
+	 entityCollection, enrichmentUtils, entityUtils, dimension) {
 	
 	//collapse states
 	$scope.enrichmentsCollapsed = true;
@@ -1175,6 +1227,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	//main variables
 	$scope.enrichmentUtils = enrichmentUtils;
+	$scope.entityUtils = entityUtils;
 	$scope.dimension = dimension;//currently selected dimension
 
 	//populate the 3 levels of entities
@@ -1182,7 +1235,7 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection	
 	$scope.expandedEntities = chapterCollection.getActiveChapter().expandedEntities || [];
 
-	$scope.savedEnrichments = chapterCollection.getActiveChapter().dimensions[dimension.id] || [] //also returned from this modal
+	$scope.savedEnrichments = chapterCollection.getSavedEnrichmentsOfDimension(dimension);
 
 	//used to formulate the enrichment query for the TVenricher (or another service)
 	$scope.enrichmentQuery = '';//the query that will be sent to the enrichmentService
@@ -1195,21 +1248,7 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
 	
 	$scope.activeEnrichmentSource = null; //current source filter
-	$scope.activeEnrichmentEntitySource = null; //current entity source filter			
-
-	$scope.toggleEntity = function(entityLabel) {
-		var index = $scope.activeEntities.indexOf(entityLabel);
-		if(index == -1) {
-			$scope.activeEntities.push(entityLabel);
-		} else {
-			$scope.activeEntities.splice(index, 1);
-		}
-		$('#e_query').attr('value', $scope.activeEntities.join('+'));
-	}
-
-	$scope.isEntitySelected = function(entityLabel) {
-		return $scope.activeEntities.indexOf(entityLabel) == -1 ? '' : 'selected';
-	}
+	$scope.activeEnrichmentEntitySource = null; //current entity source filter
 
 
 	//the actual enrichments will be shown in the enrichment tab
@@ -1225,33 +1264,23 @@ linkedtv.run(function($rootScope, conf) {
 		//$('#fetch_enrichments').button('reset');
 		$scope.activeEntities = [];
 		$scope.enrichmentQuery = '';
-		$scope.enrichmentsCollapsed = false;
-		console.debug(enrichments);
-		$scope.updateEnrichments(enrichments);
-	}
-
-	/*this part is only relevant for the tvenrichment service*/
-
-	$scope.updateEnrichments = function(enrichments) {
-		console.debug(enrichments);
-		var formattedEnrichments = enrichmentUtils.formatServiceResponse(enrichments, $scope.dimension);
-		if(formattedEnrichments) {
+		$scope.enrichmentsCollapsed = false;		
+		if(enrichments) {
 			//apply the enrichments to the scope
 			$scope.$apply(function() {
-				$scope.enrichmentSources = formattedEnrichments.enrichmentSources;
-				$scope.enrichmentEntitySources = formattedEnrichments.enrichmentEntitySources;
-				$scope.allEnrichments = formattedEnrichments.allEnrichments;
+				$scope.enrichmentSources = enrichments.enrichmentSources;
+				$scope.enrichmentEntitySources = enrichments.enrichmentEntitySources;
+				$scope.allEnrichments = enrichments.allEnrichments;
 				$scope.enrichmentsCollapsed = false;
 				$scope.nothingFound = false;
 			});
-
 			//by default filter by the first source in the list
 			$scope.filterEnrichmentsBySource($scope.enrichmentSources[0]);
 		} else {
 			$scope.enrichmentsCollapsed = false;
 			$scope.nothingFound = true;
 		}
-	};
+	}
 
 	$scope.addEnrichment = function(enrichment) {
 		$scope.savedEnrichments.push(enrichment);
@@ -1260,19 +1289,6 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.removeEnrichment = function(index) {
 		$scope.savedEnrichments.splice(index, 1);
 	}
-
-	$scope.ok = function () {			
-		if($scope.savedEnrichments) {			
-			$modalInstance.close({dimension: $scope.dimension, enrichments : $scope.savedEnrichments});
-		} else {
-			alert('Please add a label');
-		}
-	};
-
-	$scope.cancel = function () {
-		$modalInstance.dismiss('cancel');
-	};	
-
 
 	//filters the enrichments by source
 	$scope.filterEnrichmentsBySource = function(source) {
@@ -1294,77 +1310,37 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	//----------------------------SELECTING ENRICHMENTS & ENTITIES------------------------------
 
-	//********************************THIS SHOULD BE MOVED!!!!!****************************************************	
-	//********************************THIS SHOULD BE MOVED!!!!!****************************************************
-	//********************************THIS SHOULD BE MOVED!!!!!****************************************************
+	$scope.toggleEntity = function(entityLabel) {
+		var index = $scope.activeEntities.indexOf(entityLabel);
+		if(index == -1) {
+			$scope.activeEntities.push(entityLabel);
+		} else {
+			$scope.activeEntities.splice(index, 1);
+		}
+		$('#e_query').attr('value', $scope.activeEntities.join('+'));
+	}
 
-	$scope.getConfidenceClass = function(entity) {				
-		var c = parseFloat(entity.confidence);
-		if(c <= 0) {
-			return 'verylow';
-		} else if (c > 0 && c <= 0.2) {
-			return 'low';
-		} else if (c > 0.2 && c <= 0.4) {
-			return 'fair';
-		} else if (c > 0.4 && c <= 0.6) {
-			return 'medium';
-		} else if (c > 0.6 && c <= 0.8) {
-			return 'high';
-		} else if (c > 0.8) {
-			return 'veryhigh';
+	$scope.isEntitySelected = function(entityLabel) {
+		return $scope.activeEntities.indexOf(entityLabel) == -1 ? '' : 'selected';
+	}
+
+
+
+	//----------------------------BUTTON PANEL------------------------------
+
+	$scope.ok = function () {
+		if($scope.savedEnrichments) {
+			$modalInstance.close({dimension: $scope.dimension, enrichments : $scope.savedEnrichments});
+		} else {
+			alert('Please add a label');
 		}
 	};
 
-
-	$scope.fetchExtraInfoForEntityLabel = function(entity) {		
-		$scope.fetchExtraInfo(entity.disambiguationURL);
-	}
-
-	$scope.fetchExtraInfo = function(entityUri) {
-		if(entityUri) {				
-			entityProxyService.getEntityDBPediaInfo(entityUri, $scope.fetchedTriplesLoaded);
-			$scope.loading = true;
-		}
-	}
-
-	$scope.fetchedTriplesLoaded = function(data) {			
-		$scope.fetchedTriples = [];
-		var info = [];
-		for (key in data) {
-			var prop = null;
-			for(k in data[key]) {
-				prop = data[key][k];
-				var values = [];
-				var uris = [];
-				if(prop.length > 0) {
-					for(p in prop) {
-						values.push(prop[p].value || prop[p]);
-						uris.push(prop[p].uri);
-					}
-					if(key !== $scope.POSTER) {
-						info.push({index : 0, key : k, values : values, uris : uris});
-					}
-				}
-			}
-		}
-		info.sort();
-		$scope.$apply(function() {
-			$scope.loading = false;
-			$scope.thumbIndex = 0;
-			$scope.thumbs = $scope.getThumbsFromTriples(info);
-			$scope.fetchedTriples = info;
-		})
-	}
-
-	$scope.getThumbsFromTriples = function(triples) {
-		for(var i=0;i<triples.length;i++) {
-			if(triples[i].key == $scope.POSTER) {
-				return triples[i].values;
-			}
-		}
-		return null;
-	}
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};	
 	
 }]);;angular.module('linkedtv').controller('entityController', 
 	function($scope, entityCollection) {
@@ -1425,30 +1401,31 @@ linkedtv.run(function($rootScope, conf) {
 	};
 
 });;angular.module('linkedtv').controller('informationCardModalController', 
-	['$scope', '$modalInstance', 'conf', 'entityProxyService', 'entityCollection', 'chapterCollection', 'dimension', 'link',
-	function ($scope, $modalInstance, conf, entityProxyService, entityCollection, chapterCollection, dimension, link) {
+	['$scope', '$modalInstance', 'conf', 'entityProxyService', 'entityCollection', 'chapterCollection', 'entityUtils',
+	 'dimension', 'link', function ($scope, $modalInstance, conf, entityProxyService, entityCollection, chapterCollection,
+	 entityUtils, dimension, link) {
 	
 	$scope.dimension = dimension;
-	$scope.card = link || {};
+	$scope.card = link || {};//TODO make sure to copy the link to this scope!
+	$scope.entityUtils = entityUtils;	
 
-	$scope.templates = conf.templates;
-	$scope.activeTemplate = null;//is set when using the dropdown
-
-
+	console.debug($scope.card);
 	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection	
 	$scope.expandedEntities = chapterCollection.getActiveChapter().expandedEntities || [];//TODO
 	
-	$scope.POSTER = 'thumb';
 	$scope.thumbs = null;
 	$scope.thumbIndex = 0;
 
 	$scope.fetchedTriples = null;
 
 	$scope.autocompleteId = 'autocomplete_1';
-	$scope.foundEntity = {};
+	$scope.foundEntity = {};//for the autocomplete box
 
-	//state variables
 	$scope.loading = false;
+
+	//$scope.templates = conf.templates;
+	//$scope.activeTemplate = null;//is set when using the dropdown
+
 
 	$scope.addToCard = function(triple) {
 		var t = null;
@@ -1494,88 +1471,42 @@ linkedtv.run(function($rootScope, conf) {
 		} else {
 			$scope.thumbIndex = 0;
 		}
+	}	
+
+	$scope.isReserved = function(key) {
+		return key === 'thumb';
 	}
 
-	$scope.getThumbsFromTriples = function(triples) {
-		for(var i=0;i<triples.length;i++) {
-			if(triples[i].key == $scope.POSTER) {
-				return triples[i].values;
+
+	//----------------------------FETCH INFO FROM THE ENTITY PROXY------------------------------
+
+	$scope.fetchExtraInfo = function(entity) {
+		var uri = entity.disambiguationURL ? entity.disambiguationURL : entity.uri;
+		if(uri) {
+			if(!$scope.card.uri) {
+				$scope.card.uri = uri;
 			}
-		}
-		return null;
-	}
-
-
-	//DUPLICATE CODE MAKE SURE TO CENTRALIZE THIS STUFF
-	$scope.getConfidenceClass = function(entity) {
-		var c = parseFloat(entity.confidence);
-		if(c <= 0) {
-			return 'verylow';
-		} else if (c > 0 && c <= 0.2) {
-			return 'low';
-		} else if (c > 0.2 && c <= 0.4) {
-			return 'fair';
-		} else if (c > 0.4 && c <= 0.6) {
-			return 'medium';
-		} else if (c > 0.6 && c <= 0.8) {
-			return 'high';
-		} else if (c > 0.8) {
-			return 'veryhigh';
-		}
-	};
-
-	$scope.fetchExtraInfoForEntityLabel = function(entity) {		
-		$scope.fetchExtraInfo(entity.disambiguationURL);
-	}
-
-	$scope.fetchExtraInfo = function(entityUri) {
-		if(entityUri) {
-			$scope.card.uri = entityUri;		
-			entityProxyService.getEntityDBPediaInfo(entityUri, $scope.fetchedTriplesLoaded);
+			entityProxyService.fetch(uri, $scope.entityInfoFetched);
 			$scope.loading = true;
 		}
 	}
 
-	$scope.fetchedTriplesLoaded = function(data) {			
+	$scope.entityInfoFetched = function(data) {
 		$scope.fetchedTriples = [];
-		console.debug(data);
-		var info = [];
-		for (key in data) {
-			var prop = null;
-			for(k in data[key]) {
-				prop = data[key][k];
-				var values = [];
-				var uris = [];
-				if(prop.length > 0) {
-					for(p in prop) {
-						values.push(prop[p].value || prop[p]);
-						uris.push(prop[p].uri);
-					}
-					if(key !== $scope.POSTER) {
-						info.push({index : 0, key : k, values : values, uris : uris});
-					}
-				}
-			}
-		}
-		info.sort();
 		$scope.$apply(function() {
 			$scope.loading = false;
 			$scope.thumbIndex = 0;
-			$scope.thumbs = $scope.getThumbsFromTriples(info);
-			$scope.fetchedTriples = info;
+			$scope.thumbs = data.thumbs;
+			$scope.fetchedTriples = data.info;
 		})
 	}
 
-	$scope.isReserved = function(key) {
-		return key === $scope.POSTER;
-	}
 
-	//really ugly, but necessary for now...
-	$scope.updateCardProperties = function() {
-		for(t in $scope.card.triples) {
-			$scope.card[$scope.card.triples[t].key] = $scope.card.triples[t].value;
-		}
-	}
+	//----------------------------BUTTON PANEL------------------------------
+
+	$scope.cancel = function () {
+		$modalInstance.dismiss('cancel');
+	};
 
 	$scope.ok = function () {
 		$scope.updateCardProperties();
@@ -1585,10 +1516,21 @@ linkedtv.run(function($rootScope, conf) {
 			alert('Please add a label');
 		}
 	};
+	
+	$scope.updateCardProperties = function() { //really ugly, but necessary for now...
+		//TODO properly generate a URI
+		if(!$scope.card.uri) {
+			$scope.card.uri = 'http://linkedtv.eu/' + new Date().getTime();
+		}
+		for(t in $scope.card.triples) {
+			$scope.card[$scope.card.triples[t].key] = $scope.card.triples[t].value;
+		}
+	}
 
-	$scope.cancel = function () {
-		$modalInstance.dismiss('cancel');
-	};		
+	$scope.removeCard = function() {
+		$scope.card.remove = true;
+		$modalInstance.close({dimension : $scope.dimension, link : $scope.card});
+	}
 	
 }]);;angular.module('linkedtv').controller('informationCardsController', 
 	function($rootScope, $scope, $modal, conf, entityProxyService, chapterCollection) {
@@ -1672,7 +1614,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	//TODO remove this stupid function
 	$scope.init = function() {
-		//videoSelectionService.getVideosOfProvider($scope.provider, $scope.videosLoaded);
+		videoSelectionService.getVideosOfProvider($scope.provider, $scope.videosLoaded);
 	};
 
 	$scope.videosLoaded = function(videos) {
@@ -1689,7 +1631,7 @@ linkedtv.run(function($rootScope, conf) {
 		window.location.assign('http://' + location.host + '/' + $scope.provider + '/' + video)
 	};
 
-	//$scope.init();
+	$scope.init();
 });;angular.module('linkedtv').directive('chapterEditor', [function(){
 	
 	return {
@@ -1742,7 +1684,6 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 			};
 
 			$scope.init = function() {
-				console.debug($element);
 				$scope.setAutocompleteRendering('dbpedia');
 				var url = '/autocomplete';
 				$('#dbpedia').autocomplete({
