@@ -10,16 +10,3 @@ body {
 	padding-top:70px;
 	background-image: url(../images/bg-tile-fg.png);
 }
-
-@mixin horizontalList($inlineBlock : false){
-	list-style:none;
-	padding:0px;
-	margin:0px;
-	li {
-		@if $inlineBlock {
-			display:inline-block;
-		} @else {		
-			display:inline;
-		}
-	}
-}

@@ -53,7 +53,29 @@ class Api():
     """-----------------Videos------------------"""
 
     def getVideosOfProvider(self, provider):
-        return self.dataLoader.getMediaResources(provider)
+        videos = []
+        videoUris = self.dataLoader.getMediaResources(provider)
+        print videoUris
+        vd = None
+        video = None
+        thumbBaseUrl = None
+        for uri in videoUris['videos']:
+            print uri
+            vd = simplejson.loads(self.getVideoData(uri))
+            if vd['mediaResource']:
+                if vd['mediaResource'].has_key('mediaResourceRelationSet') and vd['mediaResource']['mediaResourceRelationSet']:
+                    for mrr in vd['mediaResource']['mediaResourceRelationSet']:
+                        if mrr['relationType'] == 'thumbnail-locator':
+                            thumbBaseUrl = mrr['relationTarget']
+                video = {
+                    'id' : vd['mediaResource']['id'],
+                    'title' : vd['mediaResource']['titleName'],
+                    'locator' : vd['mediaResource']['locator'],
+                    'thumbBaseUrl' : thumbBaseUrl,
+                    'dateInserted' : vd['mediaResource']['dateInserted']#TODO convert to pretty date
+                }
+                videos.append(video)
+        return {'videos' : videos}
 
 
     """-----------------Chapters------------------"""

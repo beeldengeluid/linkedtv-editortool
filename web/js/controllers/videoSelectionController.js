@@ -1,26 +1,26 @@
-angular.module('linkedtv').controller('videoSelectionController', function($rootScope, $scope, videoSelectionService) {
-		
-	$scope.provider = $rootScope.provider;
-	$scope.videos = [];
+angular.module('linkedtv').controller('videoSelectionController', 
+	function($rootScope, $scope, videoSelectionService, videoCollection) {
 
-	//TODO remove this stupid function
-	$scope.init = function() {
-		//videoSelectionService.getVideosOfProvider($scope.provider, $scope.videosLoaded);
-	};
+	$scope.videos = null;
 
-	$scope.videosLoaded = function(videos) {
-		if(videos != null) {			
+	$scope.update = function(videos) {
+		console.debug('Videos loaded');
+		if(videos) {
 			$scope.$apply(function(){
 				$scope.videos = videos;
 			});
-		} else {
-			// TODO error
 		}
 	};
 
-	$scope.setActiveVideo = function(video) {
-		window.location.assign('http://' + location.host + '/' + $scope.provider + '/' + video)
+	$scope.videosLoaded = function(videos) {
+		videoCollection.initCollectionData(videos);
 	};
 
-	$scope.init();
+	$scope.setActiveVideo = function(video) {
+		window.location.assign('http://' + location.host + '/' + $rootScope.provider + '/' + video.id);
+	};
+
+	//add the update function as an observer to the videoCollection
+	videoCollection.addObserver($scope.update);
+
 });

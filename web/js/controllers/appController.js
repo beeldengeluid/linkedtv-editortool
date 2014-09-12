@@ -1,14 +1,24 @@
 angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, shotCollection, videoModel) {	
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, 
+		shotCollection, videoModel, videoCollection, videoSelectionService) {	
 	
 	$scope.resourceData = null;
 
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
 		if(resourceUri) {
-			dataService.getResourceData(true, $scope.dataLoaded);
+			dataService.getResourceData(true, $scope.dataLoaded);			
 		}
-	});	
+	});
+
+	//fetch the video collection as soon as the provider is added to the rootScope
+	$rootScope.$watch('provider', function(provider) {
+		videoSelectionService.getVideosOfProvider(provider, $scope.videosLoaded);
+	});
+
+	$scope.videosLoaded = function(videos) {
+		videoCollection.initCollectionData(videos);
+	};
 
 	//when the resource data has been loaded, start populating the application data
 	$scope.dataLoaded = function(resourceData) {

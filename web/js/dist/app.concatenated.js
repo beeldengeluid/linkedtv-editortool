@@ -653,6 +653,48 @@ linkedtv.run(function($rootScope, conf) {
 		updateChapterShots : updateChapterShots
 	}
 
+}]);;angular.module('linkedtv').factory('videoCollection', ['imageService', function(imageService) {
+	
+	var _videos = [];
+	var _observers = [];
+	var THUMBNAIL_SECOND = 100;
+
+	function initCollectionData(videos) {
+		console.debug('Initializing video collection');				
+		_.each(videos, function(v){
+			v.poster = imageService.getThumbnail(v.thumbBaseUrl, THUMBNAIL_SECOND * 1000);
+		});
+		videos.sort(function(a, b) {
+			return parseInt(a.dateInserted) - parseInt(b.dateInserted);
+		});
+		setVideos(videos);
+	}
+
+	function addObserver(observer) {
+		_observers.push(observer);
+	}
+
+	function notifyObservers() {
+		for (o in _observers) {
+			_observers[o](_videos);
+		}
+	}
+
+	function setVideos(videos){
+		_videos = videos;
+		notifyObservers();
+	}
+
+	function getVideos() {
+		return _videos;
+	}	
+
+	return {
+		initCollectionData : initCollectionData,
+		getVideos : getVideos,
+		addObserver : addObserver
+	}
+
 }]);;angular.module('linkedtv').factory('videoModel', function() {
 	
 	var _video = null;
@@ -1083,16 +1125,26 @@ linkedtv.run(function($rootScope, conf) {
 		return timeUtils.toPrettyTime(input);
     };
 });;angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, shotCollection, videoModel) {	
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, 
+		shotCollection, videoModel, videoCollection, videoSelectionService) {	
 	
 	$scope.resourceData = null;
 
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
 		if(resourceUri) {
-			dataService.getResourceData(true, $scope.dataLoaded);
+			dataService.getResourceData(true, $scope.dataLoaded);			
 		}
-	});	
+	});
+
+	//fetch the video collection as soon as the provider is added to the rootScope
+	$rootScope.$watch('provider', function(provider) {
+		videoSelectionService.getVideosOfProvider(provider, $scope.videosLoaded);
+	});
+
+	$scope.videosLoaded = function(videos) {
+		videoCollection.initCollectionData(videos);
+	};
 
 	//when the resource data has been loaded, start populating the application data
 	$scope.dataLoaded = function(resourceData) {
@@ -1167,8 +1219,7 @@ linkedtv.run(function($rootScope, conf) {
 		$scope.openChapterDialog(null);
 	}
 
-	$scope.openChapterDialog = function(chapter) {
-		/*
+	$scope.openChapterDialog = function(chapter) {		
 		chapter = {//copy the chapter
 			annotationURI: chapter.annotationURI,
 			bodyURI: chapter.bodyURI, 
@@ -1182,7 +1233,7 @@ linkedtv.run(function($rootScope, conf) {
 			relevance: chapter.relevance,
 			start: chapter.start, 
 			type: chapter.type
-		}*/
+		}
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/chapterModal.html',
 			controller: 'chapterModalController',
@@ -1708,31 +1759,31 @@ linkedtv.run(function($rootScope, conf) {
 		}
 	});
 
-});;angular.module('linkedtv').controller('videoSelectionController', function($rootScope, $scope, videoSelectionService) {
-		
-	$scope.provider = $rootScope.provider;
-	$scope.videos = [];
+});;angular.module('linkedtv').controller('videoSelectionController', 
+	function($rootScope, $scope, videoSelectionService, videoCollection) {
 
-	//TODO remove this stupid function
-	$scope.init = function() {
-		//videoSelectionService.getVideosOfProvider($scope.provider, $scope.videosLoaded);
-	};
+	$scope.videos = null;
 
-	$scope.videosLoaded = function(videos) {
-		if(videos != null) {			
+	$scope.update = function(videos) {
+		console.debug('Videos loaded');
+		if(videos) {
 			$scope.$apply(function(){
 				$scope.videos = videos;
 			});
-		} else {
-			// TODO error
 		}
 	};
 
-	$scope.setActiveVideo = function(video) {
-		window.location.assign('http://' + location.host + '/' + $scope.provider + '/' + video)
+	$scope.videosLoaded = function(videos) {
+		videoCollection.initCollectionData(videos);
 	};
 
-	$scope.init();
+	$scope.setActiveVideo = function(video) {
+		window.location.assign('http://' + location.host + '/' + $rootScope.provider + '/' + video.id);
+	};
+
+	//add the update function as an observer to the videoCollection
+	videoCollection.addObserver($scope.update);
+
 });;angular.module('linkedtv').directive('chapterEditor', [function(){
 	
 	return {

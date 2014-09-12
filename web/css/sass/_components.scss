@@ -103,3 +103,20 @@
 	background-color:$warningRed;
 	border-radius:0px !important;
 }
+
+@mixin horizontalList($inlineBlock : false){
+	list-style:none;
+	padding:0px;
+	margin:0px;
+	li {
+		@if $inlineBlock {
+			display:inline-block;
+		} @else {		
+			display:inline;
+		}
+	}
+}
+
+.panel-custom {
+	margin:$defaultMargin;
+}

@@ -1,0 +1,18 @@
+.video-selector {
+	li {
+		cursor:pointer;
+		width:320px;
+		display:inline-block;
+		margin:$defaultItemMargin;
+		.caption {
+			text-align:center;
+		}
+		img {
+			width:320px;
+		}
+		&:hover {
+			@include activeSlot;
+		}
+	}
+	
+}
