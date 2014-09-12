@@ -1,6 +1,6 @@
 <div>
-	<foldable title="Select shots" collapsed="shotsCollapsed"></foldable>
-	<div collapse="shotsCollapsed">
+	<foldable title="Select shots" collapsed="collapsed"></foldable>
+	<div collapse="collapsed">
 		<h3>Select two shots to define the boundaries of this chapter</h3>
 		<ul class="shot-selector">
 			<li ng-repeat="s in shots" id="{{s.start}}" class="{{withinRange(s)}}" ng-click="setSelection(s)">

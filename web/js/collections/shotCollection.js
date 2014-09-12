@@ -13,7 +13,7 @@ angular.module('linkedtv').factory('shotCollection', ['imageService', function(i
 			s.poster = imageService.getThumbnail(_thumbBaseUrl, s.start);
 		});
 		_shots.sort(function(a, b) {
-			return parseFloat(a.start) - parseFloat(b.start);
+			return parseInt(a.start) - parseInt(b.start);
 		});
 	}
 
@@ -28,14 +28,16 @@ angular.module('linkedtv').factory('shotCollection', ['imageService', function(i
 	function updateChapterShots(chapter) {
 		if(chapter) {
 			//first filter all the entities to be only of the selected chapter
-			var _chapterShots = _.filter(_shots, function(item) {
-				if(item.start >= chapter.start && item.end <=  chapter.end) {
+			_chapterShots = _.filter(_shots, function(item) {
+				if(parseInt(item.start) >= parseInt(chapter.start) && parseInt(item.end) <=  parseInt(chapter.end)) {
 					return item;
 				}
 			});
 			_chapterShots.sort(function(a, b) {
-				return parseFloat(a.start) - parseFloat(b.start);
+				return parseInt(a.start) - parseInt(b.start);
 			});
+			console.debug('Chapter shots');
+			console.debug(_chapterShots);
 		}
 	}
 

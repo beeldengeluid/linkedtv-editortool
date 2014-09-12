@@ -5,8 +5,8 @@ The chapter collection contains all of the curated data:
 */
 
 angular.module('linkedtv').factory('chapterCollection', 
-	['conf', 'imageService', 'entityCollection', 'dataService',
-	 function(conf, imageService, entityCollection, dataService) {
+	['conf', 'imageService', 'entityCollection', 'shotCollection', 'dataService',
+	 function(conf, imageService, entityCollection, shotCollection, dataService) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
@@ -99,6 +99,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	function setActiveChapter(activeChapter) {
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
+		shotCollection.updateChapterShots(_activeChapter);
 	}
 
 	function getActiveChapter() {
