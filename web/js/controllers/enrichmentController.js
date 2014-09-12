@@ -2,9 +2,6 @@ angular.module('linkedtv').controller('enrichmentController',
 	function($rootScope, $scope, $modal, conf, chapterCollection, 
 		entityCollection, enrichmentService, entityProxyService, enrichmentUtils) {
 	
-
-	/*-------------------------TAB FUNCTIONS---------------------------*/
-	
 	$scope.enrichmentUtils = enrichmentUtils;
 	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
 	$scope.activeChapter = null;//holds the up-to-date active chapter

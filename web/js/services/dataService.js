@@ -48,7 +48,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 				if(json.error) {
 					alert('Could not save data');
 				} else {
-					alert('Save succesfull');
+					//TODO animate the saved data on the screen
 				}
 			},
 			error: function(err) {

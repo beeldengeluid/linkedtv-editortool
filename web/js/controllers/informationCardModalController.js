@@ -36,16 +36,22 @@ angular.module('linkedtv').controller('informationCardModalController',
 		}
 
 		//Also add the triple to the list of triples (for convencience)
+		$scope.addCardTriple(t);
+	}
+
+	$scope.addCardTriple = function(triple) {
 		if($scope.card.triples) {
-			$scope.card.triples.push(t);
+			$scope.card.triples.push(triple);
 		} else {
-			$scope.card.triples = [t];
-		}			
+			$scope.card.triples = [triple];
+		}	
 	}
 
 	$scope.removeFromCard = function(index) {
 		if($scope.card.triples[index].key === 'label') {
 			$scope.card.label = null;
+		} else if($scope.card.triples[index].key === 'poster') {
+			$scope.card.poster = null;
 		}
 		$scope.card.triples.splice(index, 1);
 	}
@@ -60,6 +66,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.setCardPoster = function(thumb) {
 		$scope.card.poster = thumb;
+		$scope.addCardTriple({key : 'poster', value : thumb, uri : null});
 	}
 
 	$scope.nextThumb = function() {

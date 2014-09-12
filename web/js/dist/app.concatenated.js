@@ -451,7 +451,7 @@ linkedtv.run(function($rootScope, conf) {
 			chapter = _activeChapter;
 		}
 		var enrichments = chapter.dimensions[dimension.id];
-		return enrichments ? enrichments.slice(0) : null;
+		return enrichments ? enrichments.slice(0) : [];
 	}
 
 	function removeChapter(chapter) {
@@ -747,7 +747,7 @@ linkedtv.run(function($rootScope, conf) {
 				if(json.error) {
 					alert('Could not save data');
 				} else {
-					alert('Save succesfull');
+					//TODO animate the saved data on the screen
 				}
 			},
 			error: function(err) {
@@ -1302,9 +1302,6 @@ linkedtv.run(function($rootScope, conf) {
 	function($rootScope, $scope, $modal, conf, chapterCollection, 
 		entityCollection, enrichmentService, entityProxyService, enrichmentUtils) {
 	
-
-	/*-------------------------TAB FUNCTIONS---------------------------*/
-	
 	$scope.enrichmentUtils = enrichmentUtils;
 	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
 	$scope.activeChapter = null;//holds the up-to-date active chapter
@@ -1444,16 +1441,22 @@ linkedtv.run(function($rootScope, conf) {
 		}
 
 		//Also add the triple to the list of triples (for convencience)
+		$scope.addCardTriple(t);
+	}
+
+	$scope.addCardTriple = function(triple) {
 		if($scope.card.triples) {
-			$scope.card.triples.push(t);
+			$scope.card.triples.push(triple);
 		} else {
-			$scope.card.triples = [t];
-		}			
+			$scope.card.triples = [triple];
+		}	
 	}
 
 	$scope.removeFromCard = function(index) {
 		if($scope.card.triples[index].key === 'label') {
 			$scope.card.label = null;
+		} else if($scope.card.triples[index].key === 'poster') {
+			$scope.card.poster = null;
 		}
 		$scope.card.triples.splice(index, 1);
 	}
@@ -1468,6 +1471,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	$scope.setCardPoster = function(thumb) {
 		$scope.card.poster = thumb;
+		$scope.addCardTriple({key : 'poster', value : thumb, uri : null});
 	}
 
 	$scope.nextThumb = function() {
@@ -1633,7 +1637,7 @@ linkedtv.run(function($rootScope, conf) {
 		}
 	}
 
-	$scope.addEnrichment = function(enrichment) {
+	$scope.addEnrichment = function(enrichment) {		
 		$scope.savedEnrichments.push(enrichment);
 	}
 

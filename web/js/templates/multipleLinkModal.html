@@ -6,17 +6,17 @@
 
 	<!-- The selected enrichments for this dimension selectedEnrichments-->
 	<div class="row">
-		<div class="col-md-12">			
+		<div class="col-md-12">	
 			<foldable title="Saved enrichments" collapsed="savedEnrichmentsCollapsed"></foldable>
 			<div collapse="savedEnrichmentsCollapsed">
 
-				 <div ng-if="!savedEnrichments" class="row" ng-show="nothingFound">
+				<div ng-show="savedEnrichments.length == 0" class="row" ng-show="nothingFound">
 					<div class="col-md-12">
 						<span class="alert alert-custom">No enrichments were added to this dimension yet</span>
 					</div>
 				</div>
 
-				<ul ng-if="savedEnrichments" class="enrichments">
+				<ul ng-show="savedEnrichments.length > 0" class="enrichments">
 					<li ng-repeat="e in savedEnrichments track by $index">
 						<div class="thumbnail" ng-if="e.uri" ng-dblclick="removeEnrichment($index)" title="{{e.description}}">
 							<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">

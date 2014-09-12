@@ -122,7 +122,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			chapter = _activeChapter;
 		}
 		var enrichments = chapter.dimensions[dimension.id];
-		return enrichments ? enrichments.slice(0) : null;
+		return enrichments ? enrichments.slice(0) : [];
 	}
 
 	function removeChapter(chapter) {

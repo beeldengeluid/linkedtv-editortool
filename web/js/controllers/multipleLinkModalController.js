@@ -72,7 +72,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 		}
 	}
 
-	$scope.addEnrichment = function(enrichment) {
+	$scope.addEnrichment = function(enrichment) {		
 		$scope.savedEnrichments.push(enrichment);
 	}
 
