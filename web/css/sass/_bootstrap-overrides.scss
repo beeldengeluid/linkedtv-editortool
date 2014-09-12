@@ -1,9 +1,38 @@
-$panel-default-heading-bg: $lightmustard;
-$panel-heading-padding: 5px 10px;
-$panel-border-radius: 0px;
+/* Important for glyphicons */
 
 $icon-font-path: "../bower_components/bootstrap-sass-official/assets/fonts/bootstrap/" !default;
 
+/* Defaults */
+
+$border-radius-base:        0px !default;
+$border-radius-large:       0px !default;
+$border-radius-small:       0px !default;
+
+/* Panels */
+
+$panel-default-heading-bg: $lightmustard;
+$panel-heading-padding: 5px 10px;
+
+/* Thumbnail caption */
+
+$thumbnail-caption-padding : 0px;
+$thumbnail-padding: 1px;
+
+.thumbnail {
+	margin-bottom:0px !important;
+}
+
+
+/* Labels */
+
+.label {
+	border-radius:0px !important;
+}
+
+
+
+
+/* Custom additions to Bootstrap classes */
 
 .interactive.glyphicon {
 	cursor:pointer;
@@ -11,8 +40,4 @@ $icon-font-path: "../bower_components/bootstrap-sass-official/assets/fonts/boots
 	
 .selected.glyphicon {
 	color:$wonderblue;
-}
-
-.modal-content {
-	border-radius:0px !important;
 }

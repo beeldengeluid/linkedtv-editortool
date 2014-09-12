@@ -8,6 +8,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 	$scope.enrichmentsCollapsed = true;
 	$scope.savedEnrichmentsCollapsed = false;
 	$scope.entitiesCollapsed = false;
+	
 	$scope.nothingFound = true;
 
 	//main variables

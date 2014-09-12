@@ -1075,7 +1075,12 @@ linkedtv.run(function($rootScope, conf) {
 		getVideosOfProvider : getVideosOfProvider
 	}
 
-}]);;angular.module('linkedtv').controller('appController',
+}]);;angular.module('linkedtv').filter('prettyTime', function(timeUtils) {
+	return function(input) {
+		input = input || 0;
+		return timeUtils.toPrettyTime(input);
+    };
+});;angular.module('linkedtv').controller('appController',
 	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, shotCollection, videoModel) {	
 	
 	$scope.resourceData = null;
@@ -1114,22 +1119,14 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 });;angular.module('linkedtv').controller('chapterController', 
-	function($rootScope, $scope, $modal, chapterCollection, chapterService, playerService) {
+	function($scope, $modal, chapterCollection, chapterService, playerService) {
 	
-	$scope.resourceUri = $rootScope.resourceUri;	
 	$scope.allChapters = [];
 	$scope.chapters = [];
 	$scope.showCuratedOnly = false;
 	$scope.shotsCollapsed = true;
 
-	//watch the chapterCollection to see when it is loaded
-	/*
-	$scope.$watch(function () { return chapterCollection.getChapters(); }, function(newValue) {
-		console.debug('loaded the chapters');
-		console.debug(newValue);
-		$scope.chapters = newValue;
-	});*/	
-
+	//needed since the $watch function on the chapterCollection no longer works
 	$scope.update = function(chapters) {
 		$scope.$apply(function() {
 			$scope.allChapters = chapters;
@@ -1154,8 +1151,8 @@ linkedtv.run(function($rootScope, conf) {
 	};
 
 	$scope.isChapterSelected = function(chapter) {
-		if($rootScope.chapter) {
-			return $rootScope.chapter.$$hashKey == chapter.$$hashKey ? 'selected' : '';
+		if(chapterCollection.getActiveChapter()) {
+			return chapterCollection.getActiveChapter().guid == chapter.guid ? 'selected' : '';
 		}
 		return '';
 	};
@@ -1211,7 +1208,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	console.debug($scope.selectionStart + ' - ' + $scope.selectionEnd);
 
-	$scope.setSelection = function(shot) {		
+	$scope.setSelection = function(shot) {
 		if($scope.settingStart) {
 			$scope.setSelectionStart(shot);
 		} else {
@@ -1900,6 +1897,22 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
     	replace : true,
 
         templateUrl : '/site_media/js/templates/entitySelector.html',
+
+    };
+
+}]);;angular.module('linkedtv').directive('foldable', [function(){
+	
+	return {
+    	restrict : 'E',
+
+    	replace : true,
+
+    	scope : {
+    		collapsed : '=collapsed',
+    		title : '@'
+    	},
+
+        templateUrl : '/site_media/js/templates/foldable.html',
 
     };
 

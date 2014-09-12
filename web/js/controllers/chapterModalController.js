@@ -10,7 +10,7 @@ angular.module('linkedtv').controller('chapterModalController',
 
 	console.debug($scope.selectionStart + ' - ' + $scope.selectionEnd);
 
-	$scope.setSelection = function(shot) {		
+	$scope.setSelection = function(shot) {
 		if($scope.settingStart) {
 			$scope.setSelectionStart(shot);
 		} else {

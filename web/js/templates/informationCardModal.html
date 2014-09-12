@@ -97,7 +97,7 @@
     <!-- display entities -->
     <div class="row">
         <div class="col-md-12">
-            <div class="foldable" ng-click="entitiesCollapsed = !entitiesCollapsed">Pick entities</div>
+            <foldable title="Pick entities" collapsed="entitiesCollapsed"></foldable>
             <div collapse="entitiesCollapsed">
                 <h4>Detected entities</h4>
                 <ul class="entities">
@@ -137,7 +137,7 @@
     <div class="row">
         <div ng-show="fetchedTriples" class="card-edit-form">
             <div class="col-md-12">
-                <div class="foldable" ng-click="fetchedDataCollapsed = !fetchedDataCollapsed">Show fetched data</div>
+                <foldable title="Show fetched data" collapsed="fetchedDataCollapsed"></foldable>
                 <div collapse="fetchedDataCollapsed">
                     <h4>Fetched properties</h4>
                

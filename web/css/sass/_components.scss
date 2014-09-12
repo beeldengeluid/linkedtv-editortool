@@ -7,10 +7,16 @@
 }
 
 @mixin activeSlot {
-	@include single-box-shadow;
-	border: 1px solid #a3a3a3;
-	a {
-		color: $wonderblue;
+	.thumbnail {
+		@include single-box-shadow;
+		border: 1px solid #a3a3a3;
+
+		.caption {
+			background-color:$lightmustard;
+		}
+		a {
+			color: $wonderblue;
+		}
 	}
 	
 }
@@ -44,20 +50,17 @@
 		text-align:center;
 		width:121px;
 
-		.thumbnail {			
+		.thumbnail {
 			border:1px solid white;
 			width:120px;
 			max-height: 150px;
-			overflow:hidden;
-			&:hover {
-				@include activeSlot;
-			}
+			overflow:hidden;			
 			img {
 				height:$imageHeight;
 			}
 			.caption {
 				overflow:hidden;
-
+				padding-top:2px;
 				.status-icon {
 					float:left;					
 				}
@@ -65,11 +68,13 @@
 			
 		}
 
-		.selected.thumbnail {
+		&:hover {
 			@include activeSlot;
-		}		
-		
-	}	
+		}
+	}
+	.selected {
+		@include activeSlot;
+	}
 
 }
 
@@ -85,6 +90,10 @@
 
 	&:hover {
 		background-color: white;	
+	}
+
+	.glyphicon {
+		float:right;
 	}
 }
 

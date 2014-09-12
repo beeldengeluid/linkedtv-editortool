@@ -1,20 +1,12 @@
 angular.module('linkedtv').controller('chapterController', 
-	function($rootScope, $scope, $modal, chapterCollection, chapterService, playerService) {
+	function($scope, $modal, chapterCollection, chapterService, playerService) {
 	
-	$scope.resourceUri = $rootScope.resourceUri;	
 	$scope.allChapters = [];
 	$scope.chapters = [];
 	$scope.showCuratedOnly = false;
 	$scope.shotsCollapsed = true;
 
-	//watch the chapterCollection to see when it is loaded
-	/*
-	$scope.$watch(function () { return chapterCollection.getChapters(); }, function(newValue) {
-		console.debug('loaded the chapters');
-		console.debug(newValue);
-		$scope.chapters = newValue;
-	});*/	
-
+	//needed since the $watch function on the chapterCollection no longer works
 	$scope.update = function(chapters) {
 		$scope.$apply(function() {
 			$scope.allChapters = chapters;
@@ -39,8 +31,8 @@ angular.module('linkedtv').controller('chapterController',
 	};
 
 	$scope.isChapterSelected = function(chapter) {
-		if($rootScope.chapter) {
-			return $rootScope.chapter.$$hashKey == chapter.$$hashKey ? 'selected' : '';
+		if(chapterCollection.getActiveChapter()) {
+			return chapterCollection.getActiveChapter().guid == chapter.guid ? 'selected' : '';
 		}
 		return '';
 	};

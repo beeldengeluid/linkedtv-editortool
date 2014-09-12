@@ -9,7 +9,8 @@ module.exports = function(grunt) {
         stripBanners: true
       },
       dist: {
-        src: ['js/conf/config.js', 'js/app.js', 'js/utils/*.js', 'js/collections/*.js', 'js/services/*.js', 'js/controllers/*.js', 'js/directives/*.js'],
+        src: ['js/conf/config.js', 'js/app.js', 'js/utils/*.js', 'js/collections/*.js', 'js/services/*.js', 
+        'js/filters/*.js', 'js/controllers/*.js', 'js/directives/*.js'],
         dest: 'js/dist/app.concatenated.js',
       },
     },

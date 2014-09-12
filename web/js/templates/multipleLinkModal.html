@@ -6,8 +6,8 @@
 
 	<!-- The selected enrichments for this dimension selectedEnrichments-->
 	<div class="row">
-		<div class="col-md-12">
-			<div class="foldable" ng-click="savedEnrichmentsCollapsed = !savedEnrichmentsCollapsed">Saved enrichments</div>
+		<div class="col-md-12">			
+			<foldable title="Saved enrichments" collapsed="savedEnrichmentsCollapsed"></foldable>
 			<div collapse="savedEnrichmentsCollapsed">
 				<ul class="enrichments">
 					<li ng-repeat="e in savedEnrichments track by $index">
@@ -30,7 +30,7 @@
     <div class="row">
     	
         <div class="col-md-12">
-			<div class="foldable" ng-click="entitiesCollapsed = !entitiesCollapsed">Choose entities</div>
+        	<foldable title="Choose entities" collapsed="entitiesCollapsed"></foldable>
         	<div collapse="entitiesCollapsed">
 
 	            <h4>Select one or more entities and fetch useful links</h4>
@@ -116,8 +116,8 @@
 	<!-- The fetched enrichments (make this another template) -->
 	<div class="row" ng-show="!nothingFound">
     	
-        <div class="col-md-12">        	
-			<div class="foldable" ng-click="enrichmentsCollapsed = !enrichmentsCollapsed">Found enrichments</div>
+        <div class="col-md-12">
+        	<foldable title="Found enrichments" collapsed="enrichmentsCollapsed"></foldable>
         	<div collapse="enrichmentsCollapsed">        		
 
         		<!-- The dropdown for filtering the found enrichments -->
