@@ -29,8 +29,16 @@ $thumbnail-padding: 1px;
 	border-radius:0px !important;
 }
 
+/* Modals */
 
+.modal-header {
+	padding:$defaultMargin !important;
+	background-color:$lightmustard;
+}
 
+.modal-footer {
+	padding:$defaultMargin !important;
+}
 
 /* Custom additions to Bootstrap classes */
 

@@ -46,7 +46,7 @@
 		
 		cursor:pointer;
 		float:left;
-		margin:$defaultMargin;
+		margin:$defaultItemMargin;
 		text-align:center;
 		width:121px;
 
@@ -81,15 +81,15 @@
 
 .foldable {
 	width:100%;
-	border: 1px solid $wonderblue;
+	border: 1px solid $bordergrey;
 	margin:$defaultMargin 0px;
 	cursor: pointer;
 	padding: 5px;
 	font-weight: bold;
-	background-color: aliceblue;
+	background-color: gainsboro;
 
 	&:hover {
-		background-color: white;	
+		background-color: whitesmoke;	
 	}
 
 	.glyphicon {

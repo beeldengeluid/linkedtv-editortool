@@ -1,5 +1,5 @@
 <div class="modal-header">    
-    <h3 class="modal-title">Edit {{dimension.label}}</h3>
+    <h4 class="modal-title">Edit {{dimension.label}}</h4>
 </div>
 
 <div class="modal-body">
@@ -9,15 +9,22 @@
 		<div class="col-md-12">			
 			<foldable title="Saved enrichments" collapsed="savedEnrichmentsCollapsed"></foldable>
 			<div collapse="savedEnrichmentsCollapsed">
-				<ul class="enrichments">
+
+				 <div ng-if="!savedEnrichments" class="row" ng-show="nothingFound">
+					<div class="col-md-12">
+						<span class="alert alert-custom">No enrichments were added to this dimension yet</span>
+					</div>
+				</div>
+
+				<ul ng-if="savedEnrichments" class="enrichments">
 					<li ng-repeat="e in savedEnrichments track by $index">
-						<div class="thumbnail" ng-if="e.uri" ng-click="removeEnrichment($index)" title="{{e.description}}">
+						<div class="thumbnail" ng-if="e.uri" ng-dblclick="removeEnrichment($index)" title="{{e.description}}">
 							<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
 							<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
 							
 							<div class="caption">
-								<a href="{{e.uri}}" target="_external">{{e.label}}</a>
+								<a href="{{e.uri}}" target="_external">{{e.label | limitTo:30}}</a>
 							</div>
 					    </div>
 					</li>
@@ -60,7 +67,9 @@
 									<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
 									<div class="caption">
-										{{e.label | limitTo : 10 || 'No label' | limitTo : 10}}
+										<a href="{{e.uri}}" target="_external">
+											{{e.label | limitTo : 30 || 'No label' | limitTo : 30}}
+										</a>
 									</div>
 							    </div>
 							</li>
@@ -94,8 +103,8 @@
 			                    <label>Search</label>
 			                    <input id="e_query" type="text">
 			                </div>
-			                <button id="fetch_enrichments" class="btn btn-primary" ng-click="fetchEnrichments()">
-			                	Fetch enrichments
+			                <button class="btn btn-primary" ng-click="fetchEnrichments()">
+			                	{{fetchButtonText}}
 							</button>
 			            </form>			
 					</div>
@@ -114,14 +123,14 @@
 	</div>
 
 	<!-- The fetched enrichments (make this another template) -->
-	<div class="row" ng-show="!nothingFound">
+	<div class="row" ng-show="enrichments">
     	
         <div class="col-md-12">
         	<foldable title="Found enrichments" collapsed="enrichmentsCollapsed"></foldable>
         	<div collapse="enrichmentsCollapsed">        		
 
         		<!-- The dropdown for filtering the found enrichments -->
-			    <div class="row" ng-show="!nothingFound">
+			    <div class="row">
 					<div class="col-md-12">
 						<nav class="tab-menu">
 							<ul class="horizontal-menu">
@@ -154,7 +163,7 @@
 
 
 				<!-- The found enrichments (filtered by the currently selected filter) -->
-				<div class="row" ng-show="!nothingFound">
+				<div class="row" ng-show="enrichments">
 					<div class="col-md-12">
 						<ul class="enrichments">
 							<li ng-repeat="e in enrichments">

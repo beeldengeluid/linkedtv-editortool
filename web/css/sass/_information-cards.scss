@@ -45,6 +45,13 @@
  }
 
 .textarea {
+	cursor:pointer;
 	overflow:auto;
-	max-height:10 * $defaultMargin;
+	max-height:15 * $defaultMargin;
+	background-color:#eee;
+	border: 1px solid #ccc;
+	padding: 6px 12px;
+	&:hover {
+		@include box-shadow($wonderblue 2px 2px 10px);
+	}
 }

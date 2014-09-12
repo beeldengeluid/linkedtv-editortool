@@ -46,7 +46,21 @@ angular.module('linkedtv').controller('chapterController',
 	}
 
 	$scope.openChapterDialog = function(chapter) {
-
+		/*
+		chapter = {//copy the chapter
+			annotationURI: chapter.annotationURI,
+			bodyURI: chapter.bodyURI, 
+			confidence: chapter.confidence,
+			dimensions: chapter.dimensions,
+			end: chapter.end,
+			guid: chapter.guid,
+			label: chapter.label, 
+			mfURI: chapter.mfURI,
+			poster: chapter.poster,
+			relevance: chapter.relevance,
+			start: chapter.start, 
+			type: chapter.type
+		}*/
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/chapterModal.html',
 			controller: 'chapterModalController',

@@ -69,7 +69,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	function setBasicProperties(chapter, updateGuid) {
 		if(updateGuid) {
 			chapter.guid = _.uniqueId('chapter_');
-			chapter.label = chapter.label.replace(/ /g,'');
+			//chapter.label = chapter.label.replace(/ /g,'');
 		}
 		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
 		if(!chapter.dimensions) {
@@ -122,7 +122,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			chapter = _activeChapter;
 		}
 		var enrichments = chapter.dimensions[dimension.id];
-		return enrichments ? enrichments.slice(0) : [];
+		return enrichments ? enrichments.slice(0) : null;
 	}
 
 	function removeChapter(chapter) {
@@ -135,10 +135,12 @@ angular.module('linkedtv').factory('chapterCollection',
 	}
 
 	function saveChapter(chapter) {
-		console.debug('Saving chapter');
-		console.debug(chapter);
-		chapter.type = TYPE_CURATED;
 		var exists = false;
+		chapter.type = TYPE_CURATED;
+		/*
+		if(chapter.type == TYPE_AUTO) {
+			chapter.type = TYPE_CURATED;	
+		} */
 		for(c in _chapters) {
 			if(_chapters[c].guid == chapter.guid) {
 				setBasicProperties(chapter, false);

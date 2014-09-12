@@ -17,9 +17,7 @@ class TvEnricher():
         self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
     
     def search(self, entities, provider, dimension, useDummyCache = False):
-        #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v
-        print 'Getting enrichments on demand'
-        print useDummyCache
+        #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v        
         if useDummyCache and self.cache.exists('dummyEnrichments'):
             print 'Loading dummy enrichments from cache!'
             return { 'enrichments' : simplejson.loads(self.cache.get('dummyEnrichments'))}
@@ -27,9 +25,7 @@ class TvEnricher():
         url = self.getServiceUrl(entities, provider, dimension)
         print url
         headers = {'Content-type': 'application/json'}
-        resp, content = http.request(url, 'GET', headers=headers)
-        print resp
-        print content
+        resp, content = http.request(url, 'GET', headers=headers)        
         if content:
             #if useDummyCache and not self.cache.exists('dummyEnrichments'):
             #self.cache.set('dummyEnrichments', simplejson.dumps({ 'enrichments' : content }))

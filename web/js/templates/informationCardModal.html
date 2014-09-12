@@ -1,6 +1,6 @@
 <div class="modal-header">
-    <h3 ng-if="card" class="modal-title">Edit: {{card.label}}</h3>
-    <h3 ng-if="!card" class="modal-title">Create new card</h3>
+    <h4 ng-if="card.uri" class="modal-title">Edit information card: {{card.label}}</h4>
+    <h4 ng-if="!card.uri" class="modal-title">Create new information card</h4>
 </div>
 
 <div class="modal-body">
