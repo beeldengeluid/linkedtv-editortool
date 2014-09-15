@@ -5,7 +5,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 	 entityCollection, enrichmentUtils, entityUtils, dimension) {
 	
 	//collapse states
-	$scope.enrichmentsCollapsed = true;
+	$scope.enrichmentsCollapsed = false;
 	$scope.savedEnrichmentsCollapsed = false;
 	$scope.entitiesCollapsed = false;
 	
@@ -61,7 +61,13 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 				$scope.enrichmentSources = enrichments.enrichmentSources;
 				$scope.enrichmentEntitySources = enrichments.enrichmentEntitySources;
 				$scope.allEnrichments = enrichments.allEnrichments;
-				$scope.filterEnrichmentsBySource($scope.enrichmentSources[0]);
+				//when calling filterEnrichmentsBySource() the view is not updated properly, so had to copy the code here...
+				$scope.activeEnrichmentSource = $scope.enrichmentSources[0];
+				$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
+					if(e.source === $scope.activeEnrichmentSource) {
+						return e;
+				}
+		});
 			});			
 		} else {
 			alert('No enrichments found');
@@ -82,7 +88,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 
 	//filters the enrichments by source
 	$scope.filterEnrichmentsBySource = function(source) {
-		$scope.activeEnrichmentSource = source;
+		$scope.activeEnrichmentSource = source;		
 		$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
 			if(e.source === source) {
 				return e;

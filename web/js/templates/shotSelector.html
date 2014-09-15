@@ -1,12 +1,16 @@
 <div>
-	<foldable title="Select shots" collapsed="collapsed"></foldable>
-	<div collapse="collapsed">
-		<h3>Select two shots to define the boundaries of this chapter</h3>
-		<ul class="shot-selector">
-			<li ng-repeat="s in shots" id="{{s.start}}" class="{{withinRange(s)}}" ng-click="setSelection(s)">
-				<img src="{{s.poster}}" title="{{s.start}}">
-			</li>
-		</ul>
+	<div ng-if="shots.length == 0" class="alert alert-custom">No shots available</div>
+	<div ng-if="shots.length > 0">
+		<foldable title="Select shots" collapsed="collapsed"></foldable>
+		<div collapse="collapsed">
+			
+			<h3>Select two shots to define the boundaries of this chapter</h3>
+			<ul class="shot-selector">
+				<li ng-repeat="s in shots" id="{{s.start}}" class="{{withinRange(s)}}" ng-click="setSelection(s)">
+					<img src="{{s.poster}}" title="{{s.start}}">
+				</li>
+			</ul>			
+		</div>
 	</div>
 
 </div>

@@ -1132,11 +1132,12 @@ linkedtv.run(function($rootScope, conf) {
 		shotCollection, videoModel, videoCollection, videoSelectionService) {	
 	
 	$scope.resourceData = null;
+	$scope.loading = true;
 
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
 		if(resourceUri) {
-			dataService.getResourceData(true, $scope.dataLoaded);			
+			dataService.getResourceData(true, $scope.dataLoaded);
 		}
 	});
 
@@ -1157,7 +1158,6 @@ linkedtv.run(function($rootScope, conf) {
 		dataService.getCuratedData($scope.curatedDataLoaded);
 	};
 
-	//TODO finish testing this!!!
 	$scope.curatedDataLoaded = function(curatedData) {					
 		console.debug('Loaded the curated/Redis data from the server');
 		console.debug(curatedData);
@@ -1173,6 +1173,11 @@ linkedtv.run(function($rootScope, conf) {
 
 		//load the shotCollection with shot data
 		shotCollection.initCollectionData($scope.resourceData);
+
+		
+		$scope.$apply(function() {
+			$scope.loading = false;
+		});
 	}
 
 });;angular.module('linkedtv').controller('chapterController', 
@@ -1223,19 +1228,21 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	$scope.openChapterDialog = function(chapter) {		
-		chapter = {//copy the chapter
-			annotationURI: chapter.annotationURI,
-			bodyURI: chapter.bodyURI, 
-			confidence: chapter.confidence,
-			dimensions: chapter.dimensions,
-			end: chapter.end,
-			guid: chapter.guid,
-			label: chapter.label, 
-			mfURI: chapter.mfURI,
-			poster: chapter.poster,
-			relevance: chapter.relevance,
-			start: chapter.start, 
-			type: chapter.type
+		if(chapter) {
+			chapter = {//copy the chapter
+				annotationURI: chapter.annotationURI,
+				bodyURI: chapter.bodyURI, 
+				confidence: chapter.confidence,
+				dimensions: chapter.dimensions,
+				end: chapter.end,
+				guid: chapter.guid,
+				label: chapter.label, 
+				mfURI: chapter.mfURI,
+				poster: chapter.poster,
+				relevance: chapter.relevance,
+				start: chapter.start, 
+				type: chapter.type
+			}
 		}
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/chapterModal.html',
@@ -1580,7 +1587,7 @@ linkedtv.run(function($rootScope, conf) {
 	 entityCollection, enrichmentUtils, entityUtils, dimension) {
 	
 	//collapse states
-	$scope.enrichmentsCollapsed = true;
+	$scope.enrichmentsCollapsed = false;
 	$scope.savedEnrichmentsCollapsed = false;
 	$scope.entitiesCollapsed = false;
 	
@@ -1636,7 +1643,13 @@ linkedtv.run(function($rootScope, conf) {
 				$scope.enrichmentSources = enrichments.enrichmentSources;
 				$scope.enrichmentEntitySources = enrichments.enrichmentEntitySources;
 				$scope.allEnrichments = enrichments.allEnrichments;
-				$scope.filterEnrichmentsBySource($scope.enrichmentSources[0]);
+				//when calling filterEnrichmentsBySource() the view is not updated properly, so had to copy the code here...
+				$scope.activeEnrichmentSource = $scope.enrichmentSources[0];
+				$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
+					if(e.source === $scope.activeEnrichmentSource) {
+						return e;
+				}
+		});
 			});			
 		} else {
 			alert('No enrichments found');
@@ -1657,7 +1670,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	//filters the enrichments by source
 	$scope.filterEnrichmentsBySource = function(source) {
-		$scope.activeEnrichmentSource = source;
+		$scope.activeEnrichmentSource = source;		
 		$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
 			if(e.source === source) {
 				return e;
