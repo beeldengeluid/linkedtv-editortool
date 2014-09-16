@@ -5,8 +5,14 @@
 
 <div class="modal-body">
 
-    <!-- select the card type (see types in config) -->
-    <!--
+    <!-- for new cards, or cards without entities -->
+    <div class="row" ng-show="!card.triples && !card.poster">
+        <div class="col-md-12">
+            <h4>Saved to card</h4>
+            <div class="alert alert-custom">Please select a number of properties to save to this card</div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12">
             <div class="form-group">
@@ -18,81 +24,64 @@
     </div>
 
     <div class="row">
-        <div class="col-md-12">
-            <div class="form-group">
-                <form role="form">
-                    <div class="form-group" ng-repeat="p in activeTemplate.properties">
-                        <label>{{p}}</label>
-                        <input class="form-control">
-                    </div>                    
-                </form>
-            </div>
-        </div>
-    </div>
-    -->
+        <div class="col-md-12">            
 
-    <!-- for new cards, or cards without entities -->
-    <div class="row" ng-show="!card.triples && !card.poster">
-        <div class="col-md-12">
-             <h4>Saved to card</h4>
-            <div class="alert alert-custom">Please select a number of properties to save to this card</div>
-        </div>
-    </div>    
+            <div class="card-edit-form">
+                <div class="col-md-12">
+                    <h4>Properties of: {{activeTemplate.label}}</h4>
+                    <div class="row">
+                        <div class="col-md-10">
+                            <!-- SHOW THE URI AT THE TOP -->
+                            <form class="form-inline" role="form">
+                                <div class="form-group">
+                                    <label>URI</label>
+                                </div>
+                                <div class="form-group">
+                                    <input class="form-control" ng-model="card.uri" title="{{card.uri}}">
+                                </div>
+                            </form>
 
-    <!-- saved entities -->
-    <div class="row">
-        <div class="card-edit-form">
-            <div class="col-md-12">
-                <h4 ng-if="card.triples">Saved to card</h4>
-                <div class="row">
-                    <div ng-if="card.triples" class="col-md-10">
-                        <header>
-                            <ul>
-                                <li>Label</li>
-                                <li>Value</li>
-                            </ul>
-                        </header>
+                            <form class="form-inline" role="form" ng-repeat="p in activeTemplate.properties track by $index">
 
-                        <!-- SHOW THE URI AT THE TOP -->
-                        <form class="form-inline" role="form">
-                            <div class="form-group">
-                                <input class="form-control" disabled value="URI">
-                            </div>
-                            <div class="form-group">
-                                <input class="form-control" ng-model="card.uri" title="{{card.uri}}">
-                            </div>
-                        </form>
+                                <div class="form-group">
+                                    <label>{{p.key}}</label>
+                                </div>
+                                <div ng-if="p.type == 'literal'" class="form-group">
+                                    <input class="form-control" ng-model="activeTemplate.properties[$index].value">
+                                </div>
+                                <div ng-if="p.type == 'entity'" class="form-group">
+                                    <dbpedia-autocomplete target="auto_{{$index}}" entity="activeTemplate.properties[$index].entity"></dbpedia-autocomplete>
+                                </div>
+                                <div ng-if="p.type == 'entity'" class="form-group">
+                                    <input class="form-control" ng-model="activeTemplate.properties[$index].entity.label">
+                                </div>
 
-                        <form class="form-inline" role="form" ng-repeat="triple in card.triples">
-                            <div class="form-group">
-                                <input class="form-control" ng-model="card.triples[$index].key">
-                            </div>
-                            <div class="form-group">
-                                <input class="form-control" ng-model="card.triples[$index].value" title="{{card.triples[$index].uri}}">
-                            </div>                            
-                            <i class="glyphicon glyphicon-minus interactive" ng-click="removeFromCard($index)"></i>
-                        </form>
-                    </div>
-
-                    <!-- this is the spot where the poster is shown -->
-                    <div ng-if="card.poster" class="col-md-2">
-                        <header>
-                            <ul>
-                                <li>Poster</li>
-                            </ul>
-                        </header>
-                        <!-- when thumbs are available -->
-                        <div ng-show="card.poster" class="thumbnail card-edit-thumb">
-                            <img ng-src="{{card.poster}}" >
+                            </form>
                         </div>
-                    </div>
 
+                        <!-- this is the spot where the poster is shown -->
+                        <div ng-if="card.poster" class="col-md-2">
+                            <header>
+                                <ul>
+                                    <li>Poster</li>
+                                </ul>
+                            </header>
+                            <!-- when thumbs are available -->
+                            <div ng-show="card.poster" class="thumbnail card-thumb">
+                                <img ng-src="{{card.poster}}" >
+                            </div>
+                        </div>
+
+                    </div>
+                    <button class="btn btn-primary" ng-click="addToCard()">New</button>
                 </div>
-                <button class="btn btn-primary" ng-click="addToCard()">New</button>
+
             </div>
-            
+
         </div>
     </div>
+
+    
 
     <!-- display entities -->
     <div class="row">
@@ -116,79 +105,75 @@
                         <form class="form-inline" role="form">
                             <div class="form-group">
                                 <label>Search</label>
-                                <dbpedia-autocomplete target="{{autocompleteId}}" entity="foundEntity"></dbpedia-autocomplete>
+                                <dbpedia-autocomplete target="auto_main" entity="foundEntity"></dbpedia-autocomplete>
                                 <div ng-if="foundEntity" ng-click="fetchExtraInfo(foundEntity)" 
-                                    class="label label-default entity" title="{{foundEntity.label}}">
-                                    {{foundEntity.label}}
-                                </div>
+                                class="label label-default entity" title="{{foundEntity.label}}">
+                                {{foundEntity.label}}
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </div>
+            </div>
 
-            </div>            
+        </div>            
 
-        </div>        
-    </div>
+    </div>        
+</div>
 
 
 
-    <!-- results from proxy -->
-    <div class="row">
-        <div ng-show="fetchedTriples" class="card-edit-form">
-            <div class="col-md-12">
-                <foldable title="Show fetched data" collapsed="fetchedDataCollapsed"></foldable>
-                <div collapse="fetchedDataCollapsed">
-                    <h4>Fetched properties</h4>
-               
-                    <div class="row">
-                        <div class="col-md-10">
-                            <header>
-                                <ul>
-                                    <li>Label</li>
-                                    <li>Value</li>
-                                </ul>
-                            </header>
-                            <form class="form-inline" role="form" ng-repeat="triple in fetchedTriples" 
-                                ng-click="nextTriple($index)" ng-if="!isReserved(triple.key)">
-                                <div class="form-group">
-                                    <input disabled class="form-control" value="{{triple.key}}">
-                                </div>
-                                <div class="form-group">
-                                    <div class="textarea" ng-if="!triple.uris[triple.index]">{{triple.values[triple.index]}}</div>
-                                    <div ng-if="triple.uris[triple.index]" ng-click="fetchExtraInfo(triple.uris[triple.index])" 
-                                        class="label label-default entity" title="{{triple.values[triple.index]}}">
-                                        {{triple.values[triple.index]}}
-                                    </div>
-                                </div>
-                                
-                                <i class="glyphicon glyphicon-plus interactive" ng-click="addToCard(triple)"></i>
-                            </form>
+<!-- results from proxy -->
+<div class="row">
+    <div ng-show="fetchedTriples" class="card-fetch-form">
+        <div class="col-md-12">
+            <foldable title="Show fetched data" collapsed="fetchedDataCollapsed"></foldable>
+            <div collapse="fetchedDataCollapsed">
+                <h4>Fetched properties</h4>
+
+                <div class="row">
+                    <div class="col-md-10">
+                        <header>
+                            <ul>
+                                <li>Label</li>
+                                <li>Value</li>
+                            </ul>
+                        </header>
+                        <form class="form-inline" role="form" ng-repeat="triple in fetchedTriples" 
+                        ng-click="nextTriple($index)" ng-if="!isReserved(triple.key)">
+                        <div class="form-group">
+                            <input disabled class="form-control" value="{{triple.key}}">
                         </div>
-
-                        <!-- this is the spot where the poster is shown -->
-                        <div class="col-md-2">
-                            <header>
-                                <ul>
-                                    <li>Poster</li>
-                                </ul>
-                            </header>
-                            <!-- when thumbs are available -->
-                            <div ng-show="thumbs" class="thumbnail card-edit-thumb">
-                                <img ng-src="{{thumbs[thumbIndex]}}" ng-click="nextThumb()">
-                                <a ng-click="setCardPoster(thumbs[thumbIndex])">Use as poster</a>
-                            </div>
-                            <!-- when loading -->
-                            <div ng-show="loading" class="thumbnail card-edit-thumb">
-                                <img src="/site_media/images/loading.gif" alt="...">
-                            </div>
+                        <div class="form-group">
+                            <div class="textarea" ng-if="!triple.uris[triple.index]">{{triple.values[triple.index]}}</div>
+                            <div ng-if="triple.uris[triple.index]" ng-click="fetchExtraInfo(triple.uris[triple.index])" 
+                            class="label label-default entity" title="{{triple.values[triple.index]}}">
+                            {{triple.values[triple.index]}}
                         </div>
                     </div>
+
+                    <i class="glyphicon glyphicon-plus interactive" ng-click="addToCard(triple)"></i>
+                </form>
+            </div>
+
+            <!-- this is the spot where the poster is shown -->
+            <div class="col-md-2">
+                <header>
+                    <ul>
+                        <li>Poster</li>
+                    </ul>
+                </header>
+                <!-- when thumbs are available -->
+                <div ng-show="thumbs" class="thumbnail card-thumb">
+                    <img ng-src="{{thumbs[thumbIndex]}}" ng-click="nextThumb()">
+                    <a ng-click="setCardPoster(thumbs[thumbIndex])">Use as poster</a>
+                </div>
+                <!-- when loading -->
+                <div ng-show="loading" class="thumbnail card-thumb">
+                    <img src="/site_media/images/loading.gif" alt="...">
                 </div>
             </div>
         </div>
     </div>
-    
 </div>
 
 

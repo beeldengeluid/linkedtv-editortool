@@ -1,4 +1,6 @@
-//userful read: http://jasonmore.net/angular-js-directives-difference-controller-link/
+//userful to read: 
+// - http://jasonmore.net/angular-js-directives-difference-controller-link/
+// - http://www.jvandemo.com/the-nitty-gritty-of-compile-and-link-functions-inside-angularjs-directives/
 
 angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 
@@ -12,10 +14,13 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 			target : '@' //this is the id of the html element that holds the autocomplete widget
 		},
 
+		//templates are actually rendered after the linking function, so it's not possible 
+		//to refer to the outcome of angular expressions
 		templateUrl : '/site_media/js/templates/dbpediaAutocomplete.html',
 
-		controller : function($scope, $element) {
+		//template : '<input id="dbpedia" class="form-control autocomplete" value="">',
 
+		controller : function($scope, $element) {			
 			$scope.entity = null;
 
 			$scope.BUTTON_MAPPINGS = {'who' : 'orange', 'unknown' : 'red', 'where' : 'blue', 
@@ -38,45 +43,36 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 				}
 			};
 
-			$scope.init = function() {
-				$scope.setAutocompleteRendering('dbpedia');
-				var url = '/autocomplete';
-				$('#dbpedia').autocomplete({
-					source: url,
-					minLength: 3,
-					select: function(event, ui) {
-						if(ui.item) {
-							var v_arr = ui.item.label.split('\|');
-							var l = v_arr[0];
-							var t = v_arr[1];
-							var c = v_arr[2];
-							var dbpediaURL = ui.item.value;
-
-							//stores the selected DBpedia entry
-							$scope.$apply(function() {
-								$scope.entity = {label : l, type : t, category : c, uri : dbpediaURL};
-							});
-
-							//use the selected DBpedia entry to fill in the label and vocab URL of the annotation
-							$('#entity').attr('value', l);
-							$('#entity_url').attr('value', dbpediaURL);
-							this.value = '';
-							return false;
-						}
-					}
-				});
-			};
-		
 			$scope.setAutocompleteRendering = function(type) {
 				if(type == 'dbpedia') {
 					$.ui.autocomplete.prototype._renderItem = $scope.RENDER_OPTIONS.DBPEDIA;
 				} else {				
 					$.ui.autocomplete.prototype._renderItem = $scope.RENDER_OPTIONS.ORIGINAL;
 				}
-			};			
+			};
+			
+			$scope.setAutocompleteRendering('dbpedia');
+			$element.attr('id', $scope.target); //needed to be able to bind the autocomplete
+			$('#' + $scope.target).autocomplete({
+				source: '/autocomplete',
+				minLength: 3,
+				select: function(event, ui) {
+					if(ui.item) {
+						var v_arr = ui.item.label.split('\|');
+						var l = v_arr[0];
+						var t = v_arr[1];
+						var c = v_arr[2];
+						var dbpediaURL = ui.item.value;
 
-			$scope.init();
-
+						//stores the selected DBpedia entry
+						$scope.$apply(function() {
+							$scope.entity = {label : l, type : t, category : c, uri : dbpediaURL};
+						});
+						this.value = '';
+						return false;
+					}
+				}
+			});
 		}
 
 	}

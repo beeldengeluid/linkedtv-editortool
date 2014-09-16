@@ -46,11 +46,14 @@ var informationCardTemplates = {
 	sv : [
 		{
 			label : 'Art object',
-			properties : ['Creator', 'Styles', 'Period', 'Materials', 'Container']
-		},
-		{
-			label : 'Person/artist/creator',
-			properties : ['Name', 'Description', 'Profession', 'Birth place', 'Death place', 'Born', 'Deceased']
+			properties : [
+				{key : 'Label', type: 'literal', optional : false},
+				{key : 'Description', type : 'literal', optional : false},
+				{key : 'Creator', type : 'entity', optional : true},
+				{key : 'Period', type : 'entity', optional : true},
+				{key : 'Material', type : 'entity', optional : true},
+				{key : 'Style', type : 'entity', optional : true},
+			]
 		}
 	]
 

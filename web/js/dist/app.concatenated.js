@@ -46,11 +46,14 @@ var informationCardTemplates = {
 	sv : [
 		{
 			label : 'Art object',
-			properties : ['Creator', 'Styles', 'Period', 'Materials', 'Container']
-		},
-		{
-			label : 'Person/artist/creator',
-			properties : ['Name', 'Description', 'Profession', 'Birth place', 'Death place', 'Born', 'Deceased']
+			properties : [
+				{key : 'Label', type: 'literal', optional : false},
+				{key : 'Description', type : 'literal', optional : false},
+				{key : 'Creator', type : 'entity', optional : true},
+				{key : 'Period', type : 'entity', optional : true},
+				{key : 'Material', type : 'entity', optional : true},
+				{key : 'Style', type : 'entity', optional : true},
+			]
 		}
 	]
 
@@ -1442,9 +1445,13 @@ linkedtv.run(function($rootScope, conf) {
 
 	$scope.loading = false;
 
-	//$scope.templates = conf.templates;
-	//$scope.activeTemplate = null;//is set when using the dropdown
+	$scope.templates = conf.templates;
+	$scope.activeTemplate = null;//is set when using the dropdown
 
+	//TODO this function formats the stored triples in the form of the user friendly template
+	$scope.formatSavedProperties = function() {
+		
+	}
 
 	$scope.addToCard = function(triple) {
 		var t = null;
@@ -1502,6 +1509,10 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.isReserved = function(key) {
 		return key === 'thumb';
 	}
+
+	$scope.DBpediaPropertyClass = function(triple) {
+		return triple.uri ? 'dbpedia' : '';
+	}	
 
 
 	//----------------------------FETCH INFO FROM THE ENTITY PROXY------------------------------
@@ -1767,7 +1778,9 @@ linkedtv.run(function($rootScope, conf) {
 
     };
 
-}]);;//userful read: http://jasonmore.net/angular-js-directives-difference-controller-link/
+}]);;//userful to read: 
+// - http://jasonmore.net/angular-js-directives-difference-controller-link/
+// - http://www.jvandemo.com/the-nitty-gritty-of-compile-and-link-functions-inside-angularjs-directives/
 
 angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 
@@ -1783,8 +1796,9 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 
 		templateUrl : '/site_media/js/templates/dbpediaAutocomplete.html',
 
-		controller : function($scope, $element) {
+		//template : '<input id="dbpedia" class="form-control autocomplete" value="">',
 
+		controller : function($scope, $element) {			
 			$scope.entity = null;
 
 			$scope.BUTTON_MAPPINGS = {'who' : 'orange', 'unknown' : 'red', 'where' : 'blue', 
@@ -1807,45 +1821,38 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 				}
 			};
 
-			$scope.init = function() {
-				$scope.setAutocompleteRendering('dbpedia');
-				var url = '/autocomplete';
-				$('#dbpedia').autocomplete({
-					source: url,
-					minLength: 3,
-					select: function(event, ui) {
-						if(ui.item) {
-							var v_arr = ui.item.label.split('\|');
-							var l = v_arr[0];
-							var t = v_arr[1];
-							var c = v_arr[2];
-							var dbpediaURL = ui.item.value;
-
-							//stores the selected DBpedia entry
-							$scope.$apply(function() {
-								$scope.entity = {label : l, type : t, category : c, uri : dbpediaURL};
-							});
-
-							//use the selected DBpedia entry to fill in the label and vocab URL of the annotation
-							$('#entity').attr('value', l);
-							$('#entity_url').attr('value', dbpediaURL);
-							this.value = '';
-							return false;
-						}
-					}
-				});
-			};
-		
 			$scope.setAutocompleteRendering = function(type) {
 				if(type == 'dbpedia') {
 					$.ui.autocomplete.prototype._renderItem = $scope.RENDER_OPTIONS.DBPEDIA;
 				} else {				
 					$.ui.autocomplete.prototype._renderItem = $scope.RENDER_OPTIONS.ORIGINAL;
 				}
-			};			
+			};
+			
+			$scope.setAutocompleteRendering('dbpedia');
+			//$element.replaceWith(angular.element('<pre>' +  exampleDirectiveCtrl.awesomeVariable + '</pre>'));
+			$element.attr('id', $scope.target);
+			console.debug($element.attr('id'));
+			$('#' + $scope.target).autocomplete({
+				source: '/autocomplete',
+				minLength: 3,
+				select: function(event, ui) {
+					if(ui.item) {
+						var v_arr = ui.item.label.split('\|');
+						var l = v_arr[0];
+						var t = v_arr[1];
+						var c = v_arr[2];
+						var dbpediaURL = ui.item.value;
 
-			$scope.init();
-
+						//stores the selected DBpedia entry
+						$scope.$apply(function() {
+							$scope.entity = {label : l, type : t, category : c, uri : dbpediaURL};
+						});
+						this.value = '';
+						return false;
+					}
+				}
+			});
 		}
 
 	}

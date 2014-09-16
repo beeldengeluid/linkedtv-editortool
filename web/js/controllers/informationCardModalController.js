@@ -14,15 +14,18 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.thumbIndex = 0;
 
 	$scope.fetchedTriples = null;
-
-	$scope.autocompleteId = 'autocomplete_1';
+	
 	$scope.foundEntity = {};//for the autocomplete box
 
 	$scope.loading = false;
 
-	//$scope.templates = conf.templates;
-	//$scope.activeTemplate = null;//is set when using the dropdown
+	$scope.templates = conf.templates;
+	$scope.activeTemplate = null;//is set when using the dropdown
 
+	//TODO this function formats the stored triples in the form of the user friendly template
+	$scope.formatSavedProperties = function() {
+		
+	}
 
 	$scope.addToCard = function(triple) {
 		var t = null;
@@ -80,6 +83,10 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.isReserved = function(key) {
 		return key === 'thumb';
 	}
+
+	$scope.DBpediaPropertyClass = function(triple) {
+		return triple.uri ? 'dbpedia' : '';
+	}	
 
 
 	//----------------------------FETCH INFO FROM THE ENTITY PROXY------------------------------
