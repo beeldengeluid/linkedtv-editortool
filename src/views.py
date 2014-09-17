@@ -81,13 +81,14 @@ def resource(request):
         resourceData = {}
         api = Api()
         if loadData:
-            resourceData = api.getAllAnnotationsOfResource(resourceUri, True)
+            resourceData = api.getAllAnnotationsOfResource(resourceUri, True)            
         """Get the mediaresource metadata and the playout URL"""
-        videoMetadata = simplejson.loads(api.getVideoData(resourceUri))
+        print 'getting video metadata'
+        videoMetadata = simplejson.loads(api.getVideoData(resourceUri))        
         if videoMetadata:
             vph = VideoPlayoutHandler()
             resourceData['videoMetadata'] = videoMetadata
-            playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)                
+            playoutURL = 'none'#vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)            
             resourceData['locator'] = playoutURL
             if videoMetadata['mediaResource']['mediaResourceRelationSet']:
                 for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:

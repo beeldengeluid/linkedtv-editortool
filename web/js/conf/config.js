@@ -43,17 +43,21 @@ var informationCardTemplates = {
 		}
 	],
 
-	sv : [
+	sv : [		
 		{
 			label : 'Art object',
 			properties : [
-				{key : 'Label', type: 'literal', optional : false},
-				{key : 'Description', type : 'literal', optional : false},
-				{key : 'Creator', type : 'entity', optional : true},
-				{key : 'Period', type : 'entity', optional : true},
-				{key : 'Material', type : 'entity', optional : true},
-				{key : 'Style', type : 'entity', optional : true},
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'description', type : 'literal', optional : false},
+				{key : 'creator', type : 'entity', optional : true},
+				{key : 'period', type : 'entity', optional : true},
+				{key : 'material', type : 'entity', optional : true},
+				{key : 'style', type : 'entity', optional : true},
 			]
+		},
+		{
+			label : 'Information card',
+			properties : null
 		}
 	]
 

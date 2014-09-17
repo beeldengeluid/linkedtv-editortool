@@ -30,7 +30,7 @@ angular.module('linkedtv').factory('chapterCollection',
 				chapters.push(c);
 			});
 		} else if(resourceData.curated.chapters && resourceData.curated.chapters.length > 0) {
-			console.debug('Loading v1.0 curations...');		
+			console.debug('Loading v1.0 curations...');
 			chapters = initCollectionWithRDFData(resourceData);
 		} else {
 			console.debug('No curations found...');
@@ -50,7 +50,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	}
 
 	//This function must be used once all the curated data is saved in the LinkedTV graph
-	function initCollectionWithRDFData(resourceData) {		
+	function initCollectionWithRDFData(resourceData) {
 		var chapters = [];
 		var autoChapters = resourceData.chapters;
 		var curatedChapters = resourceData.curated.chapters;
@@ -102,7 +102,9 @@ angular.module('linkedtv').factory('chapterCollection',
 		shotCollection.updateChapterShots(_activeChapter);
 	}
 
+	//TODO waarom wordt deze zo vaak aangeroepen
 	function getActiveChapter() {
+		//console.debug(_activeChapter);
 		return _activeChapter;
 	}
 

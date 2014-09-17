@@ -18,11 +18,7 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 		//to refer to the outcome of angular expressions
 		templateUrl : '/site_media/js/templates/dbpediaAutocomplete.html',
 
-		//template : '<input id="dbpedia" class="form-control autocomplete" value="">',
-
-		controller : function($scope, $element) {			
-			$scope.entity = null;
-
+		controller : function($scope, $element) {
 			$scope.BUTTON_MAPPINGS = {'who' : 'orange', 'unknown' : 'red', 'where' : 'blue', 
 				'what' : 'yellow', 'Freebase' : 'pink', 'DBpedia' : 'green', 'NERD' : 'yellow'
 			};
@@ -53,6 +49,9 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 			
 			$scope.setAutocompleteRendering('dbpedia');
 			$element.attr('id', $scope.target); //needed to be able to bind the autocomplete
+			if($scope.entity) {
+				$element.attr('value', $scope.entity.label);
+			}
 			$('#' + $scope.target).autocomplete({
 				source: '/autocomplete',
 				minLength: 3,

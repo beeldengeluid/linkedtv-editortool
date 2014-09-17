@@ -43,17 +43,21 @@ var informationCardTemplates = {
 		}
 	],
 
-	sv : [
+	sv : [		
 		{
 			label : 'Art object',
 			properties : [
-				{key : 'Label', type: 'literal', optional : false},
-				{key : 'Description', type : 'literal', optional : false},
-				{key : 'Creator', type : 'entity', optional : true},
-				{key : 'Period', type : 'entity', optional : true},
-				{key : 'Material', type : 'entity', optional : true},
-				{key : 'Style', type : 'entity', optional : true},
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'description', type : 'literal', optional : false},
+				{key : 'creator', type : 'entity', optional : true},
+				{key : 'period', type : 'entity', optional : true},
+				{key : 'material', type : 'entity', optional : true},
+				{key : 'style', type : 'entity', optional : true},
 			]
+		},
+		{
+			label : 'Information card',
+			properties : null
 		}
 	]
 
@@ -160,7 +164,6 @@ linkedtv.run(function($rootScope, conf) {
 });;angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', function($modal, chapterCollection) {
 
 	function openMultipleLinkDialog(dimension) {
-		console.debug(dimension);
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/multipleLinkModal.html',
 			controller: 'multipleLinkModalController',
@@ -186,7 +189,6 @@ linkedtv.run(function($rootScope, conf) {
 	};
 
 	function openLinkDialog(dimension, link) {
-		console.debug(dimension);
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/linkModal.html',
 			controller: 'linkModalController',
@@ -203,8 +205,6 @@ linkedtv.run(function($rootScope, conf) {
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			console.debug('I saved a link');
-			console.debug(data);
 			chapterCollection.saveChapterLink(data.dimension, data.link);
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());
@@ -228,7 +228,6 @@ linkedtv.run(function($rootScope, conf) {
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			console.debug('I saved a damn card yeah!');			
 			chapterCollection.saveChapterLink(data.dimension, data.link);
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());
@@ -265,10 +264,31 @@ linkedtv.run(function($rootScope, conf) {
 		}
 	};
 
-	
 
-	return {		
-		getConfidenceClass : getConfidenceClass
+	//FIXME see if this is still necessary. Remove it from this file anyway
+	function copyInformationCardTemplate(template, type) {
+		console.debug('What is this? ' + type);
+		if(!template) {
+			return null;
+		}
+		var t = {};
+		t.label = template.label;
+		t.properties = [];
+		_.each(template.properties, function(p) {
+			var val = null;
+			if(p.value != null && typeof(p.value) == 'object') {
+				val = {'category': p.value.category, 'label': p.value.label, 'type' :p.value.type, 'uri': p.value.uri};				
+			} else {
+				val = p.value;
+			}
+			t.properties.push({'key' : p.key, 'type' : p.type, 'optional' : p.optional, 'value' : val});
+		});
+		return t;
+	}
+
+	return {
+		getConfidenceClass : getConfidenceClass,
+		copyInformationCardTemplate : copyInformationCardTemplate
 	}
 }]);;angular.module('linkedtv').factory('timeUtils', [function(){
 
@@ -362,7 +382,7 @@ linkedtv.run(function($rootScope, conf) {
 				chapters.push(c);
 			});
 		} else if(resourceData.curated.chapters && resourceData.curated.chapters.length > 0) {
-			console.debug('Loading v1.0 curations...');		
+			console.debug('Loading v1.0 curations...');
 			chapters = initCollectionWithRDFData(resourceData);
 		} else {
 			console.debug('No curations found...');
@@ -382,7 +402,7 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	//This function must be used once all the curated data is saved in the LinkedTV graph
-	function initCollectionWithRDFData(resourceData) {		
+	function initCollectionWithRDFData(resourceData) {
 		var chapters = [];
 		var autoChapters = resourceData.chapters;
 		var curatedChapters = resourceData.curated.chapters;
@@ -434,7 +454,9 @@ linkedtv.run(function($rootScope, conf) {
 		shotCollection.updateChapterShots(_activeChapter);
 	}
 
+	//TODO waarom wordt deze zo vaak aangeroepen
 	function getActiveChapter() {
+		//console.debug(_activeChapter);
 		return _activeChapter;
 	}
 
@@ -647,8 +669,6 @@ linkedtv.run(function($rootScope, conf) {
 			_chapterShots.sort(function(a, b) {
 				return parseInt(a.start) - parseInt(b.start);
 			});
-			console.debug('Chapter shots');
-			console.debug(_chapterShots);
 		}
 	}
 
@@ -1322,8 +1342,7 @@ linkedtv.run(function($rootScope, conf) {
 	function($rootScope, $scope, $modal, conf, chapterCollection, 
 		entityCollection, enrichmentService, entityProxyService, enrichmentUtils) {
 	
-	$scope.enrichmentUtils = enrichmentUtils;
-	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
+	$scope.enrichmentUtils = enrichmentUtils;	
 	$scope.activeChapter = null;//holds the up-to-date active chapter
 	$scope.activeLinkIndex = 0;//selected slot
 
@@ -1331,18 +1350,8 @@ linkedtv.run(function($rootScope, conf) {
 	//watch for changes in the active chapter
 	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {
 		$scope.activeChapter = newValue;
+		console.debug($scope.activeChapter);
 	});
-
-	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
-		if(newValue) {
-			$scope.updateEntities(newValue);
-		}
-	});
-	
-	//called whenever a chapter is selected
-	$scope.updateEntities = function(entities) {
-		$scope.entities	= entities;
-	}
 
 	$scope.editLink = function(dimension, link) {
 		if(dimension.service != 'informationCards') {
@@ -1430,6 +1439,7 @@ linkedtv.run(function($rootScope, conf) {
 	
 	$scope.dimension = dimension;
 	$scope.card = link || {};
+	$scope.card.poster = $scope.card.poster || '';
 	$scope.entityUtils = entityUtils;
 
 	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection	
@@ -1439,19 +1449,17 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.thumbIndex = 0;
 
 	$scope.fetchedTriples = null;
-
-	$scope.autocompleteId = 'autocomplete_1';
-	$scope.foundEntity = {};//for the autocomplete box
-
+	$scope.foundEntity = null;//for the autocomplete box
 	$scope.loading = false;
 
 	$scope.templates = conf.templates;
-	$scope.activeTemplate = null;//is set when using the dropdown
+	$scope.activeTemplate = entityUtils.copyInformationCardTemplate($scope.card.template, 'saved') || 
+		entityUtils.copyInformationCardTemplate(conf.templates[0], 'default');//is set when using the dropdown	
 
 	//TODO this function formats the stored triples in the form of the user friendly template
-	$scope.formatSavedProperties = function() {
-		
-	}
+	$scope.setTemplate = function(template) {
+		$scope.activeTemplate = template;
+	};
 
 	$scope.addToCard = function(triple) {
 		var t = null;
@@ -1466,7 +1474,7 @@ linkedtv.run(function($rootScope, conf) {
 
 		//Also add the triple to the list of triples (for convencience)
 		$scope.addCardTriple(t);
-	}
+	};
 
 	$scope.addCardTriple = function(triple) {
 		if($scope.card.triples) {
@@ -1474,7 +1482,7 @@ linkedtv.run(function($rootScope, conf) {
 		} else {
 			$scope.card.triples = [triple];
 		}	
-	}
+	};
 
 	$scope.removeFromCard = function(index) {
 		if($scope.card.triples[index].key === 'label') {
@@ -1483,7 +1491,7 @@ linkedtv.run(function($rootScope, conf) {
 			$scope.card.poster = null;
 		}
 		$scope.card.triples.splice(index, 1);
-	}
+	};
 
 	$scope.nextTriple = function(index) {
 		if($scope.fetchedTriples[index].index + 1 < $scope.fetchedTriples[index].values.length) {
@@ -1491,12 +1499,12 @@ linkedtv.run(function($rootScope, conf) {
 		} else {
 			$scope.fetchedTriples[index].index = 0;
 		}
-	}
+	};
 
 	$scope.setCardPoster = function(thumb) {
 		$scope.card.poster = thumb;
 		$scope.addCardTriple({key : 'poster', value : thumb, uri : null});
-	}
+	};
 
 	$scope.nextThumb = function() {
 		if($scope.thumbIndex + 1 < $scope.thumbs.length) {
@@ -1504,15 +1512,15 @@ linkedtv.run(function($rootScope, conf) {
 		} else {
 			$scope.thumbIndex = 0;
 		}
-	}	
+	};	
 
 	$scope.isReserved = function(key) {
 		return key === 'thumb';
-	}
+	};
 
 	$scope.DBpediaPropertyClass = function(triple) {
 		return triple.uri ? 'dbpedia' : '';
-	}	
+	};
 
 
 	//----------------------------FETCH INFO FROM THE ENTITY PROXY------------------------------
@@ -1526,7 +1534,7 @@ linkedtv.run(function($rootScope, conf) {
 			entityProxyService.fetch(uri, $scope.entityInfoFetched);
 			$scope.loading = true;
 		}
-	}
+	};
 
 	$scope.entityInfoFetched = function(data) {
 		$scope.fetchedTriples = [];
@@ -1536,7 +1544,33 @@ linkedtv.run(function($rootScope, conf) {
 			$scope.thumbs = data.thumbs;
 			$scope.fetchedTriples = data.info;
 		})
-	}
+	};
+
+	//----------------------------VALIDATION AND DATA FORMATTING------------------------------
+
+	$scope.isProperlyFilledOut = function() {
+		//TODO
+		return true;
+	};
+
+	//FIXME this needs to be fixed again for 'regular' information cards/entities
+	$scope.updateCardProperties = function() { //really ugly, but necessary for now...
+		//TODO properly generate a URI
+		if(!$scope.card.uri) {
+			$scope.card.uri = 'http://linkedtv.eu/' + new Date().getTime();
+		}
+		//add the filled out template to card properties
+		if($scope.card.template) {
+			console.debug($scope.card.template);
+			_.each($scope.card.template.properties, function(p) {
+				$scope.card[p.key] = p.value;
+			});
+		}
+		//if there are manually added 'triples' add them also as properties
+		for(t in $scope.card.triples) {
+			$scope.card[$scope.card.triples[t].key] = $scope.card.triples[t].value;
+		}
+	};
 
 
 	//----------------------------BUTTON PANEL------------------------------
@@ -1546,28 +1580,20 @@ linkedtv.run(function($rootScope, conf) {
 	};
 
 	$scope.ok = function () {
+		//set the active template as the card's template (so it will be saved)
+		$scope.card.template = entityUtils.copyInformationCardTemplate($scope.activeTemplate);
 		$scope.updateCardProperties();
-		if($scope.card.label) {
+		if($scope.isProperlyFilledOut()) {
 			$modalInstance.close({dimension : $scope.dimension, link : $scope.card});
 		} else {
 			alert('Please add a label');
 		}
 	};
-	
-	$scope.updateCardProperties = function() { //really ugly, but necessary for now...
-		//TODO properly generate a URI
-		if(!$scope.card.uri) {
-			$scope.card.uri = 'http://linkedtv.eu/' + new Date().getTime();
-		}
-		for(t in $scope.card.triples) {
-			$scope.card[$scope.card.triples[t].key] = $scope.card.triples[t].value;
-		}
-	}
 
 	$scope.removeCard = function() {
 		$scope.card.remove = true;
 		$modalInstance.close({dimension : $scope.dimension, link : $scope.card});
-	}
+	};
 	
 }]);;angular.module('linkedtv').controller('linkModalController', 
 	['$scope', '$modalInstance', 'dimension', 'link', function ($scope, $modalInstance, dimension, link) {
@@ -1794,13 +1820,11 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 			target : '@' //this is the id of the html element that holds the autocomplete widget
 		},
 
+		//templates are actually rendered after the linking function, so it's not possible 
+		//to refer to the outcome of angular expressions
 		templateUrl : '/site_media/js/templates/dbpediaAutocomplete.html',
 
-		//template : '<input id="dbpedia" class="form-control autocomplete" value="">',
-
-		controller : function($scope, $element) {			
-			$scope.entity = null;
-
+		controller : function($scope, $element) {
 			$scope.BUTTON_MAPPINGS = {'who' : 'orange', 'unknown' : 'red', 'where' : 'blue', 
 				'what' : 'yellow', 'Freebase' : 'pink', 'DBpedia' : 'green', 'NERD' : 'yellow'
 			};
@@ -1830,9 +1854,10 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 			};
 			
 			$scope.setAutocompleteRendering('dbpedia');
-			//$element.replaceWith(angular.element('<pre>' +  exampleDirectiveCtrl.awesomeVariable + '</pre>'));
-			$element.attr('id', $scope.target);
-			console.debug($element.attr('id'));
+			$element.attr('id', $scope.target); //needed to be able to bind the autocomplete
+			if($scope.entity) {
+				$element.attr('value', $scope.entity.label);
+			}
 			$('#' + $scope.target).autocomplete({
 				source: '/autocomplete',
 				minLength: 3,
@@ -1939,10 +1964,12 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
     	replace : true,
     	
         scope : {
-            start : '=start',
-            end : '=end',
+            start : '=?',
+            end : '=?',
+            poster : '=?',
             chapter : '@', //true or false
-            collapsed : '@' //doesn't work properly yet
+            collapsed : '@', //doesn't work properly yet
+            title : '@'
         },
 
     	link: function ($scope, $element, $attributes) {
@@ -1969,11 +1996,17 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
             }
 
             $scope.setSelection = function(shot) {
-                if($scope.settingStart) {
-                    $scope.setSelectionStart(shot);
-                } else {
-                    $scope.setSelectionEnd(shot);
+                if($attributes.poster) {
+                   $scope.poster = shot.poster;
                 }
+                if($attributes.start && $attributes.end) {
+                    if($scope.settingStart) {
+                        $scope.setSelectionStart(shot);
+                    } else {
+                        $scope.setSelectionEnd(shot);
+                    }
+                }
+                
             }
 
             $scope.setSelectionStart = function(shot) {
@@ -1986,8 +2019,6 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
                 if(shot.start > $scope.start) {
                     $scope.end = shot.start;
                     $scope.settingStart = !$scope.settingStart;
-                    //$scope.start = $scope.selectionStart;
-                    //$scope.end = $scope.selectionEnd;
                 }
             }
         },

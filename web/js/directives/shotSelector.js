@@ -6,10 +6,12 @@ angular.module('linkedtv').directive('shotSelector', ['shotCollection', function
     	replace : true,
     	
         scope : {
-            start : '=start',
-            end : '=end',
+            start : '=?',
+            end : '=?',
+            poster : '=?',
             chapter : '@', //true or false
-            collapsed : '@' //doesn't work properly yet
+            collapsed : '@', //doesn't work properly yet
+            title : '@'
         },
 
     	link: function ($scope, $element, $attributes) {
@@ -36,11 +38,17 @@ angular.module('linkedtv').directive('shotSelector', ['shotCollection', function
             }
 
             $scope.setSelection = function(shot) {
-                if($scope.settingStart) {
-                    $scope.setSelectionStart(shot);
-                } else {
-                    $scope.setSelectionEnd(shot);
+                if($attributes.poster) {
+                   $scope.poster = shot.poster;
                 }
+                if($attributes.start && $attributes.end) {
+                    if($scope.settingStart) {
+                        $scope.setSelectionStart(shot);
+                    } else {
+                        $scope.setSelectionEnd(shot);
+                    }
+                }
+                
             }
 
             $scope.setSelectionStart = function(shot) {
@@ -53,8 +61,6 @@ angular.module('linkedtv').directive('shotSelector', ['shotCollection', function
                 if(shot.start > $scope.start) {
                     $scope.end = shot.start;
                     $scope.settingStart = !$scope.settingStart;
-                    //$scope.start = $scope.selectionStart;
-                    //$scope.end = $scope.selectionEnd;
                 }
             }
         },

@@ -36,8 +36,6 @@ angular.module('linkedtv').factory('shotCollection', ['imageService', function(i
 			_chapterShots.sort(function(a, b) {
 				return parseInt(a.start) - parseInt(b.start);
 			});
-			console.debug('Chapter shots');
-			console.debug(_chapterShots);
 		}
 	}
 

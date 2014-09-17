@@ -1,7 +1,6 @@
 angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', function($modal, chapterCollection) {
 
 	function openMultipleLinkDialog(dimension) {
-		console.debug(dimension);
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/multipleLinkModal.html',
 			controller: 'multipleLinkModalController',
@@ -27,7 +26,6 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 	};
 
 	function openLinkDialog(dimension, link) {
-		console.debug(dimension);
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/linkModal.html',
 			controller: 'linkModalController',
@@ -44,8 +42,6 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			console.debug('I saved a link');
-			console.debug(data);
 			chapterCollection.saveChapterLink(data.dimension, data.link);
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());
@@ -69,7 +65,6 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			console.debug('I saved a damn card yeah!');			
 			chapterCollection.saveChapterLink(data.dimension, data.link);
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());

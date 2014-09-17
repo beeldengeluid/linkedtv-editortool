@@ -2,8 +2,7 @@ angular.module('linkedtv').controller('enrichmentController',
 	function($rootScope, $scope, $modal, conf, chapterCollection, 
 		entityCollection, enrichmentService, entityProxyService, enrichmentUtils) {
 	
-	$scope.enrichmentUtils = enrichmentUtils;
-	$scope.entities = null; //entities are passed to the informationCardModal (editing dialog)
+	$scope.enrichmentUtils = enrichmentUtils;	
 	$scope.activeChapter = null;//holds the up-to-date active chapter
 	$scope.activeLinkIndex = 0;//selected slot
 
@@ -11,18 +10,8 @@ angular.module('linkedtv').controller('enrichmentController',
 	//watch for changes in the active chapter
 	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {
 		$scope.activeChapter = newValue;
+		console.debug($scope.activeChapter);
 	});
-
-	$scope.$watch(function () { return entityCollection.getChapterEntities(); }, function(newValue) {
-		if(newValue) {
-			$scope.updateEntities(newValue);
-		}
-	});
-	
-	//called whenever a chapter is selected
-	$scope.updateEntities = function(entities) {
-		$scope.entities	= entities;
-	}
 
 	$scope.editLink = function(dimension, link) {
 		if(dimension.service != 'informationCards') {
