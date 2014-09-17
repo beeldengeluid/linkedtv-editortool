@@ -1,7 +1,8 @@
 import simplejson
 import redis
+import base64
 from subprocess import Popen, PIPE
-from linkedtv.LinkedtvSettings import LTV_API_ENDPOINT, LTV_DATA_ENDPOINT, LTV_REDIS_SETTINGS
+from linkedtv.LinkedtvSettings import LTV_API_ENDPOINT, LTV_DATA_ENDPOINT, LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN
 from linkedtv.api.sparql.DataLoader import *
 from linkedtv.api.external.TvEnricher import *
 from linkedtv.api.external.TvNewsEnricher import *
@@ -18,7 +19,7 @@ class Api():
 
     #directly uses the linkedTV platform
     def getVideoData(self, resourceUri):        
-        pw = base64.b64encode(b'admin:linkedtv')
+        pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
         http = httplib2.Http()      
         url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri        
         headers = {
@@ -53,13 +54,11 @@ class Api():
 
     def getVideosOfProvider(self, provider):
         videos = []
-        videoUris = self.dataLoader.getMediaResources(provider)
-        print videoUris
+        videoUris = self.dataLoader.getMediaResources(provider)        
         vd = None
         video = None
         thumbBaseUrl = None
-        for uri in videoUris['videos']:
-            print uri
+        for uri in videoUris['videos']:            
             vd = simplejson.loads(self.getVideoData(uri))
             if vd['mediaResource']:
                 if vd['mediaResource'].has_key('mediaResourceRelationSet') and vd['mediaResource']['mediaResourceRelationSet']:
@@ -74,7 +73,28 @@ class Api():
                     'dateInserted' : vd['mediaResource']['dateInserted']#TODO convert to pretty date
                 }
                 videos.append(video)
+        #self.getVideosOfProviderNew(provider, None, None)
         return {'videos' : videos}
+
+    #TODO this must be finished
+    def getVideosOfProviderNew(self, provider, videos, page):
+        print 'Getting new videos of provider: %s' % provider
+        if provider == 'sv':
+            provider = 'S&V'
+        #http://api.linkedtv.eu/mediaresource?publisher=S%26V
+        pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
+        http = httplib2.Http()      
+        url = 'http://api.linkedtv.eu/mediaresource?publisher=%s' % provider
+        headers = {
+            'Accept' : 'application/json',
+            'Authorization' : 'Basic %s' % pw,
+        }
+        resp, content = http.request(url, 'GET', headers=headers)
+        print resp
+        print content
+        if resp and resp['status'] == '200':
+            return content
+        return None
 
 
     """-----------------Chapters------------------"""

@@ -52,8 +52,6 @@ class DataLoader():
             return None
     
     def getMediaResources(self, publisher, format='json'):
-        if publisher == 'sv':
-            publisher = 'avro'        
         query = []
         query.append('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ')
         query.append('PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ')
@@ -71,7 +69,7 @@ class DataLoader():
         query.append('?mf rdf:type ma:MediaFragment . ')
         query.append('?annotation oa:hasTarget ?mf . ')
         query.append('}')
-        logger.debug(''.join(query))
+        #print ''.join(query)
         resp = self.sendSearchRequest(''.join(query))
         jsonData = None
         try:
@@ -79,10 +77,15 @@ class DataLoader():
         except JSONDecodeError, e:
             print e
         locs = []
+        found = False
         if jsonData:
             for k in jsonData['results']['bindings']:
                 if k.has_key('medialocator') and k.has_key('locator'):
-                    if k['locator']['value'].find(publisher) != -1:
+                    if publisher == 'sv':
+                        found = k['locator']['value'].find('SV') != -1 or k['locator']['value'].find('avro') != -1
+                    else:
+                        found = k['locator']['value'].find(publisher) != -1
+                    if found:
                         loc = k['medialocator']['value']
                         loc = loc[len(self.LINKEDTV_MEDIA_RESOURCE_PF):]
                         locs.append(loc)
@@ -131,6 +134,7 @@ class DataLoader():
         query.append('OPTIONAL {?body linkedtv:hasRelevance ?r } ')
         query.append('OPTIONAL {?body rdfs:label ?label}')        
         query.append('}')
+        print ''.join(query)
         logger.debug(''.join(query))
         resp = self.sendSearchRequest(''.join(query))
         jsonData = None

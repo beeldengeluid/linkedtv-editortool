@@ -88,7 +88,7 @@ def resource(request):
         if videoMetadata:
             vph = VideoPlayoutHandler()
             resourceData['videoMetadata'] = videoMetadata
-            playoutURL = 'none'#vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)            
+            playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)            
             resourceData['locator'] = playoutURL
             if videoMetadata['mediaResource']['mediaResourceRelationSet']:
                 for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
