@@ -26,7 +26,7 @@ class TvEnricher():
         url = self.getServiceUrl(entities, provider, dimension)
         print url
         headers = {'Content-type': 'application/json'}
-        resp, content = http.request(url, 'GET', headers=headers)        
+        resp, content = http.request(url, 'GET', headers=headers)
         if content:
             #if useDummyCache and not self.cache.exists('dummyEnrichments'):
             #self.cache.set('dummyEnrichments', simplejson.dumps({ 'enrichments' : content }))
@@ -44,7 +44,6 @@ class TvEnricher():
     def formatResponse(self, content, entities, provider, dimension):
         resp = None        
         if dimension == 'Solr':
-            #api = Api()
             enrichments = []
             mfs = simplejson.loads(content)
             for mf in mfs:

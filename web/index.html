@@ -1,24 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="linkedtv">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="Jaap Blom">
-    
+
     <link rel="icon" href="/site_media/images/favicon.ico">
 
     <title>LinkedTV - Editor Tool v2.0</title>    
 
     <!-- Custom styles for this template -->
-    <link href="/site_media/css/linkedtv-et.css" rel="stylesheet">
-
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
+    <link href="/site_media/css/linkedtv-et.css" rel="stylesheet">    
 
 
     <!-- angular -->
@@ -29,36 +23,106 @@
     <!-- main application -->
     <script src="/site_media/js/dist/app.concatenated.js"></script>
 
-  </head>
+</head>
 
-  <body>
+<body class="home">
 
     <navigation-bar user="{{user}}"></navigation-bar>
 
-    <div class="container">
-      <h1>Welcome to the LinkedTV Editor Tool v2.0</h1>
+    <div class="masthead">
+        <div class="container">
 
-      <div class="list-group">
-        <a href="/sv" class="list-group-item">
-          <h4 class="list-group-item-heading">AVROTROS (Hilversum, The Netherlands)</h4>
-          <p class="list-group-item-text">Available programmes: Tussen Kunst &amp; Kitsch</p>
-        </a>
-        <a href="/rbb" class="list-group-item">
-          <h4 class="list-group-item-heading">RBB (Berlin, Germany)</h4>
-          <p class="list-group-item-text">Available programmes: RBB News</p>
-        </a>
-        <a href="/mons" class="list-group-item">
-          <h4 class="list-group-item-heading">Universite de Mons</h4>
-          <p class="list-group-item-text">Available content: Unknown</p>
-        </a>
-      </div>
+            <h1>LinkedTV Editor Tool v2.0</h1>
+
+            <p class="lead">
+                The LinkedTV Editor Tool (ET) offers a dashboard for broadcaster programme teams to utilize LinkedTV’s automatically generated annotations to quickly produce high quality contextual information queues for their viewers.
+            </p>
+
+            <p class="info">
+                All automatically extracted information is retrieved from a customizable list of trusted web sites, ensuring high relevance and trustworthy provenance.
+            </p>
+            <br>
+            <br>
+            <div class="row">
+                <div class="col-md-4 lead-thumb">
+                    <div class="thumbnail">
+                        <img src="/site_media/images/home-et-snapshot-1.png" style="width:300px;">
+                   
+                        <div class="caption">Create chapters</div>
+                     </div>
+                </div>
+                <div class="col-md-4 lead-thumb">
+                    <div class="thumbnail">
+                        <img src="/site_media/images/home-et-snapshot-2.png" style="width:300px;">                    
+                        <div class="caption">Add annotations</div>
+                    </div>
+
+                </div>
+                <div class="col-md-4">
+                    <p class="info-item">
+                    Use automatically extracted annotations & hyperlinks to quickly create information queues for your viewers
+                    </p>
+                    <p class="info-item">
+                    Use autocomplete and dynamic lookup to quickly find information that LinkedTV did not provide for you  automatically
+                    </p>
+                    <p class="info-item">
+                    Ultimately publish all edited information to the LinkedTV platform and enable viewers to watch your broadcast in your own LinkedTV player
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="featurette">
+
+        <div class="container">
+            <h1>Try out the tool yourself!</h1>
+
+            <p class="info">
+                To give you the chance to try out the Editor Tool, LinkedTV graciously processed and analyzed this video licensed with a Creative Commons license.
+            </p>
+
+            <div class="col-md-4 lead-thumb">
+                <div class="thumbnail">
+                    <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec5.jpg" alt="Open video">
+                 </div>
+            </div>            
+            <div class="col-md-4 lead-thumb">
+                <div class="thumbnail">
+                    <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec15.jpg" alt="Open video">
+                 </div>
+            </div>
+            <div class="col-md-4 lead-thumb">
+                <div class="thumbnail">
+                    <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec25.jpg" alt="Open video">
+                 </div>
+            </div>
+
+        </div>
 
     </div>
-   
+
+    <div class="featurette">
+         <div class="container">
+            <h1>Read more on LinkedTV</h1>
+
+            <p class="info">
+                The project website offers insights into upcoming events, project updates, the people behind LinkedTV, links to scientific papers and much more.
+            </p>
+
+            <div class="col-md-4 lead-thumb">
+                <div class="thumbnail">
+                    <img src="/site_media/images/home-ltv-snapshot.png" style="width:300px;">
+                 </div>
+            </div>
+        </div>
+    </div>
+
 
 
     <!-- Bootstrap core JavaScript -->
     <script src="/site_media/bower_components/jquery/dist/jquery.min.js"></script>
     <script src="/site_media/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-  </body>
+</body>
 </html>

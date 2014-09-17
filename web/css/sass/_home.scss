@@ -1,0 +1,52 @@
+.home {
+	/*font-family:Calibri,sans-serif;*/
+	font-family:'Helvetica Light', 'Helvetica', Arial, sans-serif;
+}
+
+.lead-thumb {
+	@include activeSlot;
+}
+
+.info, info-item {	
+	font-weight:100;
+}
+.info {
+	font-size:22px;
+}
+.info-item {
+	font-size:18px;
+	text-align:justify;
+}
+
+.masthead {	
+	background-color:rgb(112, 167, 197);
+	text-align:center;
+	padding:6 * $defaultMargin 0px;
+	h1 {
+		color: $lightmustard;
+		border-bottom: 1px solid $lightmustard;
+	}
+	.info {
+		color:white;
+	}
+	.info-item {
+		color:white;
+	}
+	.lead {
+		color:$lightmustard;
+		font-size:26px;
+	}
+	
+}
+
+.featurette {
+	padding:6 * $defaultMargin;
+	text-align:center;
+	border-bottom:1px solid rgb(112, 167, 197);
+	h1 {
+		color:rgb(112, 167, 197);		
+	}
+	.info, info-item {
+		color:black;
+	}	
+}

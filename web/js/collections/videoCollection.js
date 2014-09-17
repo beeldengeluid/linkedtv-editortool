@@ -25,7 +25,7 @@ angular.module('linkedtv').factory('videoCollection', ['imageService', function(
 		}
 	}
 
-	function setVideos(videos){
+	function setVideos(videos) {
 		_videos = videos;
 		notifyObservers();
 	}
