@@ -6,9 +6,9 @@ angular.module('linkedtv').directive('shotSelector', ['shotCollection', function
     	replace : true,
     	
         scope : {
-            start : '=?',
-            end : '=?',
-            poster : '=?',
+            start : '=',
+            end : '=',
+            poster : '=',
             chapter : '@', //true or false
             collapsed : '@', //doesn't work properly yet
             title : '@'
@@ -38,8 +38,8 @@ angular.module('linkedtv').directive('shotSelector', ['shotCollection', function
             }
 
             $scope.setSelection = function(shot) {
-                if($attributes.poster) {
-                   $scope.poster = shot.poster;
+                if($attributes.poster) {                    
+                    $scope.poster = shot.poster;                    
                 }
                 if($attributes.start && $attributes.end) {
                     if($scope.settingStart) {

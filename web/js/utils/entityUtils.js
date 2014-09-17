@@ -21,8 +21,7 @@ angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterC
 
 
 	//FIXME see if this is still necessary. Remove it from this file anyway
-	function copyInformationCardTemplate(template, type) {
-		console.debug('What is this? ' + type);
+	function copyInformationCardTemplate(template) {
 		if(!template) {
 			return null;
 		}
@@ -32,11 +31,11 @@ angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterC
 		_.each(template.properties, function(p) {
 			var val = null;
 			if(p.value != null && typeof(p.value) == 'object') {
-				val = {'category': p.value.category, 'label': p.value.label, 'type' :p.value.type, 'uri': p.value.uri};				
+				val = {category: p.value.category, label: p.value.label, type :p.value.type, uri: p.value.uri};				
 			} else {
 				val = p.value;
 			}
-			t.properties.push({'key' : p.key, 'type' : p.type, 'optional' : p.optional, 'value' : val});
+			t.properties.push({key : p.key, type : p.type, optional : p.optional, value : val});
 		});
 		return t;
 	}

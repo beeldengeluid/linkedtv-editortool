@@ -61,10 +61,10 @@
                 </div>
 
                 <!-- this is the spot where the poster is shown -->
-                <div ng-if="card.poster" class="col-md-2">
+                <div ng-if="poster" class="col-md-2">
                     <!-- when thumbs are available -->
-                    <div ng-show="card.poster" class="thumbnail card-thumb">
-                        <img ng-src="{{card.poster}}" >
+                    <div ng-show="poster" class="thumbnail card-thumb">
+                        <img ng-src="{{poster}}" >
                     </div>
                 </div>
 
@@ -75,8 +75,9 @@
 
     <div class="row">
         <div class="col-md-12">
+            <!-- not sure yet why, but it's really needed to use $parent.poster instead of poster...-->
             <shot-selector title="Select a shot to use as poster for this information card" 
-            poster="card.poster" chapter="true" collapsed="true"></shot-selector>
+            poster="$parent.poster" chapter="true" collapsed="true"></shot-selector>
         </div>
     </div>
 
@@ -124,7 +125,10 @@
             <div class="col-md-12">
                 <foldable title="Show fetched data" collapsed="fetchedDataCollapsed"></foldable>
                 <div collapse="fetchedDataCollapsed">
-                    <h4>Fetched properties</h4>
+                    <h4>
+                        Fetched properties
+                        <i class="glyphicon glyphicon-plus interactive" ng-click="useAsTemplate()"></i>
+                    </h4>
 
                     <div class="row">
 
@@ -148,7 +152,9 @@
                                         {{triple.values[triple.index]}}
                                     </div>
                                 </div>
-                                <i class="glyphicon glyphicon-plus interactive" ng-click="addToCard(triple)"></i>
+                                <!--DISABLED ADDING INDIVIDUAL PROPERTIES
+                                <i class="glyphicon glyphicon-plus interactive" ng-click="addToTemplate(triple)"></i>
+                                -->
                             </form>
                         </div>
 

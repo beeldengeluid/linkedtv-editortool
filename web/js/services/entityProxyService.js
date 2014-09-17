@@ -1,8 +1,7 @@
 angular.module('linkedtv').factory('entityProxyService', ['$rootScope', 'conf', function($rootScope, conf){
 	
 
-	function fetch(dbpediaUri, callback) {
-		console.debug('Getting entity info for: ' + dbpediaUri);
+	function fetch(dbpediaUri, callback) {		
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -18,7 +17,6 @@ angular.module('linkedtv').factory('entityProxyService', ['$rootScope', 'conf', 
 	}
 
 	function formatResponse(data) {		
-		console.debug(data);
 		var info = [];
 		var thumbs = [];
 		for (key in data) {
