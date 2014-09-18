@@ -4,39 +4,60 @@ var informationCardTemplates = {
 	rbb : [
 		{ 
 			label : 'Film',			
-			properties : ['Cinematography', 'Director',
-				'Music composer', 'Starring']
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'genre', type: 'entity', optional : true},
+				{key : 'director', type: 'entity', optional : true},
+				{key : 'cinematographor', type: 'entity', optional : true},
+				{key : 'music composer', type: 'entity', optional : true},
+				{key : 'starring', type: 'entity', optional : true}
+			]
 		},
 		{ 
 			label : 'Organization',			
-			properties : ['Chairman', 'Focus',
-				'Formation year', 'Founder',
-				'Founding year', 'industry',
-				'Location', 'City',
-				'Number of employees', 'Founding date']
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'founder', type: 'entity', optional : false},
+				{key : 'chairman', type: 'entity', optional : false},
+				{key : 'city', type: 'entity', optional : false},
+				{key : 'type of industry', type: 'literal', optional : false},
+				{key : 'founding date', type: 'entity', optional : false},
+				{key : 'founding location', type: 'entity', optional : false},
+				{key : 'number of employees', type: 'literal', optional : false}
+			]	
 		},
 		{
-			label : 'Political party',		
-			properties : ['Headquarters', 'Second leader',
-				'Orientation', 'General director',
-				'EU parlement', 'Founding date', 
-				'Founding location', 'Chairman']
+			label : 'Political party',
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'orientation', type: 'entity', optional : false},
+				{key : 'general director', type: 'entity', optional : false},
+				{key : 'chairman', type: 'entity', optional : false},
+				{key : 'founding date', type: 'literal', optional : false},
+				{key : 'founding location', type: 'entity', optional : false}
+			]
 		},
 		{
-			label : 'Politicians and other office holders',			
-			properties : ['Active since', 'Active till', 
-				'Office', 'Party', 'Before',
-				'After']
+			label : 'Politicians and other office holders',
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'party', type: 'entity', optional : false},
+				{key : 'active since', type: 'literal', optional : false},
+				{key : 'active till', type: 'literal', optional : false}				
+			]
 		},
 		{
-			label : 'Places',			
-			properties : ['Owner', 'Opening', 
-				'Stand place', 'Architect', 
-				'Builder', 'Building year', 
-				'Style', 'Place', 
-				'Leader', 'Title of leader', 
-				'Unemployment rate', 'Foreign immigrants',
-				'Party']
+			label : 'Places',
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'founding date', type: 'literal', optional : false},
+				{key : 'population', type: 'literal', optional : false},
+				{key : 'capital city', type: 'entity', optional : false}
+			]
+		},
+		{
+			label : 'Information card',
+			properties : null
 		}
 	],
 
