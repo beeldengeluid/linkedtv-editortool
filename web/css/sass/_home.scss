@@ -81,9 +81,13 @@
 			cursor:pointer;
 			width:240px;
 			display:inline-block;
-			margin:$defaultItemMargin;
+			margin:$defaultItemMargin;			
 			img {
 				width:240px;
+				margin-bottom:$defaultItemMargin;
+			}
+			.caption {
+				border-top:1px solid #e3e3e3;
 			}
 			&:hover {
 				@include activeSlot;
