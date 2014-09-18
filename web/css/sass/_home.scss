@@ -1,18 +1,16 @@
-.home {
-	/*font-family:Calibri,sans-serif;*/
-	font-family:'Helvetica Light', 'Helvetica', Arial, sans-serif;
-}
-
 .lead-thumb {
-	@include activeSlot;
+	@include thumbnail;
 }
 
 .info, info-item {	
-	font-weight:100;
+	font-weight:100;		
 }
+
 .info {
-	font-size:22px;
+	font-size:22px;		
+	text-align:center;
 }
+
 .info-item {
 	font-size:18px;
 	text-align:justify;
@@ -22,31 +20,75 @@
 	background-color:rgb(112, 167, 197);
 	text-align:center;
 	padding:6 * $defaultMargin 0px;
+
 	h1 {
 		color: $lightmustard;
 		border-bottom: 1px solid $lightmustard;
+		text-shadow: 1px 1px #333;		
 	}
-	.info {
-		color:white;
-	}
-	.info-item {
-		color:white;
-	}
+
 	.lead {
-		color:$lightmustard;
 		font-size:26px;
+		color:$lightmustard;
+		text-shadow: 1px 1px #333;
 	}
-	
+
+	.info, .info-item {
+		color:azure;
+
+	}
+		
 }
 
 .featurette {
 	padding:6 * $defaultMargin;
 	text-align:center;
-	border-bottom:1px solid rgb(112, 167, 197);
+	border-bottom:1px dashed rgb(112, 167, 197);	
+
 	h1 {
-		color:rgb(112, 167, 197);		
+		color:rgb(112, 167, 197);
+		text-shadow: 1px 1px #333;
 	}
+
 	.info, info-item {
 		color:black;
+		text-shadow: 1px 1px azure;
 	}	
+}
+
+.last.featurette {
+	border-bottom:0px;
+}
+
+.credits {		
+	background-color:#111;
+	text-align:center;
+	h1 {
+		color:rgb(112, 167, 197);
+	}
+	h4 {
+		color: $lightmustard;
+		text-align:center;
+	}
+	.info {
+		margin-top:2 * $defaultMargin;		
+		color:#e3e3e3;
+		text-shadow: 1px 1px #555;
+	}
+
+	.partner-list {
+		li {
+			cursor:pointer;
+			width:240px;
+			display:inline-block;
+			margin:$defaultItemMargin;
+			img {
+				width:240px;
+			}
+			&:hover {
+				@include activeSlot;
+			}
+		}	
+	}	
+	
 }

@@ -38,18 +38,22 @@ def logout_user(request):
 
 """ 
 *********************************************************************************************************
-For loading the main page
+For loading the main page and the trial page
 *********************************************************************************************************
 """
 
 def main(request):
-    return render_to_response('index.html', {'user' : request.user})
+    return render_to_response('index.html', {'user' : request.user})    
 
 """ 
 *********************************************************************************************************
 For loading a the page that lists the available mediaresources/videos per provider
 *********************************************************************************************************
 """
+
+def trial(request):
+    print 'Going to the trial page'
+    return render_to_response('edit.html', {'user' : 'anonymous', 'trialId' : 'b967eefd-5ca2-492c-8fae-aa01dc0229cf'})
 
 @login_required
 def provider(request, pub = '', id = ''):
@@ -59,7 +63,6 @@ def provider(request, pub = '', id = ''):
             if(g.name.lower() == pub):
                 authorized = True
                 break
-    print request.user
     if not authorized:
         print 'you (%s) are not authorized to view this page' % pub
         return render_to_response('index.html', {'user' : request.user})

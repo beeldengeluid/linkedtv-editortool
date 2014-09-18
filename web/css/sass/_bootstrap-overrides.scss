@@ -17,6 +17,9 @@ $navbar-margin-bottom : 0px;
 
 $panel-default-heading-bg: $lightmustard;
 $panel-heading-padding: 5px 10px;
+.panel {
+	margin:$defaultMargin 0px;
+}
 
 /* Thumbnail caption */
 

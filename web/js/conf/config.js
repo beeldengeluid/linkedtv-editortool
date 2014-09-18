@@ -1,10 +1,16 @@
-//TODO properly import the programme configs from an external file
-//RBB types => http://www.linkedtv.eu/wiki/index.php/Annotation_types_in_RBB#Proposal_for_common_entity_types
-//TKK types => http://www.linkedtv.eu/wiki/index.php/Creating_rich_descriptions_of_cultural_artefacts_out_of_a_TV_program
+/*
+TODO:
+	- properly import the programme configs from an external file
 
-//FIXME this is not used yet
+READ:	
+	- RBB types => http://www.linkedtv.eu/wiki/index.php/Annotation_types_in_RBB#Proposal_for_common_entity_types
+	- TKK types => http://www.linkedtv.eu/wiki/index.php/Creating_rich_descriptions_of_cultural_artefacts_out_of_a_TV_program
+*/
+
 var informationCardTemplates = {
-	rbb : [//FIXME the RBB types are directly taken from the DBpedia types
+
+	//FIXME the RBB types are directly taken from the DBpedia types
+	rbb : [
 		{ 
 			label : 'Film',			
 			properties : ['Cinematography', 'Director',
@@ -55,6 +61,13 @@ var informationCardTemplates = {
 				{key : 'style', type : 'entity', optional : true},
 			]
 		},
+		{
+			label : 'Information card',
+			properties : null
+		}
+	],
+
+	trial : [
 		{
 			label : 'Information card',
 			properties : null
@@ -128,10 +141,26 @@ var tkkConfig = {
 	]
 };
 
+var trialConfig = {
+	dimensions : [
+		{
+		'id' : 'maintopic',
+		'label' : 'Main topics',
+		'service' : 'informationCards'
+		},
+		{
+		'id' : 'freshMedia',
+		'label' : 'Background information',
+		'service' : 'TvEnricher'
+		}
+	]
+}
+
 //make sure to map this to the provider part in the ET URL
 var programmeConfigs = {
 	sv : tkkConfig,
-	rbb : rbbConfig
+	rbb : rbbConfig,
+	trial : trialConfig
 }
 
 

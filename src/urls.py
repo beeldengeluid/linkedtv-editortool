@@ -11,6 +11,7 @@ urlpatterns = patterns('',
     url(r'^autocomplete$', 'views.autocomplete'),
     
     #authentication
+    url(r'^trial$', 'views.trial'),
     url(r'^login$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     url(r'^logout$', 'views.logout_user'),
     
@@ -30,6 +31,6 @@ urlpatterns = patterns('',
 
     #new save/load calls (communicates with Redis)
     url(r'^saveresource$', 'views.saveresource'),
-    url(r'^curatedresource$', 'views.curatedresource'),
+    url(r'^curatedresource$', 'views.curatedresource'),    
 
 )

@@ -1,10 +1,7 @@
-//TODO properly import the programme configs from an external file
-//RBB types => http://www.linkedtv.eu/wiki/index.php/Annotation_types_in_RBB#Proposal_for_common_entity_types
-//TKK types => http://www.linkedtv.eu/wiki/index.php/Creating_rich_descriptions_of_cultural_artefacts_out_of_a_TV_program
-
-//FIXME this is not used yet
 var informationCardTemplates = {
-	rbb : [//FIXME the RBB types are directly taken from the DBpedia types
+
+	//FIXME the RBB types are directly taken from the DBpedia types
+	rbb : [
 		{ 
 			label : 'Film',			
 			properties : ['Cinematography', 'Director',
@@ -55,6 +52,13 @@ var informationCardTemplates = {
 				{key : 'style', type : 'entity', optional : true},
 			]
 		},
+		{
+			label : 'Information card',
+			properties : null
+		}
+	],
+
+	trial : [
 		{
 			label : 'Information card',
 			properties : null
@@ -128,10 +132,26 @@ var tkkConfig = {
 	]
 };
 
+var trialConfig = {
+	dimensions : [
+		{
+		'id' : 'maintopic',
+		'label' : 'Main topics',
+		'service' : 'informationCards'
+		},
+		{
+		'id' : 'freshMedia',
+		'label' : 'Background information',
+		'service' : 'TvEnricher'
+		}
+	]
+}
+
 //make sure to map this to the provider part in the ET URL
 var programmeConfigs = {
 	sv : tkkConfig,
-	rbb : rbbConfig
+	rbb : rbbConfig,
+	trial : trialConfig
 }
 
 
@@ -144,17 +164,19 @@ var config = angular.module('configuration', []).constant('conf', {
 linkedtv.run(function($rootScope, conf) {
 
 	var urlParts = window.location.pathname.split('/');	
-	
+
 	//set the provider as a property of the rootScope
 	if(urlParts && urlParts.length >= 2) {
-		$rootScope.provider = urlParts[1];		
+		$rootScope.provider = urlParts[1];
 		conf.programmeConfig = programmeConfigs[$rootScope.provider];
 		conf.templates = informationCardTemplates[$rootScope.provider];
 	}
 
 	//set the resourceUri as a property of the rootScope
-	if(urlParts && urlParts.length >= 3) {
+	if(urlParts && urlParts.length >= 3 && !trialId) {
 		$rootScope.resourceUri = urlParts[2];
+	} else if (trialId) {		
+		$rootScope.resourceUri = trialId;
 	}
 
 	/*
@@ -685,7 +707,7 @@ linkedtv.run(function($rootScope, conf) {
 	var THUMBNAIL_SECOND = 60;
 
 	function initCollectionData(videos) {
-		console.debug('Initializing video collection');				
+		console.debug('Initializing video collection');
 		_.each(videos, function(v){
 			v.poster = imageService.getThumbnail(v.thumbBaseUrl, THUMBNAIL_SECOND * 1000);
 		});
@@ -705,7 +727,7 @@ linkedtv.run(function($rootScope, conf) {
 		}
 	}
 
-	function setVideos(videos){
+	function setVideos(videos) {
 		_videos = videos;
 		notifyObservers();
 	}

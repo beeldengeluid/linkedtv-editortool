@@ -14,6 +14,9 @@
     <!-- Custom styles for this template -->
     <link href="/site_media/css/linkedtv-et.css" rel="stylesheet">    
 
+    <script>
+        trialId = null;
+    </script>
 
     <!-- angular -->
     <script src="/site_media/bower_components/angular/angular.min.js"></script>
@@ -25,7 +28,7 @@
 
 </head>
 
-<body class="home">
+<body>
 
     <navigation-bar user="{{user}}"></navigation-bar>
 
@@ -34,40 +37,30 @@
 
             <h1>LinkedTV Editor Tool v2.0</h1>
 
-            <p class="lead">
-                The LinkedTV Editor Tool (ET) offers a dashboard for broadcaster programme teams to utilize LinkedTV’s automatically generated annotations to quickly produce high quality contextual information queues for their viewers.
-            </p>
+            <p class="lead">The LinkedTV Editor Tool (ET) offers a dashboard for broadcaster programme teams to utilize LinkedTV’s automatically generated annotations to quickly produce high quality contextual information queues for their viewers.</p>
 
-            <p class="info">
-                All automatically extracted information is retrieved from a customizable list of trusted web sites, ensuring high relevance and trustworthy provenance.
-            </p>
+            <p class="info">All automatically extracted information is retrieved from a customizable list of trusted web sites to ensure high relevance and trustworthy provenance.</p>
             <br>
             <br>
             <div class="row">
-                <div class="col-md-4 lead-thumb">
-                    <div class="thumbnail">
-                        <img src="/site_media/images/home-et-snapshot-1.png" style="width:300px;">
-                   
-                        <div class="caption">Create chapters</div>
-                     </div>
-                </div>
-                <div class="col-md-4 lead-thumb">
-                    <div class="thumbnail">
-                        <img src="/site_media/images/home-et-snapshot-2.png" style="width:300px;">                    
-                        <div class="caption">Add annotations</div>
+                <div class="col-md-4">
+                    <div class="lead-thumb">
+                        <div class="thumbnail center">
+                            <img src="/site_media/images/home-et-snapshot-1.png" style="width:300px;">
+                         </div>
                     </div>
-
                 </div>
                 <div class="col-md-4">
-                    <p class="info-item">
-                    Use automatically extracted annotations & hyperlinks to quickly create information queues for your viewers
-                    </p>
-                    <p class="info-item">
-                    Use autocomplete and dynamic lookup to quickly find information that LinkedTV did not provide for you  automatically
-                    </p>
-                    <p class="info-item">
-                    Ultimately publish all edited information to the LinkedTV platform and enable viewers to watch your broadcast in your own LinkedTV player
-                    </p>
+                    <div class="lead-thumb center">
+                        <div class="thumbnail">
+                            <img src="/site_media/images/home-et-snapshot-2.png" style="width:300px;">                            
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <p class="info-item">Use automatically extracted annotations &amp; hyperlinks to quickly create information queues for your viewers</p><br>
+                    <p class="info-item">Use autocomplete and dynamic lookup to quickly find information that LinkedTV did not provide for you  automatically</p><br>
+                    <p class="info-item">Ultimately publish all edited information to the LinkedTV platform and enable viewers to watch your broadcast in your own LinkedTV player</p>
                 </div>
             </div>
 
@@ -80,23 +73,31 @@
             <h1>Try out the tool yourself!</h1>
 
             <p class="info">
-                To give you the chance to try out the Editor Tool, LinkedTV graciously processed and analyzed this video licensed with a Creative Commons license.
+                To give you the chance to <a href="/trial" target="_trial"> try out the ET</a>, LinkedTV graciously processed and analyzed this video licensed with a Creative Commons license.
             </p>
 
-            <div class="col-md-4 lead-thumb">
-                <div class="thumbnail">
-                    <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec5.jpg" alt="Open video">
-                 </div>
-            </div>            
-            <div class="col-md-4 lead-thumb">
-                <div class="thumbnail">
-                    <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec15.jpg" alt="Open video">
-                 </div>
-            </div>
-            <div class="col-md-4 lead-thumb">
-                <div class="thumbnail">
-                    <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec25.jpg" alt="Open video">
-                 </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="lead-thumb center">
+                        <div class="thumbnail">
+                            <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec5.jpg" alt="Open video">
+                         </div>
+                    </div>
+                </div>            
+                <div class="col-md-4">
+                    <div class="lead-thumb center">
+                        <div class="thumbnail">
+                            <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec16.jpg" alt="Open video">
+                         </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="lead-thumb center">
+                        <div class="thumbnail">
+                            <img src="http://images1.noterik.com/domain/linkedtv/user/avro/video/206/shots/1/h/0/m/0/sec34.jpg" alt="Open video">
+                         </div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -105,17 +106,195 @@
 
     <div class="featurette">
          <div class="container">
+            <h1>It's open source!</h1>
+
+            <p class="info">LinkedTV acknowledges the infinte variety of possible use cases of LinkedTV technology. For this reason, the ET code is open source, so it's possible for your IT department to customize a editor tool specific for your programme team's needs.</p>
+
+            <p class="info">So, if you want to contribute or customize the ET for your own specific needs: find us on <a href="https://github.com/linkedtv/editortool">GitHub</a>!</p>
+            
+        </div>
+    </div>
+
+    <div class="featurette last">
+         <div class="container">
             <h1>Read more on LinkedTV</h1>
 
-            <p class="info">
-                The project website offers insights into upcoming events, project updates, the people behind LinkedTV, links to scientific papers and much more.
-            </p>
+            <p class="info">The project website offers insights into upcoming events, project updates, the people behind LinkedTV, links to scientific papers and much more.</p>
 
-            <div class="col-md-4 lead-thumb">
+            
+            <div class="lead-thumb center">
                 <div class="thumbnail">
                     <img src="/site_media/images/home-ltv-snapshot.png" style="width:300px;">
-                 </div>
+                </div>
             </div>
+            
+        </div>
+    </div>
+
+    <div class="credits">
+         <div class="container">
+            <h1>Who made this happen</h1>
+
+            <p class="info">The Editor Tool was built within LinkedTV by The Netherlands Institute for Sound and Vision.</p>
+            <div class="row">
+
+                <div class="col-md-12">
+                    <h4>LinkedTV partners</h4>
+
+                    <ul class="partner-list">
+
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/Beeld_en_Geluid.png" alt="NISV">
+                                <div class="caption">
+                                    <a href="http://www.beeldengeluid.nl" target="_partner">
+                                        The Netherlands Institute for Sound and Vision
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>            
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/CWI_Logo.png" alt="CWI">
+                                <div class="caption">
+                                    <a href="http://www.cwi.nl/" target="_partner">                                
+                                        Stichting Centrum voor Wiskunde en Informatica (CWI)
+                                    </a>
+                                </div>
+                            </div>                           
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/EURECOM_logo.png" alt="EURECOM">
+                                <div class="caption">
+                                    <a href="http://www.eurecom.fr/en" target="_partner">
+                                        EURECOM
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/Iais_logo.png" alt="Fraunhofer IAIS">
+                                <div class="caption">
+                                    <a href="http://www.iais.fraunhofer.de/" target="_partner">
+                                        Fraunhofer Institute for Intelligent Analysis and Information Systems
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>                        
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/Logo_Noterik.png" alt="Noterik">
+                                 <div class="caption">
+                                    <a href="http://www.noterik.nl/" target="_partner">
+                                        Noterik B.V.
+                                    </a>
+                                </div>
+                            </div>                           
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/Logo-UMONS.png" alt="UMons">
+                                <div class="caption">
+                                    <a href="http://portail.umons.ac.be/en2/Pages/default.aspx" target="_partner">
+                                        Université de Mons
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/modul_university.png" alt="MODUL University">
+                                <div class="caption">
+                                    <a href="http://www.modul.ac.at/nmt" target="_partner">
+                                        MODUL University Vienna GmbH
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/RBB_logo.png" alt="RBB">
+                                 <div class="caption">
+                                    <a href="http://www.rbb-online.de/" target="_partner">
+                                        Rundfunk Berlin-Brandenburg
+                                    </a>
+                                </div>
+                            </div>                           
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/st_gallen_logo.png" alt="University St. Gallen">
+                                <div class="caption">
+                                    <a href="http://www.unisg.ch/" target="_partner">
+                                        Universität St. Gallen
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/Logo_Condat.png" alt="Condat">
+                                 <div class="caption">
+                                    <a href="http://www.condat.de/" target="_partner">
+                                        Condat AG
+                                    </a>
+                                </div>
+                            </div>                           
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/VSE-logo1.png" alt="VSE">
+                                <div class="caption">
+                                    <a href="http://www.vse.cz/" target="_partner">
+                                        Vysoka Skola Ekonomicka v Praze
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/CERTH-ITI.png" alt="CERTH">
+                                <div class="caption">
+                                    <a href="http://www.certh.gr/root.en.aspx" target="_partner">
+                                        Centre for Research and Technology Hellas
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- EXTERNAL PARTNERS -->
+                <div class="col-md-12">
+                    <h4>~ Special thanks to external partners who provided us with their content and valuable feedback ~</h4>
+                    <ul class="partner-list">
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/AVROTROS.png" alt="CWI">
+                                <div class="caption">
+                                    <a href="http://www.avrotros.nl/" target="_partner">                                
+                                        AVROTROS
+                                    </a>
+                                </div>
+                            </div>                           
+                        </li>
+                        <li>
+                            <div class="thumbnail">
+                                <img src="/site_media/images/partner-logos/openbeelden.png" alt="NISV">
+                                <div class="caption">
+                                    <a href="http://openbeelden.nl/" target="_partner">
+                                        Open Beelden
+                                    </a>
+                                </div>
+                            </div>                            
+                        </li>                                    
+                    </ul>
+
+                </div>
+
+            </div><!-- end of row -->
         </div>
     </div>
 

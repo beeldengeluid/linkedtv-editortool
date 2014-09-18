@@ -78,6 +78,10 @@
 
 }
 
+@mixin thumbnail ($width:320px) {
+	width:$width;
+	@include activeSlot;	
+}
 
 .foldable {
 	width:100%;

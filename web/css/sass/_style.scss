@@ -9,4 +9,9 @@ a {
 body {
 	padding-top:$navbar-height;
 	background-image: url(../images/bg-tile-fg.png);
+	font-family:'Helvetica Light', 'Helvetica', Arial, sans-serif;
+}
+
+.center {
+	margin:auto;
 }
