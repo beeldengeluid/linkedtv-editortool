@@ -19,6 +19,7 @@ from linkedtv.api.dbpedia.EntityProxy import EntityProxy
 from linkedtv.api.external.MediaCollector import MediaCollector
 from linkedtv.api.external.UnstructuredSearch import UnstructuredSearch
 from linkedtv.api.external.TvEnricher import TvEnricher
+from linkedtv.api.external.EntityExpansionService import EntityExpansionService
 
 from linkedtv.api import SaveEndpoint as ET
 from linkedtv.api.Api import *
@@ -93,10 +94,13 @@ def resource(request):
             resourceData['videoMetadata'] = videoMetadata
             playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)            
             resourceData['locator'] = playoutURL
+            print videoMetadata
             if videoMetadata['mediaResource']['mediaResourceRelationSet']:
                 for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
                     if mrr['relationType'] == 'thumbnail-locator':
                         resourceData['thumbBaseUrl'] = mrr['relationTarget']
+                    elif mrr['relationType'] == 'srt':
+                        resourceData['srtUrl'] = mrr['relationTarget']
         resp = simplejson.dumps(resourceData)
         return HttpResponse(resp, mimetype='application/json')
         
@@ -289,3 +293,20 @@ def entityproxy(request):
         resp = ep.fetch(uri, lang)
         return HttpResponse(resp, mimetype='application/json')
     return HttpResponse(getErrorMessage('Please provide a DBPedia URI'), mimetype='application/json')
+
+#TODO test this function
+def entityexpand(request):
+    url = request.GET.get('url', None)
+    start = request.GET.get('start', -1)
+    end = request.GET.get('end', -1)
+    if url and (end > start or (end == -1 and start == -1)):
+        ees = EntityExpansionService()
+        resp = ees.fetch(url, start, end)
+        if resp:
+            return HttpResponse(resp, mimetype='text/plain')
+            #return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+        else:
+            return HttpResponse(getErrorMessage('Could not find any entities'), mimetype='application/json')
+    return HttpResponse(getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+
+
