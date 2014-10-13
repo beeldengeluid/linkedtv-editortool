@@ -51,6 +51,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 		//reset the button and the selected entities
 		$scope.fetchButtonText = 'Find links';
 		$scope.activeEntities = [];
+		$('#e_query').attr('value', '');
 		$scope.enrichmentQuery = '';
 		$scope.enrichmentsCollapsed = false;		
 		if(enrichments) {
@@ -108,18 +109,28 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 
 	//----------------------------SELECTING ENRICHMENTS & ENTITIES------------------------------
 
-	$scope.toggleEntity = function(entityLabel) {
-		var index = $scope.activeEntities.indexOf(entityLabel);
-		if(index == -1) {
-			$scope.activeEntities.push(entityLabel);
-		} else {
-			$scope.activeEntities.splice(index, 1);
+	$scope.addQueryEntity = function(entity) {
+		console.debug(entity);
+		if($scope.activeEntities.indexOf(entity.label) == -1) {
+			$scope.activeEntities.push(entity.label);
 		}
-		$('#e_query').attr('value', $scope.activeEntities.join('+'));
+		$scope.updateEnrichmentQuery();
 	}
 
-	$scope.isEntitySelected = function(entityLabel) {
-		return $scope.activeEntities.indexOf(entityLabel) == -1 ? '' : 'selected';
+	$scope.removeQueryEntity = function(entityLabel) {
+		var len = $scope.activeEntities.length;
+		var e = null;
+		while(len--) {
+			e = $scope.activeEntities[len];
+			if(e === entityLabel) {
+				$scope.activeEntities.splice(len, 1);
+			}
+		}
+		$scope.updateEnrichmentQuery();
+	}
+
+	$scope.updateEnrichmentQuery = function() {
+		$('#e_query').attr('value', $scope.activeEntities.join('+'));
 	}
 
 	//----------------------------BUTTON PANEL------------------------------

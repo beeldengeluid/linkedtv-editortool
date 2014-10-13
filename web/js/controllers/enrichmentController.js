@@ -10,7 +10,6 @@ angular.module('linkedtv').controller('enrichmentController',
 	//watch for changes in the active chapter
 	$scope.$watch(function () { return chapterCollection.getActiveChapter(); }, function(newValue) {
 		$scope.activeChapter = newValue;
-		console.debug($scope.activeChapter);
 	});
 
 	$scope.editLink = function(dimension, link) {

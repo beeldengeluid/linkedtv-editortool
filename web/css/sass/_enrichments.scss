@@ -10,6 +10,22 @@
 	@include mediaSlots;
 }
 
+.enrichment-query-items {
+	margin-bottom:$defaultMargin;
+	label {
+		font-weight:bold;
+	}
+	ul {
+		list-style:none;
+		margin:0px;
+		padding:0px;
+		li {
+			margin-right:$defaultItemMargin;
+			display:inline-block;
+		}
+	}
+}
+
 .enrichment-search input[type='text'] {
 	width:400px;
 }
