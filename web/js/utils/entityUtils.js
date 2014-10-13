@@ -1,5 +1,5 @@
-angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterCollection', 
-	function(entityCollection, chapterCollection) {
+angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterCollection', 'conf', 
+	function(entityCollection, chapterCollection, conf) {
 
 
 	function getConfidenceClass(entity) {
@@ -23,8 +23,13 @@ angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterC
 	//FIXME see if this is still necessary. Remove it from this file anyway
 	function copyInformationCardTemplate(template) {
 		if(!template) {
-			return null;
-		}
+			if(conf.templates && conf.templates.length != 0) {
+				template = conf.templates[0];
+			} else {
+				return null;
+			}
+		} 
+
 		var t = {};
 		t.label = template.label;
 		t.properties = [];

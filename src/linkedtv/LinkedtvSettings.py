@@ -10,3 +10,4 @@ LTV_REDIS_SETTINGS = getattr(settings, 'LTV_REDIS_SETTINGS', {'host' : 'localhos
 LTV_DBPEDIA_PROXY = getattr(settings, 'LTV_DBPEDIA_PROXY', 'http://linkedtv.project.cwi.nl/explore/entity_proxy')
 LTV_STOP_FILE = getattr(settings, 'LTV_STOP_FILE', '/Users/jblom/workspace/linkedtv-et-v2/resources/stoplist_tno.tab')
 LTV_PLATFORM_LOGIN = getattr(settings, 'LTV_PLATFORM_LOGIN', {'user' : 'admin', 'password' : 'linkedtv'})
+LTV_EUROPEANA = getattr(settings, 'LTV_EUROPEANA', {'apikey' : 'yourkey'})

@@ -63,10 +63,6 @@ var informationCardTemplates = {
 				{key : 'population', type: 'literal', optional : false},
 				{key : 'capital city', type: 'entity', optional : false}
 			]
-		},
-		{
-			label : 'Information card',
-			properties : null
 		}
 	],
 
@@ -81,19 +77,10 @@ var informationCardTemplates = {
 				{key : 'material', type : 'entity', optional : true},
 				{key : 'style', type : 'entity', optional : true},
 			]
-		},
-		{
-			label : 'Information card',
-			properties : null
 		}
 	],
 
-	trial : [
-		{
-			label : 'Information card',
-			properties : null
-		}
-	]
+	trial : null
 
 }
 
@@ -101,7 +88,7 @@ var rbbConfig = {
 	dimensions : [
 		{//temporary
 		'id' : 'maintopic',
-		'label' : 'The art object',
+		'label' : 'Information cards',
 		'service' : 'informationCards'
 		},
 		{
@@ -150,7 +137,7 @@ var tkkConfig = {
 		'service' : 'TvEnricher'
 		},
 		{
-		'id' : 'Europeana',//TODO add some service specific params here
+		'id' : 'Europeana',
 		'label' : 'Related Europeana objects',
 		'service' : 'TvEnricher'
 		},

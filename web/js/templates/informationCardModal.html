@@ -8,7 +8,15 @@
     <div class="row">
 
         <!-- TEMPLATE SELECTION -->
-        <div class="col-md-12">
+        <div class="col-md-3">           
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="useTemplate" ng-change="clearTemplate()"> Use template
+                </label>
+            </div>
+        </div>
+        <div class="col-md-9" ng-show="useTemplate">
+            <strong>Select template</strong>
             <div class="btn-group" dropdown>
                 <button ng-if="!activeTemplate" type="button" class="btn btn-primary">Select template</button>
                 <button ng-if="activeTemplate" type="button" class="btn btn-primary">{{activeTemplate.label}}</button>
@@ -28,12 +36,20 @@
 
     <!-- SAVED/TEMPLATE PROPERTIES -->
     <div class="row">
+
+
+        <div ng-show="!card.uri" class="row">
+            <div class="col-md-12">
+                <span ng-show="!useTemplate" class="alert alert-custom">Please select or find an entity to edit for this card</span>
+            </div>
+        </div>
+
         <div class="col-md-12 card-edit-form">
             <h4>Properties of: {{card.template.label}}</h4>
             <div class="row">
                 <div class="col-md-10">
                     <!-- SHOW THE URI AT THE TOP -->
-                    <form class="form-inline" role="form">
+                    <form ng-if="card.uri" class="form-inline" role="form">
                         <div class="form-group">
                             <label>URI</label>
                         </div>
@@ -69,7 +85,7 @@
                 </div>
 
             </div>           
-        </div>
+        </div><!-- END OF card-edit-form -->
 
     </div>
 
@@ -126,8 +142,8 @@
                 <foldable title="Show fetched data" collapsed="fetchedDataCollapsed"></foldable>
                 <div collapse="fetchedDataCollapsed">
                     <h4>
-                        Fetched properties
-                        <i class="glyphicon glyphicon-plus interactive" ng-click="useAsTemplate()"></i>
+                        Fetched properties                        
+                        <button type="button" class="btn btn-primary" ng-click="useAsTemplate()">Use as card</button>
                     </h4>
 
                     <div class="row">
