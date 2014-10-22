@@ -56,8 +56,7 @@ class TvNewsEnricher(DimensionService):
 		http = httplib2.Http()		
 		url = self.__getServiceUrl(params['dimension'], query)
 		headers = {'Content-type': 'application/json'}
-		resp, content = http.request(url, 'GET', headers=headers)
-		print resp
+		resp, content = http.request(url, 'GET', headers=headers)		
 		if content:
 			return self.__formatResponse(content, params['dimension'])
 		else:

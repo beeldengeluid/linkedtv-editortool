@@ -12,3 +12,7 @@
 .horizontal-menu {
 	@include horizontalMenu($wonderblue, true);
 }
+
+.editor-menu {
+	@include horizontalMenu('#fff');
+}

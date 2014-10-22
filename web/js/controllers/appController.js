@@ -40,11 +40,10 @@ angular.module('linkedtv').controller('appController',
 		chapterCollection.initCollectionData($rootScope.provider, $scope.resourceData, curatedData);
 
 		//load the entityCollection with entity data
-		entityCollection.initCollectionData($scope.resourceData.nes);		
+		entityCollection.initCollectionData($scope.resourceData.nes);
 
 		//load the shotCollection with shot data
 		shotCollection.initCollectionData($scope.resourceData);
-
 		
 		$scope.$apply(function() {
 			$scope.loading = false;

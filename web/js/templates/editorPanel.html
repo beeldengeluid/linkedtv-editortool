@@ -3,7 +3,12 @@
 
 	<div class="panel-heading">
 		<strong>Edit chapter annotations: {{activeChapter.label}}</strong>
-
+		<ul class="editor-menu">
+			<li title="Publish data to LinkedTV" ng-click="publishResource()">
+				<a>Publish</a>
+				<i class="glyphicon glyphicon-export"></i>
+			</li>
+		</ul>
 	</div>
 
 	<div class="panel-body">

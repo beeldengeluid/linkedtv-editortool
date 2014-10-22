@@ -4,11 +4,21 @@ import base64
 import httplib2
 from subprocess import Popen, PIPE
 from linkedtv.LinkedtvSettings import LTV_API_ENDPOINT, LTV_DATA_ENDPOINT, LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN
-from linkedtv.api.sparql.DataLoader import *
 
-from linkedtv.video.VideoPlayoutHandler import VideoPlayoutHandler
-from linkedtv.api import SaveEndpoint as ET
+#storage related
+from linkedtv.api.storage.sparql.DataLoader import DataLoader
+from linkedtv.api.storage.SaveEndpoint import SaveEndpoint
+from linkedtv.api.storage.publish.PublishingHandler import PublishingHandler
+
+#image & video related
+from linkedtv.api.video.VideoPlayoutHandler import VideoPlayoutHandler
+from linkedtv.api.images.ImageFetcher import ImageFetcher
+
+#dimension/enrichment services
 from linkedtv.api.dimension.DimensionHandler import DimensionHandler
+
+#linkedTV object holding all data
+from linkedtv.model.MediaResource import MediaResource
 
 class Api():
     
@@ -22,42 +32,45 @@ class Api():
     """-------------------------LOAD, SAVE AND EXPORT MEDIA RESOURCES-------------------------"""
 
     def load_ltv(self, resourceUri, clientIP, loadData):
-        resourceData = {}        
+        mediaResource = MediaResource()
         if loadData:
-            resourceData = self.__getAllAnnotationsOfResource(resourceUri, False)
+            mediaResource = self.__getAllAnnotationsOfResource(resourceUri, False)
         """Get the mediaresource metadata and the playout URL"""
         print 'getting video metadata'
-        videoMetadata = self.getVideoData(resourceUri)
+        videoMetadata = self.__getVideoData(resourceUri)
         if videoMetadata:
             videoMetadata = simplejson.loads(videoMetadata)        
         vph = VideoPlayoutHandler()
-        resourceData['videoMetadata'] = videoMetadata
-        playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)            
-        resourceData['locator'] = playoutURL        
+        mediaResource.setVideoMetadata(videoMetadata)
+        playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
+        mediaResource.setPlayoutUrl(playoutURL)
         if videoMetadata:
             if videoMetadata['mediaResource']['mediaResourceRelationSet']:
                 for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
                     if mrr['relationType'] == 'thumbnail-locator':
-                        resourceData['thumbBaseUrl'] = mrr['relationTarget']
+                        mediaResource.setThumbBaseUrl(mrr['relationTarget'])
                     elif mrr['relationType'] == 'srt':
-                        resourceData['srtUrl'] = mrr['relationTarget']
-        else:
-            resourceData['thumbBaseUrl'] = None
-            resourceData['srtUrl'] = None
-        resp = simplejson.dumps(resourceData)
+                        mediaResource.setSrtUrl(mrr['relationTarget'])
+        resp = simplejson.dumps(mediaResource, default=lambda obj: obj.__dict__)
         return resp
 
     def load_et(self, resourceUri):
-        sep = ET.SaveEndpoint()
+        sep = SaveEndpoint()
         return sep.loadCuratedResource(resourceUri)        
 
     def save_et(self, saveData):
-        sep = ET.SaveEndpoint()
+        sep = SaveEndpoint()
         try:
             resp = sep.saveVideo(simplejson.loads(saveData))
         except JSONDecodeError, e:
             return None
         return resp
+
+    def publish(self, publishingPoint, saveData):
+        print 'PUBLISHING DATA TO: %s' % publishingPoint
+        ph = PublishingHandler()
+        ph.publish(publishingPoint, saveData)
+        return None
 
     #uses the SPARQL dataloader to fetch all annotations
     def __getAllAnnotationsOfResource(self, resourceUri, fetchFromCache=False):
@@ -74,7 +87,7 @@ class Api():
         else:
             print 'fetching from API'
             data = self.dataLoader.loadMediaResource(resourceUri)
-            self.cache.set(resourceUri, simplejson.dumps(data))
+            self.cache.set(resourceUri, simplejson.dumps(data, default=lambda obj: obj.__dict__))
         return data
 
     """-------------------------DIMENSION HANDLING-------------------------"""
@@ -90,31 +103,14 @@ class Api():
 
     """-------------------------VIDEOS & IMAGES-------------------------"""
 
-    #directly uses the linkedTV platform
-    def getVideoData(self, resourceUri):        
-        pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
-        http = httplib2.Http()      
-        url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri        
-        headers = {
-            'Accept' : 'application/json',
-            'Authorization' : 'Basic %s' % pw,
-        }
-        print url
-        resp, content = http.request(url, 'GET', headers=headers)
-        print resp
-        print content
-        if resp and resp['status'] == '200':
-            return content
-        return None
-
-    def getVideosOfProvider(self, provider):
+    def videos(self, provider):
         videos = []
         videoUris = self.dataLoader.getMediaResources(provider)        
         vd = None
         video = None
         thumbBaseUrl = None
         for uri in videoUris['videos']:            
-            vd = simplejson.loads(self.getVideoData(uri))
+            vd = simplejson.loads(self.__getVideoData(uri))
             if vd['mediaResource']:
                 if vd['mediaResource'].has_key('mediaResourceRelationSet') and vd['mediaResource']['mediaResourceRelationSet']:
                     for mrr in vd['mediaResource']['mediaResourceRelationSet']:
@@ -131,6 +127,24 @@ class Api():
         #self.getVideosOfProviderNew(provider, None, None)
         return {'videos' : videos}
 
+    def image(self, millis, baseUrl):
+        fetcher = ImageFetcher()
+        resp = fetcher.getNoterikThumbnailByMillis(millis, baseUrl)
+
+    #directly uses the linkedTV platform
+    def __getVideoData(self, resourceUri):        
+        pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
+        http = httplib2.Http()      
+        url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri        
+        headers = {
+            'Accept' : 'application/json',
+            'Authorization' : 'Basic %s' % pw,
+        }
+        resp, content = http.request(url, 'GET', headers=headers)        
+        if resp and resp['status'] == '200':
+            return content
+        return None
+
     #TODO this must be finished
     def __getVideosOfProviderNew(self, provider, videos, page):
         print 'Getting new videos of provider: %s' % provider
@@ -144,9 +158,7 @@ class Api():
             'Accept' : 'application/json',
             'Authorization' : 'Basic %s' % pw,
         }
-        resp, content = http.request(url, 'GET', headers=headers)
-        print resp
-        print content
+        resp, content = http.request(url, 'GET', headers=headers)        
         if resp and resp['status'] == '200':
             return content
         return None

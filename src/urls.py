@@ -14,7 +14,7 @@ urlpatterns = patterns('',
     url(r'^load_ltv$', 'views.load_ltv'),
     url(r'^load_et$', 'views.load_et'),
     url(r'^save_et$', 'views.save_et'),
-    url(r'^export$', 'views.export'),
+    url(r'^publish$', 'views.publish'),
 
     #API - load images and other vidoes
     url(r'^image$', 'views.image'),

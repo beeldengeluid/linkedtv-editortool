@@ -25,11 +25,11 @@ angular.module('linkedtv').factory('chapterCollection',
 			console.debug('Loading v2.0 curations...');
 			chapters = curatedData.chapters;
 			var autoChapters = resourceData.chapters;
-			_.each(autoChapters, function(c) {	
+			_.each(autoChapters, function(c) {
 				c.type = TYPE_AUTO;
 				chapters.push(c);
 			});
-		} else if(resourceData.curated.chapters && resourceData.curated.chapters.length > 0) {
+		} else if(resourceData.curatedMediaResource.chapters && resourceData.curatedMediaResource.chapters.length > 0) {
 			console.debug('Loading v1.0 curations...');
 			chapters = initCollectionWithRDFData(resourceData);
 		} else {
@@ -53,7 +53,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	function initCollectionWithRDFData(resourceData) {
 		var chapters = [];
 		var autoChapters = resourceData.chapters;
-		var curatedChapters = resourceData.curated.chapters;
+		var curatedChapters = resourceData.curatedMediaResource.chapters;
 		_.each(autoChapters, function(c) {
 			c.type = TYPE_AUTO;
 			chapters.push(c);
@@ -94,6 +94,12 @@ angular.module('linkedtv').factory('chapterCollection',
 
 	function getChapters() {
 		return _chapters;
+	}
+
+	function getCuratedChapters() {
+		return _.filter(_chapters, function(c) {
+			return c.type == TYPE_CURATED;
+		})
 	}
 
 	function setActiveChapter(activeChapter) {
@@ -140,10 +146,6 @@ angular.module('linkedtv').factory('chapterCollection',
 	function saveChapter(chapter) {
 		var exists = false;
 		chapter.type = TYPE_CURATED;
-		/*
-		if(chapter.type == TYPE_AUTO) {
-			chapter.type = TYPE_CURATED;	
-		} */
 		for(c in _chapters) {
 			if(_chapters[c].guid == chapter.guid) {
 				setBasicProperties(chapter, false);
@@ -189,13 +191,12 @@ angular.module('linkedtv').factory('chapterCollection',
 	}
 
 	function saveOnServer() {
-		dataService.saveResource(_.filter(_chapters, function(c) {
-			return c.type == TYPE_CURATED;
-		}));
+		dataService.saveResource(getCuratedChapters());
 	}
 
 	return {
 		initCollectionData : initCollectionData,
+		getCuratedChapters : getCuratedChapters,
 		getChapters : getChapters,
 		setChapters : setChapters,
 		setActiveChapter : setActiveChapter,

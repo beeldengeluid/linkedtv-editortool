@@ -1,5 +1,5 @@
 angular.module('linkedtv').controller('editorPanelController', 
-	function($rootScope, $scope, conf, chapterCollection) {
+	function($rootScope, $scope, conf, chapterCollection, dataService) {
 	
 	$scope.activeChapter = null;
 	$scope.activeDimension = conf.programmeConfig.dimensions[0];
@@ -14,6 +14,10 @@ angular.module('linkedtv').controller('editorPanelController',
 
 	$scope.setActiveDimension = function(dimension) {
 		$scope.activeDimension = dimension;
+	}
+
+	$scope.publishResource = function() {
+		dataService.publishResource(chapterCollection.getCuratedChapters());
 	}
 	
 });

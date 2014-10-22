@@ -58,10 +58,34 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		});
 	}
 
+	function publishResource(chapters) {
+		console.debug('Exporting resource...');
+		var saveData = {uri : $rootScope.resourceUri, chapters : chapters};
+		$.ajax({
+			type: 'POST',
+			url: '/publish?pp=LinkedTV',//currently no other publishing points are supported
+			data: JSON.stringify(saveData),
+			dataType : 'json',
+			success: function(json) {
+				console.debug(json);
+				if(json.error) {
+					alert('Could not export data');
+				} else {
+					//TODO animate the saved data on the screen
+				}
+			},
+			error: function(err) {
+	    		console.debug(err);
+			},
+			dataType: 'json'
+		});
+	}
+
 	return {
 		getResourceData : getResourceData,
 		getCuratedData : getCuratedData,
-		saveResource : saveResource
+		saveResource : saveResource,
+		publishResource : publishResource
 	}
 
 }]);

@@ -10,21 +10,18 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.context_processors import csrf
 from django.template import RequestContext
 
-from linkedtv.api.sparql.SaveEndpoint import SaveEndpoint
-from linkedtv.images.ImageFetcher import ImageFetcher
-
-from linkedtv.api.dbpedia.AutoComplete import AutoComplete
-from linkedtv.api.dbpedia.EntityProxy import EntityProxy
+from linkedtv.api.external.dbpedia.AutoComplete import AutoComplete
+from linkedtv.api.external.dbpedia.EntityProxy import EntityProxy
 from linkedtv.api.external.EntityExpansionService import EntityExpansionService
 
 from linkedtv.api.Api import *
 
 
-def getErrorMessage(msg):
+def __getErrorMessage(msg):
     return "{\"error\" : \"%s\"}" % msg;
 
 """This is called to fetch the IP of the connecting client"""
-def getClientIP(request):
+def __getClientIP(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
@@ -46,7 +43,6 @@ def logout_user(request):
     return render_to_response('index.html')
 
 def trial(request):
-    print 'Going to the trial page'
     return render_to_response('edit.html', {'user' : 'anonymous', 'trialId' : 'b967eefd-5ca2-492c-8fae-aa01dc0229cf'})
 
 @login_required
@@ -73,12 +69,12 @@ REST API CALLS (loading & saving data, fetching images and video etc)
 def load_ltv(request):
     resourceUri = request.GET.get('id', None)
     loadData = request.GET.get('ld', 'false') == 'true'
-    clientIP = getClientIP(request)
+    clientIP = __getClientIP(request)
     if resourceUri:
         api = Api()
         resp = api.load_ltv(resourceUri, clientIP, loadData)
         return HttpResponse(resp, mimetype='application/json')
-    return HttpResponse(getErrorMessage('The resource does not exist'), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('The resource does not exist'), mimetype='application/json')
 
 """This is called to fetched the curated data from the Redis store (which should later be synched with the SPARQL?)"""
 def load_et(request):
@@ -88,24 +84,31 @@ def load_et(request):
         resp = api.load_et(resourceUri)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse(getErrorMessage('Could not load curated data'), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('Could not load curated data'), mimetype='application/json')
 
 """New Saving function"""
 @csrf_exempt
 def save_et(request):
     action = request.GET.get('action', None)
-    saveData = request.body    
+    saveData = request.body
     api = Api()
     resp = api.save_et(saveData)
     if resp:
         return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse(getErrorMessage('Malformed POST data'), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('Malformed POST data'), mimetype='application/json')
     
 
 """for exporting a resource to the LinkedTV platform"""
-def export(request):
+@csrf_exempt
+def publish(request):
     publishingPoint = request.GET.get('pp', None)
-    return HttpResponse(getErrorMessage('To be implemented!'), mimetype='application/json')
+    saveData = request.body
+    if publishingPoint:
+        api = Api()
+        resp = api.publish(publishingPoint, saveData)
+        if resp:
+            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('Failed to publish this media resource'), mimetype='application/json')
 
 
 """This is called to fetch an keyframe/thumbnail image from the Noterik server"""
@@ -114,31 +117,22 @@ def image(request):
     millis = request.GET.get('ms', None)
     baseUrl = request.GET.get('baseUrl', None)
     if millis and baseUrl:
-        fetcher = ImageFetcher()
-        resp = fetcher.getNoterikThumbnailByMillis(millis, baseUrl)
+        api = Api()        
+        resp = api.image(millis, baseUrl)
         if resp:
             return HttpResponse(resp, mimetype='image/jpeg')
         else:
-            return HttpResponseRedirect('/site_media/images/snowscreen.gif')
-    """
-    elif id:
-        fetcher = ImageFetcher()
-        resp = fetcher.getEnrichmentThumb(id)
-        if resp:
-            return HttpResponse(resp)
-        else:
-            return HttpResponseRedirect('/site_media/images/snowscreen.gif')
-    """    
+            return HttpResponseRedirect('/site_media/images/snowscreen.gif')    
     return HttpResponse("{'error' : 'Please provide the moment in time by milliseconds'}", mimetype='application/json')
 
 def videos(request):
     p = request.GET.get('p', None)
     if p:
         api = Api()
-        resp = api.getVideosOfProvider(p)
+        resp = api.videos(p)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse(getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
 
 def dimension(request):
@@ -154,15 +148,15 @@ def dimension(request):
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
         else:
-            return HttpResponse(getErrorMessage('No enrichments found'), mimetype='application/json')
-    return HttpResponse(getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+            return HttpResponse(__getErrorMessage('No enrichments found'), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
 def dimensions(request):
     api = Api()
     resp = api.dimensions()
     if resp:
         return HttpResponse(simplejson.dumps(resp), mimetype='application/json')    
-    return HttpResponse(getErrorMessage('No services have been registered!'), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('No services have been registered!'), mimetype='application/json')
 
 
 """ 
@@ -187,7 +181,7 @@ def entityproxy(request):
         ep = EntityProxy()
         resp = ep.fetch(uri, lang)
         return HttpResponse(resp, mimetype='application/json')
-    return HttpResponse(getErrorMessage('Please provide a DBPedia URI'), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('Please provide a DBPedia URI'), mimetype='application/json')
 
 #TODO test this function
 def entityexpand(request):
@@ -201,7 +195,7 @@ def entityexpand(request):
             return HttpResponse(resp, mimetype='text/plain')
             #return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
         else:
-            return HttpResponse(getErrorMessage('Could not find any entities'), mimetype='application/json')
-    return HttpResponse(getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+            return HttpResponse(__getErrorMessage('Could not find any entities'), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
 

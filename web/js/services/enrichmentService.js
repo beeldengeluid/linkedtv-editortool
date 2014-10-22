@@ -82,7 +82,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data
 		var eSources = [];//always empty in this case
-		if(dimension.id != 'tweets') { //TODO make sure that Tweets can also be shown (build another formatXXX function)
+		if(dimension.params.dimension != 'tweets') { //TODO make sure that Tweets can also be shown (build another formatXXX function)
 			_.each(data, function(e){
 				var enrichment = {
 					label : e.title,

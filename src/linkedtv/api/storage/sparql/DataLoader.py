@@ -3,11 +3,15 @@ import os
 import simplejson
 from simplejson import JSONDecodeError
 import urllib
+import httplib2
 import base64
+import logging
+
 from linkedtv.text.TextAnalyzer import TextAnalyzer
 from linkedtv.LinkedtvSettings import LTV_SAVE_GRAPH, LTV_SPARQL_ENDPOINT, LTV_STOP_FILE
 from linkedtv.utils.TimeUtils import *
-import logging
+from linkedtv.model import *
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,25 +36,9 @@ class DataLoader():
         self.NL_WIKIPEDIA_PF = 'http://nl.wikipedia.org/wiki/'
         self.DE_WIKIPEDIA_PF = 'http://de.wikipedia.org/wiki/'
         self.EN_WIKIPEDIA_PF = 'http://en.wikipedia.org/wiki/'
-        
-    def sendSearchRequest(self, query):
-        cmd_arr = []
-        cmd_arr.append('curl')
-        cmd_arr.append('-X')
-        cmd_arr.append('POST')
-        cmd_arr.append(LTV_SPARQL_ENDPOINT)
-        cmd_arr.append('-H')
-        cmd_arr.append('Accept: application/sparql-results+json')
-        cmd_arr.append('-d')
-        cmd_arr.append('query=%s' % urllib.quote(query, ''))
-        p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p1.communicate()
-        if stdout:
-            return stdout
-        else:
-            logger.error(stderr)
-            return None
     
+
+    """maps to videos API call"""
     def getMediaResources(self, publisher, format='json'):
         query = []
         query.append('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ')
@@ -70,7 +58,7 @@ class DataLoader():
         query.append('?annotation oa:hasTarget ?mf . ')
         query.append('}')
         #print ''.join(query)
-        resp = self.sendSearchRequest(''.join(query))
+        resp = self.__sendSearchRequest(''.join(query))
         jsonData = None
         try:
             jsonData = simplejson.loads(resp)            
@@ -91,17 +79,38 @@ class DataLoader():
                         locs.append(loc)
         return {'videos' : locs}
     
+
+    """maps to load_ltv API call"""
     def loadMediaResource(self, mediaResourceID, locator = None):
-        print 'getting computated data...'   
-        mediaResource = self.loadComputatedMediaResourceData(mediaResourceID)
-        print 'getting curated data...'
-        mediaResource['curated'] = self.loadCuratedMediaResourceData(mediaResourceID)
-        return mediaResource
+        mr = MediaResource(mediaResourceID)
+        print 'getting computated data...'
+        mr = self.__loadAutogenMediaResourceData(mr)
+        print mr
+        if mr:
+            print 'getting curated data...'
+            mr.setCuratedMediaResource(self.__loadCuratedMediaResourceData(mr.getId()))
+        return mr
+
+
+    def __sendSearchRequest(self, query):      
+        cmd_arr = []
+        cmd_arr.append('curl')
+        cmd_arr.append('-X')
+        cmd_arr.append('POST')
+        cmd_arr.append(LTV_SPARQL_ENDPOINT)
+        cmd_arr.append('-H')
+        cmd_arr.append('Accept: application/sparql-results+json')
+        cmd_arr.append('-d')
+        cmd_arr.append('query=%s' % urllib.quote(query, ''))
+        p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p1.communicate()
+        if stdout:
+            return stdout
+        else:
+            logger.error(stderr)
+            return None        
     
-    def loadComputatedMediaResourceData (self, mediaResourceID):        
-        """Check if the media resource is in the cache"""
-        mediaResource = None
-        
+    def __loadAutogenMediaResourceData (self, mediaResource):        
         """Otherwise get query it from the SPARQL end-point"""     
         query = []
         query.append('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ')
@@ -116,7 +125,7 @@ class DataLoader():
         query.append('SELECT DISTINCT ?mf ?annotation ?body ?start ?end ?label ?RDFType ?DCType ?OWLSameAs ?c ?r ')
         query.append('FROM <%s> ' % self.GRAPH)
         query.append('WHERE { ')
-        query.append('?mf ma:isFragmentOf <%s%s> . ' % (self.LINKEDTV_MEDIA_RESOURCE_PF, mediaResourceID))
+        query.append('?mf ma:isFragmentOf <%s%s> . ' % (self.LINKEDTV_MEDIA_RESOURCE_PF, mediaResource.getId()))
         query.append('?mf nsa:temporalStart ?start . ')
         query.append('?mf nsa:temporalEnd ?end . ')
         query.append('?annotation oa:hasTarget ?mf . ')
@@ -136,7 +145,7 @@ class DataLoader():
         query.append('}')
         print ''.join(query)
         logger.debug(''.join(query))
-        resp = self.sendSearchRequest(''.join(query))
+        resp = self.__sendSearchRequest(''.join(query))
         jsonData = None
         try:
             jsonData = simplejson.loads(resp)
@@ -161,25 +170,25 @@ class DataLoader():
                 if k.has_key('RDFType'): RDFType = k['RDFType']['value']
                 if k.has_key('DCType'): DCType = k['DCType']['value']
                 if k.has_key('OWLSameAs'): OWLSameAs = k['OWLSameAs']['value']                
-                if RDFType == '%sConcept' % self.LINKEDTV_ONTOLOGY_PF:
-                    """
-                    concepts.append({'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 'end' : end,
-                                     'label' : label, 'link' : OWLSameAs, 'relevance' : r, 'confidence' : c})
-                    """
-                elif RDFType == '%sShot' % self.LINKEDTV_ONTOLOGY_PF:
-                    shots.append({'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 
-                        'end' : end, 'label' : label, 'relevance' : r, 'confidence' : c})
+                if RDFType == '%sConcept' % self.LINKEDTV_ONTOLOGY_PF:                    
+                    concepts.append(Concept(label, start, end, OWLSameAs, mfURI, annotationURI, bodyURI, r, c))
+                elif RDFType == '%sShot' % self.LINKEDTV_ONTOLOGY_PF:                    
+                    shots.append(Shot(label, start, end, mfURI, annotationURI, bodyURI, r, c))
                 elif RDFType == '%sChapter' % self.LINKEDTV_ONTOLOGY_PF:
-                    chapters.append({'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 'end' : end,
-                                     'label' : label, 'relevance' : r, 'confidence' : c})      
+                    chapters.append(Chapter(label, start, end, mfURI, annotationURI, bodyURI, r, c))
                 elif RDFType.find(self.NERD_ONTOLOGY_PF) != -1:
-                    nes.append({'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 'end' : end, 'label' : label,
-                                'type' : self.getNEType(DCType, RDFType, OWLSameAs), 'subTypes' : self.getDCTypes(DCType),
-                                'disambiguationURL' : OWLSameAs, 'relevance' : r, 'confidence' : c})
-                    
-            enrichments = self.loadComputatedEnrichmentsOfMediaResource(mediaResourceID)            
-            mediaResource = {'concepts' : concepts, 'nes' : self.filterStopWordNEs(nes),
-                             'shots' : shots, 'chapters' : chapters, 'enrichments' : enrichments}
+                    nes.append(NamedEntity(label, self.__getNEType(DCType, RDFType, OWLSameAs), 
+                        self.__getDCTypes(DCType), OWLSameAs, start, end, mfURI, annotationURI, bodyURI, r, c))
+            
+            #load the autogenerated enrichments        
+            enrichments = self.__loadAutogenEnrichmentsOfMediaResource(mediaResource.getId())
+
+            #add all of the loaded data to the media resource
+            mediaResource.setConcepts(concepts)
+            mediaResource.setNamedEntities(self.__filterStopWords(nes))
+            mediaResource.setShots(shots)
+            mediaResource.setChapters(chapters)
+            mediaResource.setEnrichments(enrichments)
             
             return mediaResource
         return None
@@ -188,7 +197,7 @@ class DataLoader():
     This function (should) return a dictionary with key=NElabel value=list of hyperlinks
     TODO: the RDF data is not yet available and therefore this function has to be tested still!!
     """
-    def loadComputatedEnrichmentsOfMediaResource(self, mediaResourceID):
+    def __loadAutogenEnrichmentsOfMediaResource(self, mediaResourceID):
         query = []
         query.append('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ')
         query.append('PREFIX linkedtv: <http://data.linkedtv.eu/ontologies/core#> ')
@@ -228,7 +237,7 @@ class DataLoader():
         #query.append('OPTIONAL {?body dc:description ?desc . ?desc <http://nlp2rdf.lod2.eu/schema/string/label> ?label}')
         query.append('}')        
         logger.debug(''.join(query))
-        resp = self.sendSearchRequest(''.join(query))
+        resp = self.__sendSearchRequest(''.join(query))
         jsonData = None
         try:
             jsonData = simplejson.loads(resp)
@@ -240,7 +249,7 @@ class DataLoader():
                 uri = entityURI = entityLabel = source = date = creator = deeplink = partOf = DCType = ''
                 socialInteraction = poster = ''
                 start = end = 0
-                if k.has_key('body'): uri = k['body']['value']            
+                if k.has_key('body'): bodyURI = k['body']['value']            
                 if k.has_key('entity'): entityURI = k['entity']['value']
                 if k.has_key('entityLabel'): entityLabel = k['entityLabel']['value']
                 if k.has_key('source'): source = k['source']['value']
@@ -253,16 +262,16 @@ class DataLoader():
                 if k.has_key('socialInteraction'): socialInteraction = k['socialInteraction']['value']
                 if k.has_key('start'): start = TimeUtils.toMillis(k['start']['value'])
                 if k.has_key('end'): end = TimeUtils.toMillis(k['end']['value'])
+                
                 #TODO update when there are more!
-                entities = [{'uri' : entityURI, 'label' : entityLabel}]
-                enrichments.append({'uri' : uri, 'source' : source, 'date' : date, 'creator' : creator, 'url' : deeplink, 'partOf' : partOf, 
-                                        'DCType' : DCType, 'start' : start, 'end' : end, 'poster' : poster, 'socialInteraction' : socialInteraction,
-                                        'derivedFrom' : entities})
+                entities = [Entity(entityURI, entityLabel)]
+                enrichments.append(Enrichment(deeplink, None, poster, start, end, source, creator, date, entities,
+                    socialInteraction, bodyURI, DCType))
+
+
         return enrichments
     
-    def loadCuratedMediaResourceData (self, mediaResourceID):
-        """Check if the media resource is in the cache"""
-        mediaResource = None
+    def __loadCuratedMediaResourceData (self, mediaResourceID):        
         
         """Otherwise get query it from the SPARQL end-point"""     
         query = []
@@ -310,7 +319,7 @@ class DataLoader():
         query.append('OPTIONAL {?body rdfs:label ?label}')
         query.append('}')
         logger.debug(''.join(query))
-        resp = self.sendSearchRequest(''.join(query))
+        resp = self.__sendSearchRequest(''.join(query))
         jsonData = None
         try:
             jsonData = simplejson.loads(resp)
@@ -343,37 +352,49 @@ class DataLoader():
                 if k.has_key('DCType'): DCType = k['DCType']['value']
                 if k.has_key('OWLSameAs'): OWLSameAs = k['OWLSameAs']['value']
                 if k.has_key('vocabURL'): vocabURL = k['vocabURL']['value']
+
                 if RDFType == '%sConcept' % self.LINKEDTV_ONTOLOGY_PF:
-                    continue
-                    """
-                    concepts.append({'ETmfURI' : ETmfURI, 'ETannotationURI' : ETannotationURI, 'ETbodyURI' : ETbodyURI,
-                                     'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI,
-                                     'start' : start, 'end' : end,
-                                     'label' : label, 'link' : OWLSameAs, 'relevance' : r, 'confidence' : c})
-                    """
+                    continue #not supported
                 elif RDFType == '%sShot' % self.LINKEDTV_ONTOLOGY_PF:
+                    """ TODO add curated URIs to object!!!?
+
                     shots.append({'ETmfURI' : ETmfURI, 'ETannotationURI' : ETannotationURI, 'ETbodyURI' : ETbodyURI,
                                   'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start,
                                   'end' : end, 'label' : label, 'relevance' : r, 'confidence' : c})
+                    """
+                    shots.append(Shot(label, start, end, mfURI, annotationURI, bodyURI, r, c))
                 elif RDFType == '%sChapter' % self.LINKEDTV_ONTOLOGY_PF:
+                    """
                     chapters.append({'ETmfURI' : ETmfURI, 'ETannotationURI' : ETannotationURI, 'ETbodyURI' : ETbodyURI,
                                      'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 'end' : end,
-                                     'label' : label, 'relevance' : r, 'confidence' : c, 'segmentType' : segmentType})      
+                                     'label' : label, 'relevance' : r, 'confidence' : c, 'segmentType' : segmentType})
+                    """
+                    chapters.append(Chapter(label, start, end, mfURI, annotationURI, bodyURI, r, c))
                 elif RDFType.find(self.NERD_ONTOLOGY_PF) != -1 or RDFType.find(self.DBPEDIA_ONTOLOGY_PF) != -1:
+                    """
                     nes.append({'ETenrichmentURI' : ETenrichmentURI, 'ETmfURI' : ETmfURI, 'ETannotationURI' : ETannotationURI, 'ETbodyURI' : ETbodyURI,
                                 'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start,
-                                'end' : end, 'label' : label, 'type' : self.getNEType(DCType, RDFType, OWLSameAs),
-                                'subTypes' : self.getDCTypes(DCType), 'disambiguationURL' : OWLSameAs, 'relevance' : r, 'confidence' : c,
+                                'end' : end, 'label' : label, 'type' : self.__getNEType(DCType, RDFType, OWLSameAs),
+                                'subTypes' : self.__getDCTypes(DCType), 'disambiguationURL' : OWLSameAs, 'relevance' : r, 'confidence' : c,
                                 'url' : vocabURL})
+                    """
+                    nes.append(NamedEntity(label, self.__getNEType(DCType, RDFType, OWLSameAs), 
+                        self.__getDCTypes(DCType), OWLSameAs, start, end, mfURI, annotationURI, bodyURI, r, c))
 
-            enrichments = self.loadCuratedEnrichmentsOfMediaResource(mediaResourceID)
-            mediaResource = {'concepts' : concepts, 'nes' : self.filterStopWordNEs(nes),
-                             'shots' : shots, 'chapters' : chapters, 'enrichments' : enrichments}
+            #load the curated enrichments (NEEDS TO BE CHANGED)
+            enrichments = self.__loadCuratedEnrichmentsOfMediaResource(mediaResourceID)
+
+            #add everything to the media resource
+            mediaResource = MediaResource(mediaResourceID)
+            mediaResource.setNamedEntities(self.__filterStopWords(nes))
+            mediaResource.setShots(shots)
+            mediaResource.setChapters(chapters)
+            mediaResource.setEnrichments(enrichments)            
             
             return mediaResource
         return None
     
-    def loadCuratedEnrichmentsOfMediaResource(self, mediaResourceID):
+    def __loadCuratedEnrichmentsOfMediaResource(self, mediaResourceID):
         query = []
         query.append('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ')
         query.append('PREFIX linkedtv: <http://data.linkedtv.eu/ontologies/core#> ')
@@ -415,7 +436,7 @@ class DataLoader():
         query.append('}')
         logger.debug('---------- CURATED ENRICHMENTS --------------')
         logger.debug(''.join(query))
-        resp = self.sendSearchRequest(''.join(query))
+        resp = self.__sendSearchRequest(''.join(query))
         jsonData = None
         try:
             jsonData = simplejson.loads(resp)
@@ -442,24 +463,30 @@ class DataLoader():
                 if k.has_key('end'): end = TimeUtils.toMillis(k['end']['value'])
                 if k.has_key('bodyProv'): bodyProv = k['bodyProv']['value']
                 
+                """
                 enrichments.append({'bodyURI' : bodyURI, 'source' : source, 'date' : date, 'creator' : creator, 
                                     'url' : deeplink, 'partOf' : partOf, 'DCType' : DCType, 'start' : start, 'end' : end,
                                     'annotationURI' : annotationURI, 'ne' : entityLabel, 'poster' : poster,
                                     'socialInteraction' : socialInteraction, 'bodyProv' : bodyProv})
+                """
+                
+                enrichments.append(Enrichment(deeplink, entityLabel, poster, start, end, source, creator, date, [],
+                    socialInteraction, bodyURI, DCType))
+
         return enrichments
     
-    def filterStopWordNEs(self, nes):
+    def __filterStopWords(self, nes):
         ta = TextAnalyzer()
         stop = ta.readStopWordsFile(LTV_STOP_FILE)
         nonStopNEs = []
         for ne in nes:
-            if ne['label'].lower() in stop:
+            if ne.getLabel().lower() in stop:
                 continue
             else:
                 nonStopNEs.append(ne)
         return nonStopNEs     
     
-    def getNEType(self, DCType, RDFType, OWLSameAs):
+    def __getNEType(self, DCType, RDFType, OWLSameAs):
         """The RDF should be the correct one, however in some cases the OWLSameAs or DCType makes more sense"""
         #TODO maybe later add some intelligence to this! Now handling on the client side...
         if(RDFType.find(self.DBPEDIA_ONTOLOGY_PF) == -1):                
@@ -467,7 +494,7 @@ class DataLoader():
         else:
             return RDFType[len(self.DBPEDIA_ONTOLOGY_PF):]
         
-    def getDCTypes(self, DCType):
+    def __getDCTypes(self, DCType):
         if len(DCType) > 0 and DCType != 'null':
             types = {}
             if DCType.find('DBpedia') == -1 and DCType.find('Freebase') == -1:

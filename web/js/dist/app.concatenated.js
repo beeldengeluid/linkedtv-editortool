@@ -436,11 +436,11 @@ linkedtv.run(function($rootScope, conf) {
 			console.debug('Loading v2.0 curations...');
 			chapters = curatedData.chapters;
 			var autoChapters = resourceData.chapters;
-			_.each(autoChapters, function(c) {	
+			_.each(autoChapters, function(c) {
 				c.type = TYPE_AUTO;
 				chapters.push(c);
 			});
-		} else if(resourceData.curated.chapters && resourceData.curated.chapters.length > 0) {
+		} else if(resourceData.curatedMediaResource.chapters && resourceData.curatedMediaResource.chapters.length > 0) {
 			console.debug('Loading v1.0 curations...');
 			chapters = initCollectionWithRDFData(resourceData);
 		} else {
@@ -464,7 +464,7 @@ linkedtv.run(function($rootScope, conf) {
 	function initCollectionWithRDFData(resourceData) {
 		var chapters = [];
 		var autoChapters = resourceData.chapters;
-		var curatedChapters = resourceData.curated.chapters;
+		var curatedChapters = resourceData.curatedMediaResource.chapters;
 		_.each(autoChapters, function(c) {
 			c.type = TYPE_AUTO;
 			chapters.push(c);
@@ -505,6 +505,12 @@ linkedtv.run(function($rootScope, conf) {
 
 	function getChapters() {
 		return _chapters;
+	}
+
+	function getCuratedChapters() {
+		return _.filter(_chapters, function(c) {
+			return c.type == TYPE_CURATED;
+		})
 	}
 
 	function setActiveChapter(activeChapter) {
@@ -551,10 +557,6 @@ linkedtv.run(function($rootScope, conf) {
 	function saveChapter(chapter) {
 		var exists = false;
 		chapter.type = TYPE_CURATED;
-		/*
-		if(chapter.type == TYPE_AUTO) {
-			chapter.type = TYPE_CURATED;	
-		} */
 		for(c in _chapters) {
 			if(_chapters[c].guid == chapter.guid) {
 				setBasicProperties(chapter, false);
@@ -600,13 +602,12 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	function saveOnServer() {
-		dataService.saveResource(_.filter(_chapters, function(c) {
-			return c.type == TYPE_CURATED;
-		}));
+		dataService.saveResource(getCuratedChapters());
 	}
 
 	return {
 		initCollectionData : initCollectionData,
+		getCuratedChapters : getCuratedChapters,
 		getChapters : getChapters,
 		setChapters : setChapters,
 		setActiveChapter : setActiveChapter,
@@ -787,8 +788,8 @@ linkedtv.run(function($rootScope, conf) {
 	function initModelData(resourceData) {
 		if(resourceData.videoMetadata) {
 			_video = {
-				title : resourceData.videoMetadata.mediaResource.titleName,
-				playoutUrl : resourceData.locator
+				title : resourceData.videoMetadata.mediaResource.titleName,//update this object on the server, sheesh it's ugly
+				playoutUrl : resourceData.playoutUrl
 			}
 			console.debug('Loaded the video data');
 		} else {
@@ -888,10 +889,34 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	function publishResource(chapters) {
+		console.debug('Exporting resource...');
+		var saveData = {uri : $rootScope.resourceUri, chapters : chapters};
+		$.ajax({
+			type: 'POST',
+			url: '/publish?pp=LinkedTV',//currently no other publishing points are supported
+			data: JSON.stringify(saveData),
+			dataType : 'json',
+			success: function(json) {
+				console.debug(json);
+				if(json.error) {
+					alert('Could not export data');
+				} else {
+					//TODO animate the saved data on the screen
+				}
+			},
+			error: function(err) {
+	    		console.debug(err);
+			},
+			dataType: 'json'
+		});
+	}
+
 	return {
 		getResourceData : getResourceData,
 		getCuratedData : getCuratedData,
-		saveResource : saveResource
+		saveResource : saveResource,
+		publishResource : publishResource
 	}
 
 }]);;angular.module('linkedtv').factory('enrichmentService', [function(){
@@ -978,7 +1003,7 @@ linkedtv.run(function($rootScope, conf) {
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data
 		var eSources = [];//always empty in this case
-		if(dimension.id != 'tweets') { //TODO make sure that Tweets can also be shown (build another formatXXX function)
+		if(dimension.params.dimension != 'tweets') { //TODO make sure that Tweets can also be shown (build another formatXXX function)
 			_.each(data, function(e){
 				var enrichment = {
 					label : e.title,
@@ -1254,11 +1279,10 @@ linkedtv.run(function($rootScope, conf) {
 		chapterCollection.initCollectionData($rootScope.provider, $scope.resourceData, curatedData);
 
 		//load the entityCollection with entity data
-		entityCollection.initCollectionData($scope.resourceData.nes);		
+		entityCollection.initCollectionData($scope.resourceData.nes);
 
 		//load the shotCollection with shot data
 		shotCollection.initCollectionData($scope.resourceData);
-
 		
 		$scope.$apply(function() {
 			$scope.loading = false;
@@ -1383,7 +1407,7 @@ linkedtv.run(function($rootScope, conf) {
 	};		
 	
 }]);;angular.module('linkedtv').controller('editorPanelController', 
-	function($rootScope, $scope, conf, chapterCollection) {
+	function($rootScope, $scope, conf, chapterCollection, dataService) {
 	
 	$scope.activeChapter = null;
 	$scope.activeDimension = conf.programmeConfig.dimensions[0];
@@ -1398,6 +1422,10 @@ linkedtv.run(function($rootScope, conf) {
 
 	$scope.setActiveDimension = function(dimension) {
 		$scope.activeDimension = dimension;
+	}
+
+	$scope.publishResource = function() {
+		dataService.publishResource(chapterCollection.getCuratedChapters());
 	}
 	
 });;angular.module('linkedtv').controller('enrichmentController', 
