@@ -12,7 +12,7 @@ var informationCardTemplates = {
 	//FIXME the RBB types are directly taken from the DBpedia types
 	rbb : [
 		{ 
-			label : 'Film',			
+			label : 'Film',
 			properties : [
 				{key : 'label', type: 'literal', optional : false},
 				{key : 'genre', type: 'entity', optional : true},
@@ -86,40 +86,55 @@ var informationCardTemplates = {
 
 var rbbConfig = {
 	dimensions : [
-		{//temporary
-		'id' : 'maintopic',
-		'label' : 'Information cards',
-		'service' : 'informationCards'
+		{
+			id : 'maintopic',
+			label : 'Information cards',
+			service : 'informationCards'
 		},
 		{
-		'id' : 'opinion',
-		'label' : 'Opinion',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_1',
+			label : 'Opinion',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'opinion'
+			}
 		},		
 		{		
-		'id' : 'othermedia',
-		'label' : 'Other media',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_2',
+			label : 'Other media',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'othermedia'
+			}
 		},
 		{		
-		'id' : 'timeline',
-		'label' : 'Timeline',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_3',
+			label : 'Timeline',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'timeline'
+			}
 		},
 		{		
-		'id' : 'indepth',
-		'label' : 'In depth',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_4',
+			label : 'In depth',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'indepth'
+			}
 		},
 		{
-		'id' : 'tweets',
-		'label' : 'Tweets',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_5',
+			label : 'Tweets',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'tweets'
+			}
 		},
 		{
-		'id' : 'related',
-		'label' : 'Related news',
-		'service' : 'TvEnricher'
+			id : 'related',
+			label : 'Related news',
+			service : 'TvEnricher'
 		},
 	]
 };
@@ -127,24 +142,34 @@ var rbbConfig = {
 var tkkConfig = {
 	dimensions : [
 		{
-		'id' : 'maintopic',
-		'label' : 'The art object',
-		'service' : 'informationCards'
+			id : 'maintopic',//check this
+			label : 'The art object',
+			service : 'informationCards'
 		},
 		{
-		'id' : 'SV',
-		'label' : 'Background information',
-		'service' : 'TvEnricher'
+			id : 'tve_1',
+			label : 'Background information',
+			service : 'TvEnricher',
+			params : {
+				dimension : 'SV'
+			}
 		},
 		{
-		'id' : 'Europeana',
-		'label' : 'Related Europeana objects',
-		'service' : 'TvEnricher'
+			id : 'tve_2',
+			label : 'Related Europeana objects',
+			service : 'TvEnricher',
+			params : {
+				dimension : 'Europeana'
+			}
 		},
 		{
-		'id' : 'Solr',
-		'label' : 'Related fragments',
-		'service' : 'TvEnricher'
+			id : 'tve_3',
+			label : 'Related fragments',
+			service : 'TvEnricher',
+			params : {
+				dimension : 'Solr',
+				index : 'SV'
+			}
 		}
 	]
 };
@@ -152,14 +177,14 @@ var tkkConfig = {
 var trialConfig = {
 	dimensions : [
 		{
-		'id' : 'maintopic',
-		'label' : 'Main topics',
-		'service' : 'informationCards'
+		id : 'maintopic',
+		label : 'Main topics',
+		service : 'informationCards'
 		},
 		{
-		'id' : 'freshMedia',
-		'label' : 'Background information',
-		'service' : 'TvEnricher'
+		id : 'freshMedia',
+		label : 'Background information',
+		service : 'TvEnricher'
 		}
 	]
 }

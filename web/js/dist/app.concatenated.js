@@ -3,7 +3,7 @@ var informationCardTemplates = {
 	//FIXME the RBB types are directly taken from the DBpedia types
 	rbb : [
 		{ 
-			label : 'Film',			
+			label : 'Film',
 			properties : [
 				{key : 'label', type: 'literal', optional : false},
 				{key : 'genre', type: 'entity', optional : true},
@@ -77,40 +77,55 @@ var informationCardTemplates = {
 
 var rbbConfig = {
 	dimensions : [
-		{//temporary
-		'id' : 'maintopic',
-		'label' : 'Information cards',
-		'service' : 'informationCards'
+		{
+			id : 'maintopic',
+			label : 'Information cards',
+			service : 'informationCards'
 		},
 		{
-		'id' : 'opinion',
-		'label' : 'Opinion',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_1',
+			label : 'Opinion',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'opinion'
+			}
 		},		
 		{		
-		'id' : 'othermedia',
-		'label' : 'Other media',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_2',
+			label : 'Other media',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'othermedia'
+			}
 		},
 		{		
-		'id' : 'timeline',
-		'label' : 'Timeline',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_3',
+			label : 'Timeline',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'timeline'
+			}
 		},
 		{		
-		'id' : 'indepth',
-		'label' : 'In depth',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_4',
+			label : 'In depth',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'indepth'
+			}
 		},
 		{
-		'id' : 'tweets',
-		'label' : 'Tweets',
-		'service' : 'TvNewsEnricher'
+			id : 'tvne_5',
+			label : 'Tweets',
+			service : 'TvNewsEnricher',
+			params : {
+				dimension : 'tweets'
+			}
 		},
 		{
-		'id' : 'related',
-		'label' : 'Related news',
-		'service' : 'TvEnricher'
+			id : 'related',
+			label : 'Related news',
+			service : 'TvEnricher'
 		},
 	]
 };
@@ -118,24 +133,34 @@ var rbbConfig = {
 var tkkConfig = {
 	dimensions : [
 		{
-		'id' : 'maintopic',
-		'label' : 'The art object',
-		'service' : 'informationCards'
+			id : 'maintopic',//check this
+			label : 'The art object',
+			service : 'informationCards'
 		},
 		{
-		'id' : 'SV',
-		'label' : 'Background information',
-		'service' : 'TvEnricher'
+			id : 'tve_1',
+			label : 'Background information',
+			service : 'TvEnricher',
+			params : {
+				dimension : 'SV'
+			}
 		},
 		{
-		'id' : 'Europeana',
-		'label' : 'Related Europeana objects',
-		'service' : 'TvEnricher'
+			id : 'tve_2',
+			label : 'Related Europeana objects',
+			service : 'TvEnricher',
+			params : {
+				dimension : 'Europeana'
+			}
 		},
 		{
-		'id' : 'Solr',
-		'label' : 'Related fragments',
-		'service' : 'TvEnricher'
+			id : 'tve_3',
+			label : 'Related fragments',
+			service : 'TvEnricher',
+			params : {
+				dimension : 'Solr',
+				index : 'SV'
+			}
 		}
 	]
 };
@@ -143,14 +168,14 @@ var tkkConfig = {
 var trialConfig = {
 	dimensions : [
 		{
-		'id' : 'maintopic',
-		'label' : 'Main topics',
-		'service' : 'informationCards'
+		id : 'maintopic',
+		label : 'Main topics',
+		service : 'informationCards'
 		},
 		{
-		'id' : 'freshMedia',
-		'label' : 'Background information',
-		'service' : 'TvEnricher'
+		id : 'freshMedia',
+		label : 'Background information',
+		service : 'TvEnricher'
 		}
 	]
 }
@@ -760,11 +785,15 @@ linkedtv.run(function($rootScope, conf) {
 	var _video = null;
 
 	function initModelData(resourceData) {
-		_video = {
-			title : resourceData.videoMetadata.mediaResource.titleName,
-			playoutUrl : resourceData.locator
+		if(resourceData.videoMetadata) {
+			_video = {
+				title : resourceData.videoMetadata.mediaResource.titleName,
+				playoutUrl : resourceData.locator
+			}
+			console.debug('Loaded the video data');
+		} else {
+			console.error('No videometadata found!');
 		}
-		console.debug('Loaded the video data');
 	}
 
 	function getVideo() {
@@ -806,7 +835,7 @@ linkedtv.run(function($rootScope, conf) {
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/resource?id=' + $rootScope.resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
+			url : '/load_ltv?id=' + $rootScope.resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
 			success : function(json) {
 				console.debug(json);
 				callback(json);
@@ -822,7 +851,7 @@ linkedtv.run(function($rootScope, conf) {
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/curatedresource?id=' + $rootScope.resourceUri,
+			url : '/load_et?id=' + $rootScope.resourceUri,
 			success : function(json) {
 				callback(json.error ? null : json);
 			},
@@ -841,7 +870,7 @@ linkedtv.run(function($rootScope, conf) {
 		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
 		$.ajax({
 			type: 'POST',
-			url: '/saveresource?action=' + action,
+			url: '/save_et?action=' + action,
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {
@@ -853,7 +882,7 @@ linkedtv.run(function($rootScope, conf) {
 				}
 			},
 			error: function(err) {
-	    		console.debug(err);	    		
+	    		console.debug(err);
 			},
 			dataType: 'json'
 		});
@@ -867,11 +896,12 @@ linkedtv.run(function($rootScope, conf) {
 
 }]);;angular.module('linkedtv').factory('enrichmentService', [function(){
 	
-	function search(query, provider, dimension, callback) {
-		console.debug('Querying enrichments using ' + query + '['+provider+']');
+	function search(query, dimension, callback) {
+		console.debug('Querying enrichments using ' + query);
 		console.debug(dimension);
-		var fetchUrl = '/enrichments?q=' + query.split('+').join(',') + '&p=' + provider;
-		fetchUrl += '&d=' + dimension.id + '&s=' + dimension.service;
+		var fetchUrl = '/dimension?q=' + query.split('+').join(',');
+		fetchUrl += '&d=' + dimension.service;
+		fetchUrl += '&params=' + JSON.stringify(dimension.params)
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -887,7 +917,7 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	function formatServiceResponse(data, dimension) {		
+	function formatServiceResponse(data, dimension) {
 		if(dimension.service == 'TvEnricher') {
 			return formatTvEnricherResponse(data, dimension);
 		} else if(dimension.service == 'TvNewsEnricher') {
@@ -1463,7 +1493,9 @@ linkedtv.run(function($rootScope, conf) {
 		}
 	};
 
-});;angular.module('linkedtv').controller('informationCardModalController', 
+});;//TODO http://stackoverflow.com/questions/20791639/pseudo-element-hover-on-before
+
+angular.module('linkedtv').controller('informationCardModalController', 
 	['$scope', '$modalInstance', 'conf', 'entityProxyService', 'entityCollection', 'chapterCollection', 'entityUtils',
 	 'dimension', 'link', function ($scope, $modalInstance, conf, entityProxyService, entityCollection, chapterCollection,
 	 entityUtils, dimension, link) {
@@ -1529,7 +1561,7 @@ linkedtv.run(function($rootScope, conf) {
 				t.value = val;
 			}
 		} else {
-			t = {key : null, value : null, optional : true};
+			t = {key : null, type : 'literal', value : null, optional : true};
 		}
 
 		//Also add the triple to the list of triples (for convencience)
@@ -1727,7 +1759,8 @@ linkedtv.run(function($rootScope, conf) {
 		$scope.fetchButtonText = 'Loading...';
 		$scope.enrichmentQuery = $('#e_query').val();//FIXME ugly hack, somehow the ng-model does not work in this form!!!
 		if ($scope.enrichmentQuery) {
-			enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.dimension, $scope.onSearchEnrichments);		
+			//enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.dimension, $scope.onSearchEnrichments);
+			enrichmentService.search($scope.enrichmentQuery, $scope.dimension, $scope.onSearchEnrichments);
 		}
 	};
 

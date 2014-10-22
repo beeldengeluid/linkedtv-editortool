@@ -1,65 +1,60 @@
 import redis
-from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN
 import simplejson
 import urllib
 import httplib2
 import base64
 
-"""
-TODO make this implement an interface class and:
-    - make sure to supply a set of dimensions this service supports 
-"""
+from linkedtv.api.dimension.DimensionService import DimensionService
+from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN
 
-class TvEnricher():
+class TvEnricher(DimensionService):
     
     def __init__(self):
-        print '__init__'
+        DimensionService.__init__(self, 'TvEnricher')
         self.BASE_URL = 'http://linkedtv.eurecom.fr/tvenricher/api'
         self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
     
-    def search(self, entities, provider, dimension, useDummyCache = False):
-        #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v        
-        if useDummyCache and self.cache.exists('dummyEnrichments'):
-            print 'Loading dummy enrichments from cache!'
-            return { 'enrichments' : simplejson.loads(self.cache.get('dummyEnrichments'))}
+    def fetch(self, query, params):
+        #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v
+        print 'Fetching stuff here!!! TVNewsEnricher'        
+        print query
+        print params        
         http = httplib2.Http()
-        url = self.getServiceUrl(entities, provider, dimension)
+        url = self.__getServiceUrl(query, params)
         print url
         headers = {'Content-type': 'application/json'}
         resp, content = http.request(url, 'GET', headers=headers)
-        if content:
-            #if useDummyCache and not self.cache.exists('dummyEnrichments'):
-            #self.cache.set('dummyEnrichments', simplejson.dumps({ 'enrichments' : content }))
-            return self.formatResponse(content, entities, provider, dimension)
-        else:            
-            return None 
+        if content:            
+            return self.__formatResponse(content, query, params)
+        else:
+            return None         
 
-    def getServiceUrl(self, entities, provider, dimension):
-        query = urllib.quote(' '.join(entities)) #if somehow this fails to work, try to use '+' instead of ' '
-        url = '%s/entity/enrichment/%s?q=%s' % (self.BASE_URL, dimension, query)
-        if dimension == 'Solr':
-            url = '%s&index=%s' % (url, provider)
+    def __getServiceUrl(self, query, params):
+        query = urllib.quote(' '.join(query))
+        url = '%s/entity/enrichment/%s?q=%s' % (self.BASE_URL, params['dimension'], query)
+        if params.has_key('index'):        
+            url = '%s&index=%s' % (url, params['index'])
         return url
 
-    def formatResponse(self, content, entities, provider, dimension):
-        resp = None        
-        if dimension == 'Solr':
+    def __formatResponse(self, content, query, params):
+        resp = None
+        if params['dimension'] == 'Solr':
             enrichments = []
             mfs = simplejson.loads(content)
             for mf in mfs:
-                mf = mf.replace('\r', '').replace('\n', '')                
+                mf = mf.replace('\r', '').replace('\n', '')
                 mf = mf[len('http://data.linkedtv.eu/media/'):]
                 mf = mf[0:mf.find('#')]
-                videoData = self.getVideoData(mf)
+                videoData = self.__getVideoData(mf)
                 enrichments.append({'micropostUrl' : mf, 'posterUrl' : videoData['poster'],
                  'micropost' : {'plainText' : videoData['title']} })
-            resp = { 'enrichments' : { '%s' % ' '.join(entities) : {'LinkedTV' : enrichments } } }
+            resp = { 'enrichments' : { '%s' % ' '.join(query) : {'LinkedTV' : enrichments } } }
         else:
             resp = { 'enrichments' : simplejson.loads(content) } # service is already included in the content
         return resp
 
     #this is basically copied from the (also crappy Api class)
-    def getVideoData(self, resourceUri):        
+    def __getVideoData(self, resourceUri):
         pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
         http = httplib2.Http()      
         url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri        

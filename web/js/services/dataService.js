@@ -5,7 +5,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/resource?id=' + $rootScope.resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
+			url : '/load_ltv?id=' + $rootScope.resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
 			success : function(json) {
 				console.debug(json);
 				callback(json);
@@ -21,7 +21,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/curatedresource?id=' + $rootScope.resourceUri,
+			url : '/load_et?id=' + $rootScope.resourceUri,
 			success : function(json) {
 				callback(json.error ? null : json);
 			},
@@ -40,7 +40,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
 		$.ajax({
 			type: 'POST',
-			url: '/saveresource?action=' + action,
+			url: '/save_et?action=' + action,
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {
@@ -52,7 +52,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 				}
 			},
 			error: function(err) {
-	    		console.debug(err);	    		
+	    		console.debug(err);
 			},
 			dataType: 'json'
 		});

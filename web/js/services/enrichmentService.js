@@ -1,10 +1,11 @@
 angular.module('linkedtv').factory('enrichmentService', [function(){
 	
-	function search(query, provider, dimension, callback) {
-		console.debug('Querying enrichments using ' + query + '['+provider+']');
+	function search(query, dimension, callback) {
+		console.debug('Querying enrichments using ' + query);
 		console.debug(dimension);
-		var fetchUrl = '/enrichments?q=' + query.split('+').join(',') + '&p=' + provider;
-		fetchUrl += '&d=' + dimension.id + '&s=' + dimension.service;
+		var fetchUrl = '/dimension?q=' + query.split('+').join(',');
+		fetchUrl += '&d=' + dimension.service;
+		fetchUrl += '&params=' + JSON.stringify(dimension.params)
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -20,7 +21,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 		});
 	}
 
-	function formatServiceResponse(data, dimension) {		
+	function formatServiceResponse(data, dimension) {
 		if(dimension.service == 'TvEnricher') {
 			return formatTvEnricherResponse(data, dimension);
 		} else if(dimension.service == 'TvNewsEnricher') {

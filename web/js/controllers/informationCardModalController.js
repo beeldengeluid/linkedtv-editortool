@@ -1,3 +1,5 @@
+//TODO http://stackoverflow.com/questions/20791639/pseudo-element-hover-on-before
+
 angular.module('linkedtv').controller('informationCardModalController', 
 	['$scope', '$modalInstance', 'conf', 'entityProxyService', 'entityCollection', 'chapterCollection', 'entityUtils',
 	 'dimension', 'link', function ($scope, $modalInstance, conf, entityProxyService, entityCollection, chapterCollection,
@@ -64,7 +66,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 				t.value = val;
 			}
 		} else {
-			t = {key : null, value : null, optional : true};
+			t = {key : null, type : 'literal', value : null, optional : true};
 		}
 
 		//Also add the triple to the list of triples (for convencience)

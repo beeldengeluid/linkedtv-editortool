@@ -1,4 +1,4 @@
-@mixin cardProperties ($columns: 2) {
+@mixin cardProperties ($columns: 2, $alignTop: false) {
 	margin-bottom:$defaultItemMargin;
 
 	header ul {
@@ -37,20 +37,38 @@
 
 	.form-group {
 		margin-bottom:$defaultItemMargin;
-		vertical-align:top;
+		@if $alignTop == true {
+			vertical-align:top;
+		}
+
 		input {
+			position:relative;
  			width:100%;
  			&:hover {
 				@include box-shadow($wonderblue 2px 2px 10px);
 			}
  		}
+
  		input[disabled] {
 	 		cursor:pointer;
  		}
+
+ 		input:hover::before {
+			content: "adfsadfsadfs";
+			height: 20px;
+			width: 20px;
+			background-color:#D13335;
+			border-radius: 50%;
+			webkit-border-radius: 50%;
+			position:absolute;
+			left:-20px;
+		}
+
 		&:nth-child(1) {
  			width:20%;
  			font-weight:bold;
  		}
+
  		@if $columns == 2 {
 	 		&:nth-child(2) {
 	 			width:75%;
@@ -62,7 +80,7 @@
 	 			width:50%;
 	 		}
 	 		&:nth-child(3) {
-	 			width:25%;
+	 			width:20%;
 	 		}
 	 	}
 
@@ -89,9 +107,9 @@
 }
 
 .card-edit-form {
-	@include cardProperties(3);
+	@include cardProperties(3, false);
 }
 
 .card-fetch-form {
-	@include cardProperties();
+	@include cardProperties(2, true);
 }

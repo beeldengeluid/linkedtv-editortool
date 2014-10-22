@@ -12,45 +12,38 @@ from django.template import RequestContext
 
 from linkedtv.api.sparql.SaveEndpoint import SaveEndpoint
 from linkedtv.images.ImageFetcher import ImageFetcher
-from linkedtv.video.VideoPlayoutHandler import VideoPlayoutHandler
 
 from linkedtv.api.dbpedia.AutoComplete import AutoComplete
 from linkedtv.api.dbpedia.EntityProxy import EntityProxy
-from linkedtv.api.external.MediaCollector import MediaCollector
-from linkedtv.api.external.UnstructuredSearch import UnstructuredSearch
-from linkedtv.api.external.TvEnricher import TvEnricher
 from linkedtv.api.external.EntityExpansionService import EntityExpansionService
 
-from linkedtv.api import SaveEndpoint as ET
 from linkedtv.api.Api import *
+
 
 def getErrorMessage(msg):
     return "{\"error\" : \"%s\"}" % msg;
 
+"""This is called to fetch the IP of the connecting client"""
+def getClientIP(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 """ 
 *********************************************************************************************************
-For loading the login/logout pages
-*********************************************************************************************************
-"""
-
-def logout_user(request):
-    logout(request)
-    return render_to_response('index.html')
-
-""" 
-*********************************************************************************************************
-For loading the main page and the trial page
+Calls rendering HTML pages
 *********************************************************************************************************
 """
 
 def main(request):
-    return render_to_response('index.html', {'user' : request.user})    
+    return render_to_response('index.html', {'user' : request.user})
 
-""" 
-*********************************************************************************************************
-For loading a the page that lists the available mediaresources/videos per provider
-*********************************************************************************************************
-"""
+def logout_user(request):
+    logout(request)
+    return render_to_response('index.html')
 
 def trial(request):
     print 'Going to the trial page'
@@ -68,71 +61,52 @@ def provider(request, pub = '', id = ''):
         print 'you (%s) are not authorized to view this page' % pub
         return render_to_response('index.html', {'user' : request.user})
     return render_to_response('edit.html', {'user' : request.user})
-
-
+    
+    
 """ 
 *********************************************************************************************************
-For loading a single mediaresource (for populating the main detail page of a video)
+REST API CALLS (loading & saving data, fetching images and video etc)
 *********************************************************************************************************
 """
 
 """This is called to fetch the data of a single media resource (including the curated data from SPARQL!!!)"""
-def resource(request):
+def load_ltv(request):
     resourceUri = request.GET.get('id', None)
     loadData = request.GET.get('ld', 'false') == 'true'
     clientIP = getClientIP(request)
     if resourceUri:
-        resourceData = {}
         api = Api()
-        if loadData:
-            resourceData = api.getAllAnnotationsOfResource(resourceUri, True)            
-        """Get the mediaresource metadata and the playout URL"""
-        print 'getting video metadata'
-        videoMetadata = simplejson.loads(api.getVideoData(resourceUri))        
-        if videoMetadata:
-            vph = VideoPlayoutHandler()
-            resourceData['videoMetadata'] = videoMetadata
-            playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)            
-            resourceData['locator'] = playoutURL
-            print videoMetadata
-            if videoMetadata['mediaResource']['mediaResourceRelationSet']:
-                for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
-                    if mrr['relationType'] == 'thumbnail-locator':
-                        resourceData['thumbBaseUrl'] = mrr['relationTarget']
-                    elif mrr['relationType'] == 'srt':
-                        resourceData['srtUrl'] = mrr['relationTarget']
-        resp = simplejson.dumps(resourceData)
+        resp = api.load_ltv(resourceUri, clientIP, loadData)
         return HttpResponse(resp, mimetype='application/json')
-        
-
     return HttpResponse(getErrorMessage('The resource does not exist'), mimetype='application/json')
 
 """This is called to fetched the curated data from the Redis store (which should later be synched with the SPARQL?)"""
-def curatedresource(request):
+def load_et(request):
     resourceUri = request.GET.get('id', None)
     if resourceUri:
-        sep = ET.SaveEndpoint()
-        resp = sep.loadCuratedResource(resourceUri)
-        print resp
+        api = Api()
+        resp = api.load_et(resourceUri)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse(getErrorMessage('Could not load curated data'), mimetype='application/json')
 
+"""New Saving function"""
+@csrf_exempt
+def save_et(request):
+    action = request.GET.get('action', None)
+    saveData = request.body    
+    api = Api()
+    resp = api.save_et(saveData)
+    if resp:
+        return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+    return HttpResponse(getErrorMessage('Malformed POST data'), mimetype='application/json')
+    
 
-"""This is called to fetch the IP of the connecting client"""
-def getClientIP(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+"""for exporting a resource to the LinkedTV platform"""
+def export(request):
+    publishingPoint = request.GET.get('pp', None)
+    return HttpResponse(getErrorMessage('To be implemented!'), mimetype='application/json')
 
-""" 
-*********************************************************************************************************
-For loading keyframes from the Noterik server
-*********************************************************************************************************
-"""
 
 """This is called to fetch an keyframe/thumbnail image from the Noterik server"""
 def image(request):
@@ -157,57 +131,43 @@ def image(request):
     """    
     return HttpResponse("{'error' : 'Please provide the moment in time by milliseconds'}", mimetype='application/json')
 
-""" 
-*********************************************************************************************************
-Old Saving functions
-*********************************************************************************************************
-"""
-
-"""This is called to save a single chapter"""
-@csrf_exempt
-def savechapter(request):
-    savedata = request.POST.get('savedata', None)
-    sep = SaveEndpoint()
-    try:
-        saveURIs = sep.saveChapter(simplejson.loads(savedata))
-    except JSONDecodeError, e:
-        return HttpResponse("{'error' : 'malformed save data'}", mimetype='application/json')
-    return HttpResponse(simplejson.dumps(saveURIs), mimetype='application/json')
+def videos(request):
+    p = request.GET.get('p', None)
+    if p:
+        api = Api()
+        resp = api.getVideosOfProvider(p)
+        if resp:
+            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+    return HttpResponse(getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
 
-"""This is called to save a single annotation (containing a URL to an online resource + multiple enrichments)"""
-@csrf_exempt
-def saveannotation(request):
-    savedata = request.POST.get('savedata', None)
-    sep = SaveEndpoint()
-    try:
-        saveURIs = sep.saveAnnotation(simplejson.loads(savedata))
-    except JSONDecodeError, e:
-        return HttpResponse("{'error' : 'malformed save data'}", mimetype='application/json')
-    return HttpResponse(simplejson.dumps(saveURIs), mimetype='application/json')
+def dimension(request):
+    print 'Testing the new dimension'
+    query = request.GET.get('q', None)
+    dimensionService = request.GET.get('d', None)
+    params = request.GET.get('params', None)
+    if params:
+        params = simplejson.loads(params)
+    if query and dimensionService and params:
+        api = Api()
+        resp = api.dimension(query.split(','), dimensionService, params)
+        if resp:
+            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+        else:
+            return HttpResponse(getErrorMessage('No enrichments found'), mimetype='application/json')
+    return HttpResponse(getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
-""" 
-*********************************************************************************************************
-New Saving functions
-*********************************************************************************************************
-"""
+def dimensions(request):
+    api = Api()
+    resp = api.dimensions()
+    if resp:
+        return HttpResponse(simplejson.dumps(resp), mimetype='application/json')    
+    return HttpResponse(getErrorMessage('No services have been registered!'), mimetype='application/json')
 
-@csrf_exempt
-def saveresource(request):
-    action = request.GET.get('action', None)
-    saveData = request.body
-    print 'Got the shit'
-    sep = ET.SaveEndpoint()
-    #TODO check the action
-    try:
-        resp = sep.saveVideo(simplejson.loads(saveData))
-    except JSONDecodeError, e:
-        return HttpResponse(getErrorMessage('Malformed POST data'), mimetype='application/json')
-    return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 
 """ 
 *********************************************************************************************************
-DBPedia Spotlight autocomplete
+External APIs from LinkedTV WP2
 *********************************************************************************************************
 """
 
@@ -219,71 +179,6 @@ def autocomplete(request):
     print options;
     resp = simplejson.dumps(options)
     return HttpResponse(resp, mimetype='application/json')
-    
-    
-""" 
-*********************************************************************************************************
-New API calls
-*********************************************************************************************************
-"""
-
-def video(request):
-    r = request.GET.get('r', None)
-    if r:
-        api = Api()
-        resp = api.getVideoData(r)
-        if resp:
-            return HttpResponse(resp, mimetype='application/json')
-    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
-
-def videos(request):
-    p = request.GET.get('p', None)
-    if p:
-        api = Api()
-        resp = api.getVideosOfProvider(p)
-        if resp:
-            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
-
-def chapters(request):
-    r = request.GET.get('r', None)
-    if r:
-        api = Api()
-        resp = api.getChaptersOfResource(r)
-        if resp:
-            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
-
-#this function should be updated to fetch the entities of a chapter (once the LinkedTV API supports this)
-def entities(request):
-    r = request.GET.get('r', None)
-    if r:
-        api = Api()
-        resp = api.getEntitiesOfResource(r)
-        if resp:
-            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse("{'error' : 'Please provide the correct parameters'}", mimetype='application/json')
-
-def enrichments(request):    
-    query = request.GET.get('q', None)
-    provider = request.GET.get('p', None)
-    dimension = request.GET.get('d', None)
-    service = request.GET.get('s', None)
-    if provider and query and dimension and service:
-        print 'GOing to fetch enrichments!'
-        provider = str(provider).upper()
-        api = Api()
-        resp = api.getEnrichmentsOnDemand(query.split(','), provider, dimension, service, False)
-        print resp
-        if resp:
-            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-    return HttpResponse(getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
-
-""" 
-*********************************************************************************************************
-External APIs from LinkedTV WP2
-*********************************************************************************************************
-"""
 
 def entityproxy(request):
     uri = request.GET.get('uri', None)

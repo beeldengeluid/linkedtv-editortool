@@ -3,11 +3,15 @@ angular.module('linkedtv').factory('videoModel', function() {
 	var _video = null;
 
 	function initModelData(resourceData) {
-		_video = {
-			title : resourceData.videoMetadata.mediaResource.titleName,
-			playoutUrl : resourceData.locator
+		if(resourceData.videoMetadata) {
+			_video = {
+				title : resourceData.videoMetadata.mediaResource.titleName,
+				playoutUrl : resourceData.locator
+			}
+			console.debug('Loaded the video data');
+		} else {
+			console.error('No videometadata found!');
 		}
-		console.debug('Loaded the video data');
 	}
 
 	function getVideo() {

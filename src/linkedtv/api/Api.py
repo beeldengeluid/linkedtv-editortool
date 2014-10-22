@@ -1,11 +1,14 @@
 import simplejson
 import redis
 import base64
+import httplib2
 from subprocess import Popen, PIPE
 from linkedtv.LinkedtvSettings import LTV_API_ENDPOINT, LTV_DATA_ENDPOINT, LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN
 from linkedtv.api.sparql.DataLoader import *
-from linkedtv.api.external.TvEnricher import *
-from linkedtv.api.external.TvNewsEnricher import *
+
+from linkedtv.video.VideoPlayoutHandler import VideoPlayoutHandler
+from linkedtv.api import SaveEndpoint as ET
+from linkedtv.api.dimension.DimensionHandler import DimensionHandler
 
 class Api():
     
@@ -13,26 +16,51 @@ class Api():
         self.END_POINT = LTV_API_ENDPOINT
         self.DATA_END_POINT = LTV_DATA_ENDPOINT
         self.dataLoader = DataLoader()
-        self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
+        self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])    
 
-    """-----------------Resource (replace later on)------------------"""
 
-    #directly uses the linkedTV platform
-    def getVideoData(self, resourceUri):        
-        pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
-        http = httplib2.Http()      
-        url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri        
-        headers = {
-            'Accept' : 'application/json',
-            'Authorization' : 'Basic %s' % pw,
-        }
-        resp, content = http.request(url, 'GET', headers=headers)
-        if resp and resp['status'] == '200':
-            return content
-        return None
+    """-------------------------LOAD, SAVE AND EXPORT MEDIA RESOURCES-------------------------"""
+
+    def load_ltv(self, resourceUri, clientIP, loadData):
+        resourceData = {}        
+        if loadData:
+            resourceData = self.__getAllAnnotationsOfResource(resourceUri, False)
+        """Get the mediaresource metadata and the playout URL"""
+        print 'getting video metadata'
+        videoMetadata = self.getVideoData(resourceUri)
+        if videoMetadata:
+            videoMetadata = simplejson.loads(videoMetadata)        
+        vph = VideoPlayoutHandler()
+        resourceData['videoMetadata'] = videoMetadata
+        playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)            
+        resourceData['locator'] = playoutURL        
+        if videoMetadata:
+            if videoMetadata['mediaResource']['mediaResourceRelationSet']:
+                for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
+                    if mrr['relationType'] == 'thumbnail-locator':
+                        resourceData['thumbBaseUrl'] = mrr['relationTarget']
+                    elif mrr['relationType'] == 'srt':
+                        resourceData['srtUrl'] = mrr['relationTarget']
+        else:
+            resourceData['thumbBaseUrl'] = None
+            resourceData['srtUrl'] = None
+        resp = simplejson.dumps(resourceData)
+        return resp
+
+    def load_et(self, resourceUri):
+        sep = ET.SaveEndpoint()
+        return sep.loadCuratedResource(resourceUri)        
+
+    def save_et(self, saveData):
+        sep = ET.SaveEndpoint()
+        try:
+            resp = sep.saveVideo(simplejson.loads(saveData))
+        except JSONDecodeError, e:
+            return None
+        return resp
 
     #uses the SPARQL dataloader to fetch all annotations
-    def getAllAnnotationsOfResource(self, resourceUri, fetchFromCache=False):
+    def __getAllAnnotationsOfResource(self, resourceUri, fetchFromCache=False):
         print 'Getting %s from the API or cache' % resourceUri
         data = None
         if fetchFromCache:
@@ -49,8 +77,35 @@ class Api():
             self.cache.set(resourceUri, simplejson.dumps(data))
         return data
 
+    """-------------------------DIMENSION HANDLING-------------------------"""
 
-    """-----------------Videos------------------"""
+    def dimension(self, dimension, query, params):
+        dh = DimensionHandler()
+        return dh.fetch(dimension, query, params)
+
+    def dimensions(self):
+        dh = DimensionHandler()
+        return dh.getRegisteredServices()
+
+
+    """-------------------------VIDEOS & IMAGES-------------------------"""
+
+    #directly uses the linkedTV platform
+    def getVideoData(self, resourceUri):        
+        pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
+        http = httplib2.Http()      
+        url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri        
+        headers = {
+            'Accept' : 'application/json',
+            'Authorization' : 'Basic %s' % pw,
+        }
+        print url
+        resp, content = http.request(url, 'GET', headers=headers)
+        print resp
+        print content
+        if resp and resp['status'] == '200':
+            return content
+        return None
 
     def getVideosOfProvider(self, provider):
         videos = []
@@ -77,7 +132,7 @@ class Api():
         return {'videos' : videos}
 
     #TODO this must be finished
-    def getVideosOfProviderNew(self, provider, videos, page):
+    def __getVideosOfProviderNew(self, provider, videos, page):
         print 'Getting new videos of provider: %s' % provider
         if provider == 'sv':
             provider = 'S&V'
@@ -96,68 +151,3 @@ class Api():
             return content
         return None
 
-
-    """-----------------Chapters------------------"""
-
-    def getChaptersOfResource(self, resourceUri):
-    	url = '%s/annotation?_view=all&hasTarget.isFragmentOf=%s/media/%s&hasBody.type=Chapter' % (self.DATA_END_POINT,
-         self.DATA_END_POINT, resourceUri)
-    	resp = self.sendRequest(url)    	
-    	chapterData = simplejson.loads(resp)
-    	chapters = []
-    	for item in chapterData['result']['items']:
-    		mfUri = item['hasTarget']
-    		mfUri = mfUri[mfUri.rfind('#t=') + 3:]
-    		t_arr = mfUri.split(',')
-    		chapters.append({
-    			'title' : item['hasBody']['label'],
-    			'start' : t_arr[0],
-    			'end' : t_arr[1]
-			})
-
-    	return {'chapters' : chapters}    
-
-    def sendRequest(self, url):
-        cmd_arr = []
-        cmd_arr.append('curl')
-        cmd_arr.append('-X')
-        cmd_arr.append('GET')
-        cmd_arr.append(url)
-        cmd_arr.append('-H')
-        cmd_arr.append('Accept: application/json')
-        cmd_arr.append('-H')
-        cmd_arr.append('Authorization: YWRtaW46bGlua2VkdHY=')
-        p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p1.communicate()
-        if stdout:
-            return stdout
-        else:
-            return None
-
-
-    """-----------------Entities------------------"""
-
-    def getEntitiesOfResource(self, resourceUri):
-        url = '%s/annotation?hasTarget.isFragmentOf=%s/media/%s&_view=full&Entity' % (self.DATA_END_POINT, self.DATA_END_POINT, resourceUri)
-        resp = self.sendRequest(url)
-        entityData = simplejson.loads(resp)
-        entities = []
-        for item in entityData['result']['items']:
-            print item
-            entities.append(item)
-        return {'entities' : entities} 
-
-
-    """-----------------Enrichments------------------"""
-
-    def getEnrichmentsOnDemand(self, entities, provider, dimension, service, useDummyEnrichments = False):
-        #later fetch the endpoint based on the supplied dimension & provider
-        if service == 'TvEnricher':
-            print 'Fetching stuff from the TvEnricher'
-            tve = TvEnricher()
-            return tve.search(entities, provider, dimension, useDummyEnrichments)
-        elif service == 'TvNewsEnricher':
-            print 'Fetching stuff from the TvNewsEnricher'
-            tvne = TvNewsEnricher()
-            return tvne.search(entities, provider, dimension, useDummyEnrichments)
-        return None

@@ -43,7 +43,8 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 		$scope.fetchButtonText = 'Loading...';
 		$scope.enrichmentQuery = $('#e_query').val();//FIXME ugly hack, somehow the ng-model does not work in this form!!!
 		if ($scope.enrichmentQuery) {
-			enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.dimension, $scope.onSearchEnrichments);		
+			//enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.dimension, $scope.onSearchEnrichments);
+			enrichmentService.search($scope.enrichmentQuery, $scope.dimension, $scope.onSearchEnrichments);
 		}
 	};
 
