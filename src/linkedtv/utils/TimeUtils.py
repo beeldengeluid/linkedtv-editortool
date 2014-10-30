@@ -1,4 +1,3 @@
-
 class TimeUtils():
     
     @staticmethod
@@ -14,5 +13,4 @@ class TimeUtils():
 
     @staticmethod
     def toMillis(sec):
-        print sec
         return int(float(sec) * 1000)

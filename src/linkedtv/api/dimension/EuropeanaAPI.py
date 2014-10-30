@@ -7,6 +7,9 @@ class EuropeanaAPI(DimensionService):
 		DimensionService.__init__(self, 'EuropeanaAPI')
 		self.API_KEY = LTV_EUROPEANA['apikey']
 
-	def fetch(self, query, params):
+	def search(self, query, params):
 		#http://www.europeana.eu/api/v2/search.json?wskey=1hfhGH67Jhs&query=amsterdam&qf=PROVIDER%3A%22EUscreen+Project%22
-		print 'Implement this sirra'
+		print 'Implementation needed'
+
+	def formatResponse(self, data):
+		print 'Implementation needed'

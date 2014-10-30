@@ -4,7 +4,7 @@ super class of: Concept, Shot, Chapter and NamedEntity
 
 class Annotation(object):
 
-	def __init__(self, label, start, end, mfURI, annotationURI, bodyURI, relevance, confidence):
+	def __init__(self, label, start, end, mfURI = None, annotationURI = None, bodyURI = None, relevance = 0, confidence = 0):
 		self.label = label
 		self.start = start
 		self.end = end
@@ -61,3 +61,4 @@ class Annotation(object):
 
 	def getConfidence(self):
 		return self.confidence
+

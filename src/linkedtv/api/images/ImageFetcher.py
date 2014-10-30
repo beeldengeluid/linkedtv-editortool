@@ -51,10 +51,7 @@ class ImageFetcher():
     """ TODO dit moet gefixed worden!!! irritant gedoe!"""
     def getEnrichmentThumb(self, url):
         o = urlparse.urlparse(url)
-        print o                
-        print '\n\n'
         url = '%s://%s%s%s' % (o.scheme, o.netloc, urllib.urlencode({'q' : o.path.encode('utf-8')})[2:].replace('%2F', '/'), urllib.urlencode({'q' : o.params})[2:])
-        print url
         r = requests.get(url, verify=False)
         return r.content
     

@@ -20,6 +20,9 @@ from linkedtv.api.dimension.DimensionHandler import DimensionHandler
 #linkedTV object holding all data
 from linkedtv.model.MediaResource import MediaResource
 
+#dataconverter for transforming ET (client) JSON data into a MediaResource
+from linkedtv.utils.DataConverter import DataConverter
+
 class Api():
     
     def __init__(self):
@@ -37,13 +40,14 @@ class Api():
             mediaResource = self.__getAllAnnotationsOfResource(resourceUri, False)
         """Get the mediaresource metadata and the playout URL"""
         print 'getting video metadata'
-        videoMetadata = self.__getVideoData(resourceUri)
+        videoMetadata = self.__getVideoData(resourceUri)        
         if videoMetadata:
             videoMetadata = simplejson.loads(videoMetadata)        
         vph = VideoPlayoutHandler()
         mediaResource.setVideoMetadata(videoMetadata)
-        playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
-        mediaResource.setPlayoutUrl(playoutURL)
+        if videoMetadata:
+            playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
+            mediaResource.setPlayoutUrl(playoutURL)
         if videoMetadata:
             if videoMetadata['mediaResource']['mediaResourceRelationSet']:
                 for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
@@ -69,7 +73,9 @@ class Api():
     def publish(self, publishingPoint, saveData):
         print 'PUBLISHING DATA TO: %s' % publishingPoint
         ph = PublishingHandler()
-        ph.publish(publishingPoint, saveData)
+        mr = DataConverter.convertSaveData(saveData)#create mediaResource object
+        print simplejson.dumps(mr, default=lambda obj: obj.__dict__)
+        ph.publish(publishingPoint, mr)
         return None
 
     #uses the SPARQL dataloader to fetch all annotations
@@ -90,6 +96,7 @@ class Api():
             self.cache.set(resourceUri, simplejson.dumps(data, default=lambda obj: obj.__dict__))
         return data
 
+
     """-------------------------DIMENSION HANDLING-------------------------"""
 
     def dimension(self, dimension, query, params):
@@ -105,25 +112,27 @@ class Api():
 
     def videos(self, provider):
         videos = []
-        videoUris = self.dataLoader.getMediaResources(provider)        
+        videoUris = self.dataLoader.getMediaResources(provider)
         vd = None
         video = None
         thumbBaseUrl = None
-        for uri in videoUris['videos']:            
-            vd = simplejson.loads(self.__getVideoData(uri))
-            if vd['mediaResource']:
-                if vd['mediaResource'].has_key('mediaResourceRelationSet') and vd['mediaResource']['mediaResourceRelationSet']:
-                    for mrr in vd['mediaResource']['mediaResourceRelationSet']:
-                        if mrr['relationType'] == 'thumbnail-locator':
-                            thumbBaseUrl = mrr['relationTarget']
-                video = {
-                    'id' : vd['mediaResource']['id'],
-                    'title' : vd['mediaResource']['titleName'],
-                    'locator' : vd['mediaResource']['locator'],
-                    'thumbBaseUrl' : thumbBaseUrl,
-                    'dateInserted' : vd['mediaResource']['dateInserted']#TODO convert to pretty date
-                }
-                videos.append(video)
+        for uri in videoUris['videos']:
+            vd = self.__getVideoData(uri)
+            if vd:
+                vd = simplejson.loads(vd)
+                if vd['mediaResource']:
+                    if vd['mediaResource'].has_key('mediaResourceRelationSet') and vd['mediaResource']['mediaResourceRelationSet']:
+                        for mrr in vd['mediaResource']['mediaResourceRelationSet']:
+                            if mrr['relationType'] == 'thumbnail-locator':
+                                thumbBaseUrl = mrr['relationTarget']
+                    video = {
+                        'id' : vd['mediaResource']['id'],
+                        'title' : vd['mediaResource']['titleName'],
+                        'locator' : vd['mediaResource']['locator'],
+                        'thumbBaseUrl' : thumbBaseUrl,
+                        'dateInserted' : vd['mediaResource']['dateInserted']#TODO convert to pretty date
+                    }
+                    videos.append(video)
         #self.getVideosOfProviderNew(provider, None, None)
         return {'videos' : videos}
 
@@ -145,7 +154,7 @@ class Api():
             return content
         return None
 
-    #TODO this must be finished
+    """
     def __getVideosOfProviderNew(self, provider, videos, page):
         print 'Getting new videos of provider: %s' % provider
         if provider == 'sv':
@@ -162,4 +171,4 @@ class Api():
         if resp and resp['status'] == '200':
             return content
         return None
-
+    """

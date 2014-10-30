@@ -9,3 +9,6 @@ class PublishingHandler(object):
 
 	def publish(self, publishingPoint, data):
 		self.publishingPoints[publishingPoint].publish(data)
+
+	def unpublish(self, publishingPoint, mediaResource):
+		self.publishingPoints[publishingPoint].unpublish(mediaResource)

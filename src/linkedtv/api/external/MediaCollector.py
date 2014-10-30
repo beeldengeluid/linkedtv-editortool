@@ -8,8 +8,7 @@ class MediaCollector():
         print '__init__'
         self.BASE_URL = 'http://linkedtv.eurecom.fr/api/mediacollector/search' #/RBB or /SV
         
-    def search(self, s, provider):
-        print s
+    def search(self, s, provider):        
         s = '+'.join(s.split(' '))
         print '%s/%s/%s' % (self.BASE_URL, provider, s)
         cmd_arr = []

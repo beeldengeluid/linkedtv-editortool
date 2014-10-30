@@ -318,7 +318,7 @@ class DataLoader():
         query.append('OPTIONAL {?body linkedtv:hasRelevance ?r } ')
         query.append('OPTIONAL {?body rdfs:label ?label}')
         query.append('}')
-        logger.debug(''.join(query))
+        print ''.join(query)
         resp = self.__sendSearchRequest(''.join(query))
         jsonData = None
         try:

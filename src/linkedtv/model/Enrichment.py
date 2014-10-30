@@ -1,6 +1,6 @@
 class Enrichment(object):
 
-	def __init__(self, url, label, poster, start, end, source=None, creator=None, date=None, entities=None,
+	def __init__(self, url, label, poster, start = 0, end = 0, source=None, creator=None, date=None, entities=None,
 		socialInteraction=None, bodyURI=None, DCType=None):
 		self.url = url
 		self.label = label
@@ -10,7 +10,7 @@ class Enrichment(object):
 		self.source = source
 		self.creator = creator
 		self.date = date
-		self.entities = entities
+		self.entities = entities #Entity
 		self.socialInteraction = socialInteraction
 		self.bodyURI = bodyURI
 		self.DCType = DCType

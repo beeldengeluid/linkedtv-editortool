@@ -51,8 +51,11 @@ class TvNewsEnricher(DimensionService):
 		self.searchPeriod = 7 # days
 		self.searchLimit = 50
 
-
 	def fetch(self, query, params):
+		return self.__formatResponse(self.__search(query, params))
+
+	def __search(self, query, params):
+		DimensionService.__search(self, query, params)
 		http = httplib2.Http()		
 		url = self.__getServiceUrl(params['dimension'], query)
 		headers = {'Content-type': 'application/json'}
@@ -62,6 +65,10 @@ class TvNewsEnricher(DimensionService):
 		else:
 			return None
 		print 'fetching enrichments: %s (%s)' % (query, params['dimension'])
+
+	def __formatResponse(self, data):		
+		print 'Implement this!'
+		return data
 
 	def __getServiceUrl(self, dimension, query):
 		endDate = date.today()

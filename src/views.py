@@ -105,7 +105,12 @@ def publish(request):
     saveData = request.body
     if publishingPoint:
         api = Api()
-        resp = api.publish(publishingPoint, saveData)
+        try:
+            saveData = simplejson.loads(saveData)
+            resp = api.publish(publishingPoint, saveData)
+        except JSONDecodeError, e:
+            print e
+            return HttpResponse(__getErrorMessage('Save data was not valid JSON'), mimetype='application/json')
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse(__getErrorMessage('Failed to publish this media resource'), mimetype='application/json')
