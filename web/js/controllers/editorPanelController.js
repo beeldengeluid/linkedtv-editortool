@@ -17,7 +17,17 @@ angular.module('linkedtv').controller('editorPanelController',
 	}
 
 	$scope.publishResource = function() {
-		dataService.publishResource(chapterCollection.getCuratedChapters());
+		dataService.publishResource(chapterCollection.getCuratedChapters(), $scope.resourcePublished);
+	}
+
+	$scope.resourcePublished = function(mediaResource) {
+		if(mediaResource.chapters) {
+			console.debug('RESOURCE WAS PUBLISHED');
+			chapterCollection.setChapters(mediaResource.chapters);
+			chapterCollection.saveOnServer();
+		} else {
+			alert('The data could not be published');
+		}
 	}
 	
 });

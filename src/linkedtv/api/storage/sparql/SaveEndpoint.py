@@ -65,8 +65,8 @@ class SaveEndpoint():
             bodyURI = c['ETbodyURI']
             query.append('<%s> ?p2 ?o2 . ' % bodyURI)
         else:
-            bodyURI = '%s/%s' % (self.LTV_CHAPTER_PF, uuid.uuid1())  
-        if c.has_key('ETannotationURI'):            
+            bodyURI = '%s/%s' % (self.LTV_CHAPTER_PF, uuid.uuid1())
+        if c.has_key('ETannotationURI'):
             aURI = c['ETannotationURI']
             query.append('<%s> ?p3 ?o3' % aURI)
         else:

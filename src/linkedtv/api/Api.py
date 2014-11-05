@@ -6,7 +6,7 @@ from subprocess import Popen, PIPE
 from linkedtv.LinkedtvSettings import LTV_API_ENDPOINT, LTV_DATA_ENDPOINT, LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN
 
 #storage related
-from linkedtv.api.storage.sparql.DataLoader import DataLoader
+from linkedtv.api.storage.sparql.AutogenDataLoader import AutogenDataLoader
 from linkedtv.api.storage.SaveEndpoint import SaveEndpoint
 from linkedtv.api.storage.publish.PublishingHandler import PublishingHandler
 
@@ -28,7 +28,7 @@ class Api():
     def __init__(self):
         self.END_POINT = LTV_API_ENDPOINT
         self.DATA_END_POINT = LTV_DATA_ENDPOINT
-        self.dataLoader = DataLoader()
+        self.autogenDataLoader = AutogenDataLoader()
         self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])    
 
 
@@ -46,6 +46,7 @@ class Api():
         vph = VideoPlayoutHandler()
         mediaResource.setVideoMetadata(videoMetadata)
         if videoMetadata:
+            print 'Getting playout URL'
             playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
             mediaResource.setPlayoutUrl(playoutURL)
         if videoMetadata:
@@ -58,9 +59,14 @@ class Api():
         resp = simplejson.dumps(mediaResource, default=lambda obj: obj.__dict__)
         return resp
 
-    def load_et(self, resourceUri):
+    
+    def load_curated_ltv(self, resourceUri):
         sep = SaveEndpoint()
-        return sep.loadCuratedResource(resourceUri)        
+        return sep.loadCuratedResource(resourceUri)
+
+    def load_curated_et(self, resourceUri):
+        sep = SaveEndpoint()
+        return sep.loadCuratedResource(resourceUri)
 
     def save_et(self, saveData):
         sep = SaveEndpoint()
@@ -74,11 +80,12 @@ class Api():
         print 'PUBLISHING DATA TO: %s' % publishingPoint
         ph = PublishingHandler()
         mr = DataConverter.convertSaveData(saveData)#create mediaResource object
-        print simplejson.dumps(mr, default=lambda obj: obj.__dict__)
-        ph.publish(publishingPoint, mr)
-        return None
+        #print simplejson.dumps(mr, default=lambda obj: obj.__dict__)
+        mr = ph.publish(publishingPoint, mr)
+        resp = simplejson.dumps(mr, default=lambda obj: obj.__dict__)
+        return resp
 
-    #uses the SPARQL dataloader to fetch all annotations
+    #uses the SPARQL autogenDataLoader to fetch all automatically generated annotations
     def __getAllAnnotationsOfResource(self, resourceUri, fetchFromCache=False):
         print 'Getting %s from the API or cache' % resourceUri
         data = None
@@ -88,11 +95,11 @@ class Api():
                 data = simplejson.loads(self.cache.get(resourceUri))
             else:
                 print 'No cache for you, one year!'
-                data = self.dataLoader.loadMediaResource(resourceUri)
+                data = self.autogenDataLoader.loadMediaResource(resourceUri)
                 self.cache.set(resourceUri, simplejson.dumps(data))
         else:
             print 'fetching from API'
-            data = self.dataLoader.loadMediaResource(resourceUri)
+            data = self.autogenDataLoader.loadMediaResource(resourceUri)
             self.cache.set(resourceUri, simplejson.dumps(data, default=lambda obj: obj.__dict__))
         return data
 
@@ -112,7 +119,7 @@ class Api():
 
     def videos(self, provider):
         videos = []
-        videoUris = self.dataLoader.getMediaResources(provider)
+        videoUris = self.autogenDataLoader.getMediaResources(provider)
         vd = None
         video = None
         thumbBaseUrl = None
@@ -153,22 +160,3 @@ class Api():
         if resp and resp['status'] == '200':
             return content
         return None
-
-    """
-    def __getVideosOfProviderNew(self, provider, videos, page):
-        print 'Getting new videos of provider: %s' % provider
-        if provider == 'sv':
-            provider = 'S&V'
-        #http://api.linkedtv.eu/mediaresource?publisher=S%26V
-        pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
-        http = httplib2.Http()      
-        url = 'http://api.linkedtv.eu/mediaresource?publisher=%s' % provider
-        headers = {
-            'Accept' : 'application/json',
-            'Authorization' : 'Basic %s' % pw,
-        }
-        resp, content = http.request(url, 'GET', headers=headers)        
-        if resp and resp['status'] == '200':
-            return content
-        return None
-    """

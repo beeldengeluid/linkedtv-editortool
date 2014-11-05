@@ -20,7 +20,7 @@ class Annotation(object):
 	def getLabel(self):
 		return self.label
 
-	def setStart(self, label):
+	def setStart(self, start):
 		self.start = start
 
 	def getStart(self):

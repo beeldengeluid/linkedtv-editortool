@@ -14,7 +14,10 @@ angular.module('linkedtv').controller('appController',
 
 	//fetch the video collection as soon as the provider is added to the rootScope
 	$rootScope.$watch('provider', function(provider) {
-		videoSelectionService.getVideosOfProvider(provider, $scope.videosLoaded);
+		//only load the video list on the video selection page
+		if(!$rootScope.resourceUri) {
+			videoSelectionService.getVideosOfProvider(provider, $scope.videosLoaded);
+		}
 	});
 
 	$scope.videosLoaded = function(videos) {
@@ -32,6 +35,8 @@ angular.module('linkedtv').controller('appController',
 	$scope.curatedDataLoaded = function(curatedData) {					
 		console.debug('Loaded the curated/Redis data from the server');
 		console.debug(curatedData);
+
+		//TODO some option when loading curated data from the LTV platform
 
 		//load the videoModel with metadata
 		videoModel.initModelData($scope.resourceData);

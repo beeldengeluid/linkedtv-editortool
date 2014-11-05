@@ -2,7 +2,8 @@ from linkedtv.model.Annotation import Annotation
 
 class NamedEntity(Annotation):
 
-	def __init__(self, label, entityType, subTypes, disambiguationURL, start, end, mfURI, annotationURI, bodyURI, relevance, confidence):
+	def __init__(self, label, entityType, subTypes, disambiguationURL, start, end, mfURI, annotationURI, bodyURI,
+		relevance, confidence):
 		Annotation.__init__(self, label, start, end, mfURI, annotationURI, bodyURI, relevance, confidence)
 		self.type = entityType
 		self.subTypes = subTypes

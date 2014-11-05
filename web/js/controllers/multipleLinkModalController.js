@@ -26,7 +26,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 
 	//used to formulate the enrichment query for the TVenricher (or another service)
 	$scope.enrichmentQuery = '';//the query that will be sent to the enrichmentService
-	$scope.activeEntities = [];//selected entities
+	$scope.activeEntities = {};//selected entities
 	
 
 	$scope.allEnrichments = null; //all fetched enrichments (unfiltered)
@@ -51,9 +51,6 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 	$scope.onSearchEnrichments = function(enrichments) {
 		//reset the button and the selected entities
 		$scope.fetchButtonText = 'Find links';
-		$scope.activeEntities = [];
-		$('#e_query').attr('value', '');
-		$scope.enrichmentQuery = '';
 		$scope.enrichmentsCollapsed = false;		
 		if(enrichments) {
 			//apply the enrichments to the scope
@@ -80,7 +77,9 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 		}
 	}
 
-	$scope.addEnrichment = function(enrichment) {		
+	$scope.addEnrichment = function(enrichment) {
+		//add the active entities so it's clear on what basis the enrichment was found
+		enrichment.entities = $scope.activeEntities;
 		$scope.savedEnrichments.push(enrichment);
 	}
 
@@ -90,7 +89,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 
 	//filters the enrichments by source
 	$scope.filterEnrichmentsBySource = function(source) {
-		$scope.activeEnrichmentSource = source;		
+		$scope.activeEnrichmentSource = source;
 		$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
 			if(e.source === source) {
 				return e;
@@ -111,27 +110,27 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 	//----------------------------SELECTING ENRICHMENTS & ENTITIES------------------------------
 
 	$scope.addQueryEntity = function(entity) {
-		console.debug(entity);
-		if($scope.activeEntities.indexOf(entity.label) == -1) {
-			$scope.activeEntities.push(entity.label);
+		if(!$scope.activeEntities[entity.label]) {
+			$scope.activeEntities[entity.label] = entity;
 		}
 		$scope.updateEnrichmentQuery();
 	}
 
 	$scope.removeQueryEntity = function(entityLabel) {
-		var len = $scope.activeEntities.length;
-		var e = null;
-		while(len--) {
-			e = $scope.activeEntities[len];
-			if(e === entityLabel) {
-				$scope.activeEntities.splice(len, 1);
-			}
-		}
+		delete $scope.activeEntities[entityLabel];
 		$scope.updateEnrichmentQuery();
 	}
 
 	$scope.updateEnrichmentQuery = function() {
-		$('#e_query').attr('value', $scope.activeEntities.join('+'));
+		var labels = [];
+		_.each($scope.activeEntities, function(e){
+			labels.push(e.label);
+		})
+		$('#e_query').attr('value', labels.join('+'));
+	}
+
+	$scope.isEmpty = function() {
+		return Object.keys($scope.activeEntities).length === 0;
 	}
 
 	//----------------------------BUTTON PANEL------------------------------

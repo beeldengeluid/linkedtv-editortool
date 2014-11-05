@@ -17,11 +17,12 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		});
 	}
 
+	//TODO create a new function for loading curated data from the platform!
 	function getCuratedData(callback) {
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/load_et?id=' + $rootScope.resourceUri,
+			url : '/load_curated_et?id=' + $rootScope.resourceUri,
 			success : function(json) {
 				callback(json.error ? null : json);
 			},
@@ -58,7 +59,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		});
 	}
 
-	function publishResource(chapters) {
+	function publishResource(chapters, callback) {
 		console.debug('Exporting resource...');
 		var saveData = {uri : $rootScope.resourceUri, chapters : chapters};
 		$.ajax({
@@ -67,15 +68,14 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {
-				console.debug(json);
 				if(json.error) {
-					alert('Could not export data');
+					callback(null);
 				} else {
-					//TODO animate the saved data on the screen
+					callback(json);
 				}
 			},
 			error: function(err) {
-	    		console.debug(err);
+	    		callback(null);
 			},
 			dataType: 'json'
 		});

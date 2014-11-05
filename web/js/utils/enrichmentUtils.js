@@ -16,7 +16,7 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 		modalInstance.result.then(function (data) {
 			console.debug('I saved some enrichments');
 			var activeChapter = chapterCollection.getActiveChapter();
-			activeChapter.dimensions[data.dimension.id] = data.enrichments;
+			activeChapter.dimensions[data.dimension.id] = {annotations : data.enrichments };
 			
 			//update the chapter collection
 			chapterCollection.saveChapter(activeChapter);

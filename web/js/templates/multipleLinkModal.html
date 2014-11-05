@@ -98,12 +98,12 @@
 			<!-- SEARCH BAR -->
 			<div class="row">
 				<div class="col-md-12">
-					<div class="enrichment-query-items" ng-show="activeEntities.length > 0">
+					<div class="enrichment-query-items" ng-show="!isEmpty(activeEntities)">
 						<label>Selected for enrichment query</label>
 						<ul>
-							<li ng-repeat="e in activeEntities track by $index" ng-click="removeQueryEntity(e)">
+							<li ng-repeat="(k, v) in activeEntities" ng-click="removeQueryEntity(k)">
 								<div class="label label-default entity">
-									{{e}}
+									{{k}}
 									<i class="glyphicon glyphicon-remove"></i>
 								</div>								
 							</li>

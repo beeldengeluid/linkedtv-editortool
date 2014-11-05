@@ -76,12 +76,22 @@ def load_ltv(request):
         return HttpResponse(resp, mimetype='application/json')
     return HttpResponse(__getErrorMessage('The resource does not exist'), mimetype='application/json')
 
-"""This is called to fetched the curated data from the Redis store (which should later be synched with the SPARQL?)"""
-def load_et(request):
+"""This is called to fetch the curated data from the LinkedTV platform"""
+def load_curated_ltv(request):
     resourceUri = request.GET.get('id', None)
     if resourceUri:
         api = Api()
-        resp = api.load_et(resourceUri)
+        resp = api.load_curated_ltv(resourceUri)
+        if resp:
+            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+    return HttpResponse(__getErrorMessage('Could not load curated data'), mimetype='application/json')
+
+"""This is called to fetched the curated data from the Redis store"""
+def load_curated_et(request):
+    resourceUri = request.GET.get('id', None)
+    if resourceUri:
+        api = Api()
+        resp = api.load_curated_et(resourceUri)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse(__getErrorMessage('Could not load curated data'), mimetype='application/json')
@@ -112,7 +122,7 @@ def publish(request):
             print e
             return HttpResponse(__getErrorMessage('Save data was not valid JSON'), mimetype='application/json')
         if resp:
-            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+            return HttpResponse(resp, mimetype='application/json')
     return HttpResponse(__getErrorMessage('Failed to publish this media resource'), mimetype='application/json')
 
 
