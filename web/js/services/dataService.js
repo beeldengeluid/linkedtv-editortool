@@ -7,7 +7,6 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 			dataType : 'json',
 			url : '/load_ltv?id=' + $rootScope.resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
 			success : function(json) {
-				console.debug(json);
 				callback(json);
 			},
 			error : function(err) {
@@ -59,12 +58,16 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		});
 	}
 
-	function publishResource(chapters, callback) {
+	function publishResource(chapters, unpublish, callback) {
 		console.debug('Exporting resource...');
 		var saveData = {uri : $rootScope.resourceUri, chapters : chapters};
+		var url = '/publish?pp=LinkedTV'; //currently no other publishing points are supported
+		if(unpublish)  {
+			url += '&del=true';
+		}
 		$.ajax({
 			type: 'POST',
-			url: '/publish?pp=LinkedTV',//currently no other publishing points are supported
+			url: url,
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {

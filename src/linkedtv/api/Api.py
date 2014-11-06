@@ -47,7 +47,7 @@ class Api():
         mediaResource.setVideoMetadata(videoMetadata)
         if videoMetadata:
             print 'Getting playout URL'
-            playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
+            playoutURL = 'none'#vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
             mediaResource.setPlayoutUrl(playoutURL)
         if videoMetadata:
             if videoMetadata['mediaResource']['mediaResourceRelationSet']:
@@ -76,12 +76,15 @@ class Api():
             return None
         return resp
 
-    def publish(self, publishingPoint, saveData):
+    def publish(self, publishingPoint, saveData, unpublish):
         print 'PUBLISHING DATA TO: %s' % publishingPoint
         ph = PublishingHandler()
-        mr = DataConverter.convertSaveData(saveData)#create mediaResource object
-        #print simplejson.dumps(mr, default=lambda obj: obj.__dict__)
-        mr = ph.publish(publishingPoint, mr)
+        #create mediaResource object
+        mr = DataConverter.convertSaveData(saveData)
+        if unpublish:
+            mr = ph.unpublish(publishingPoint, mr)
+        else:
+            mr = ph.publish(publishingPoint, mr)
         resp = simplejson.dumps(mr, default=lambda obj: obj.__dict__)
         return resp
 
@@ -106,9 +109,9 @@ class Api():
 
     """-------------------------DIMENSION HANDLING-------------------------"""
 
-    def dimension(self, dimension, query, params):
+    def dimension(self, query, dimension):
         dh = DimensionHandler()
-        return dh.fetch(dimension, query, params)
+        return dh.fetch(query, dimension)
 
     def dimensions(self):
         dh = DimensionHandler()

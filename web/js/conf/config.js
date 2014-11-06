@@ -89,53 +89,71 @@ var rbbConfig = {
 		{
 			id : 'maintopic',
 			label : 'Information cards',
-			service : 'informationCards'
+			service : {
+				id : 'informationCards'
+			}
 		},
 		{
 			id : 'tvne_1',
 			label : 'Opinion',
-			service : 'TvNewsEnricher',
-			params : {
-				dimension : 'opinion'
+			service : {
+				id: 'TvNewsEnricher',
+				params : {
+					dimension : 'opinion'
+				}
 			}
 		},		
 		{		
 			id : 'tvne_2',
 			label : 'Other media',
-			service : 'TvNewsEnricher',
-			params : {
-				dimension : 'othermedia'
+			service : {
+				id :'TvNewsEnricher',
+				params : {
+					dimension : 'othermedia'
+				}
 			}
 		},
 		{		
 			id : 'tvne_3',
 			label : 'Timeline',
-			service : 'TvNewsEnricher',
-			params : {
-				dimension : 'timeline'
+			service : { 
+				id : 'TvNewsEnricher',
+				params : {
+					dimension : 'timeline'
+				}
 			}
 		},
 		{		
 			id : 'tvne_4',
 			label : 'In depth',
-			service : 'TvNewsEnricher',
-			params : {
-				dimension : 'indepth'
+			service : {
+				id : 'TvNewsEnricher',
+				params : {
+					dimension : 'indepth'
+				}
 			}
 		},
 		{
 			id : 'tvne_5',
 			label : 'Tweets',
-			service : 'TvNewsEnricher',
-			params : {
-				dimension : 'tweets'
+			service : {
+				id :'TvNewsEnricher',
+				params : {
+					dimension : 'tweets'
+				}
 			}
 		},
 		{
-			id : 'related',
+			id : 'tve_1',
 			label : 'Related news',
-			service : 'TvEnricher'
-		},
+			service : {
+				id :'TvEnricher',
+				params : {
+					dimension : 'Solr',
+					index : 'RBB'
+				}
+			}
+		}
 	]
 };
 
@@ -144,31 +162,39 @@ var tkkConfig = {
 		{
 			id : 'maintopic',//check this
 			label : 'The art object',
-			service : 'informationCards'
+			service : {
+				id :'informationCards'
+			}
 		},
 		{
 			id : 'tve_1',
 			label : 'Background information',
-			service : 'TvEnricher',
-			params : {
-				dimension : 'SV'
+			service : {
+				id : 'TvEnricher',
+				params : {
+					dimension : 'SV'
+				}
 			}
 		},
 		{
 			id : 'tve_2',
 			label : 'Related Europeana objects',
-			service : 'TvEnricher',
-			params : {
-				dimension : 'Europeana'
+			service : {
+				id : 'TvEnricher',
+				params : {
+					dimension : 'Europeana'
+				}
 			}
 		},
 		{
 			id : 'tve_3',
 			label : 'Related fragments',
-			service : 'TvEnricher',
-			params : {
-				dimension : 'Solr',
-				index : 'SV'
+			service : {
+				id : 'TvEnricher',
+				params : {
+					dimension : 'Solr',
+					index : 'SV'
+				}
 			}
 		}
 	]
@@ -177,14 +203,18 @@ var tkkConfig = {
 var trialConfig = {
 	dimensions : [
 		{
-		id : 'maintopic',
-		label : 'Main topics',
-		service : 'informationCards'
+			id : 'maintopic',
+			label : 'Main topics',
+			service : {
+				id : 'informationCards'
+			}
 		},
 		{
-		id : 'freshMedia',
-		label : 'Background information',
-		service : 'TvEnricher'
+			id : 'freshMedia',
+			label : 'Background information',
+			service : {
+				id : 'TvEnricher'
+			}
 		}
 	]
 }

@@ -112,12 +112,13 @@ def save_et(request):
 @csrf_exempt
 def publish(request):
     publishingPoint = request.GET.get('pp', None)
+    delete = request.GET.get('del', 'false')
     saveData = request.body
     if publishingPoint:
         api = Api()
         try:
-            saveData = simplejson.loads(saveData)
-            resp = api.publish(publishingPoint, saveData)
+            saveData = simplejson.loads(saveData)            
+            resp = api.publish(publishingPoint, saveData, delete == 'true')
         except JSONDecodeError, e:
             print e
             return HttpResponse(__getErrorMessage('Save data was not valid JSON'), mimetype='application/json')
@@ -153,13 +154,16 @@ def videos(request):
 def dimension(request):
     print 'Testing the new dimension'
     query = request.GET.get('q', None)
-    dimensionService = request.GET.get('d', None)
-    params = request.GET.get('params', None)
-    if params:
-        params = simplejson.loads(params)
-    if query and dimensionService and params:
+    dimension = request.GET.get('d', None)
+    try:
+        dimension = simplejson.loads(dimension)
+    except JSONDecodeError, e:
+        print 'Invalid dimension data'
+        print dimension
+        dimension = None
+    if query and dimension:
         api = Api()
-        resp = api.dimension(query.split(','), dimensionService, params)
+        resp = api.dimension(query.split(','), dimension)
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
         else:

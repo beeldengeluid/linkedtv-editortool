@@ -70,12 +70,13 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		return self.__saveMediaResourceTriples(mediaResource, self.SAVE_ACTION)		
 
 	def unpublish(self, mediaResource):
+		print 'unpublishing this mediaresource'
 		return self.__saveMediaResourceTriples(mediaResource, self.DELETE_ACTION)		
 
 	def __saveMediaResourceTriples(self, mediaResource, action):
 		print 'Saving mediaresource: %s' % mediaResource.getId()
 		for chapter in mediaResource.getChapters():
-			if chapter.isCurated():
+			if chapter.getType() == 'curated':
 				print 'Saving curated chapter'
 				resourceUris = self.__saveChapterTriples(mediaResource.getId(), chapter, action)
 				if resourceUris:
@@ -132,7 +133,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('} ')
 		
 		#Do not INSERT data when the action is DELETE_ACTION
-		if(action != self.DELETE_ACTION):
+		if(action == self.SAVE_ACTION):
 			query.append('INSERT { ')
 			
 			#media fragment
@@ -220,7 +221,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		query.append('} ')        
 		
-		if(action != self.DELETE_ACTION):
+		if(action == self.SAVE_ACTION):
 			query.append('INSERT { ')
 			
 			#TODO make sure to refer to the chapter mediafragment
@@ -258,6 +259,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 			query.append('<%s> oa:hasTarget <%s> . ' % (aURI, mfURI))
 			query.append('<%s> oa:hasBody <%s> . ' % (aURI, bodyURI))
 			query.append('<%s> prov:wasAttributedTo <%s> . ' % (aURI, self.PROV_ET_URI))
+			query.append('<%s> linkedtv:partOfDimension "%s" . ' % (aURI, dimension.getLabel()))
 			query.append('<%s> prov:startedAtTime "%s"^^xsd:dateTime . ' % (aURI, self.__getCurrentDateTime()))
 					 
 			

@@ -15,11 +15,7 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
 			console.debug('I saved some enrichments');
-			var activeChapter = chapterCollection.getActiveChapter();
-			activeChapter.dimensions[data.dimension.id] = {annotations : data.enrichments };
-			
-			//update the chapter collection
-			chapterCollection.saveChapter(activeChapter);
+			chapterCollection.saveChapterLinks(data.dimension, data.enrichments);
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());
 		});

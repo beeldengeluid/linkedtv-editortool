@@ -13,7 +13,7 @@ angular.module('linkedtv').controller('enrichmentController',
 	});
 
 	$scope.editLink = function(dimension, link) {
-		if(dimension.service != 'informationCards') {
+		if(dimension.service.id != 'informationCards') {
 			if(link) {
 				enrichmentUtils.openLinkDialog(dimension, link);
 			} else {

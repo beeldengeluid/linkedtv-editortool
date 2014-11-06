@@ -18,11 +18,11 @@ from linkedtv.model.Annotation import Annotation
 class Chapter(Annotation):
 
 	def __init__(self, label, start, end, mfURI = None, annotationURI = None, bodyURI = None, 
-			relevance = 1, confidence = 1, poster = None, dimensions = {}, curated = False):
+			relevance = 1, confidence = 1, poster = None, dimensions = {}, _type = 'auto'):
 		Annotation.__init__(self, label, start, end, mfURI, annotationURI, bodyURI, relevance, confidence)
 		self.poster = poster
 		self.dimensions = dimensions
-		self.curated = curated
+		self.type = _type
 
 	def setPoster(self, poster):
 		self.poster = poster
@@ -36,8 +36,8 @@ class Chapter(Annotation):
 	def getDimensions(self):
 		return self.dimensions
 
-	def setIsCurated(self, curated):
-		self.curated = curated
+	def setType(self, _type):
+		self.type = _type
 
-	def isCurated(self):
-		return self.curated
+	def getType(self):
+		return self.type

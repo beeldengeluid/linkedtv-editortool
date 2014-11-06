@@ -15,8 +15,8 @@ class DataConverter():
 					c['start'], 
 					c['end'],
 				)
-				if c.has_key('type') and c['type'] == 'curated':
-					chapter.setIsCurated(True)
+				if c.has_key('type'):
+					chapter.setType(c['type']);
 				if c.has_key('mfURI'):
 					chapter.setMfURI(c['mfURI']),
 				if c.has_key('annotationURI'):
@@ -32,9 +32,11 @@ class DataConverter():
 				if c.has_key('dimensions'):
 					dimensions = {}
 					for key in c['dimensions']:
+						print c['dimensions'][key]
 						dimension = Dimension(
 							key, #id
-							key #for now also use the id for the description
+							c['dimensions'][key]['label'], #label
+							c['dimensions'][key]['service'] #service (including id and params)
 						)
 						#fill the list of Enrichment objects and add it as annotations for the Dimension object
 						annotations = []

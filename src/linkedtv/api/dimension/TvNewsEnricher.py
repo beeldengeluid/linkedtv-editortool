@@ -51,42 +51,45 @@ class TvNewsEnricher(DimensionService):
 		self.searchPeriod = 7 # days
 		self.searchLimit = 50
 
-	def fetch(self, query, params):
-		return self.__formatResponse(self.__search(query, params))
+	def fetch(self, query, dimension):
+		if self.__isValidDimension(dimension):
+			return self.__formatResponse(self.__search(query, params))
+		return None
 
-	def __search(self, query, params):
+	def __isValidDimension(self, dimension):
+		if dimension.has_key('service'):
+			if dimension['service'].has_key('id') and dimension['service'].has_key('params'):
+				return dimension['service']['params'].has_key('dimension')
+		return False
+
+	def __search(self, query, dimension):
 		DimensionService.__search(self, query, params)
 		http = httplib2.Http()		
-		url = self.__getServiceUrl(params['dimension'], query)
+		url = self.__getServiceUrl(query, dimension)
 		headers = {'Content-type': 'application/json'}
 		resp, content = http.request(url, 'GET', headers=headers)		
 		if content:
-			return self.__formatResponse(content, params['dimension'])
+			return self.__formatResponse(content, dimension['service']['params']['dimension'])
 		else:
 			return None
-		print 'fetching enrichments: %s (%s)' % (query, params['dimension'])
 
-	def __formatResponse(self, data):		
-		print 'Implement this!'
-		return data
-
-	def __getServiceUrl(self, dimension, query):
+	def __getServiceUrl(self, query, dimension):
 		endDate = date.today()
 		startDate = endDate-timedelta(days=self.searchPeriod)
-
+		d = dimension['service']['params']['dimension']
 		#TODO define the date somewhere
 		query = '+'.join(query)
 
 		url = '%s/%s?query=%s&startdate=%s&enddate=%s&limit=%s' % (
 			self.BASE_URL,
-			dimension,
+			d,
 			query,
 			endDate.strftime('%Y%m%d'),
 			endDate.strftime('%Y%m%d'),
 			self.searchLimit
 		)
-		if dimension != 'tweets':
-			url = '%s&cse=%s' % (url, self.googleCustomSearchEngines[dimension])
+		if d != 'tweets':
+			url = '%s&cse=%s' % (url, self.googleCustomSearchEngines[d])
 		print url
 		return url
 

@@ -17,17 +17,27 @@ angular.module('linkedtv').controller('editorPanelController',
 	}
 
 	$scope.publishResource = function() {
-		dataService.publishResource(chapterCollection.getCuratedChapters(), $scope.resourcePublished);
+		dataService.publishResource(chapterCollection.getCuratedChapters(), false, $scope.resourcePublished);
 	}
 
 	$scope.resourcePublished = function(mediaResource) {
 		if(mediaResource.chapters) {
 			console.debug('RESOURCE WAS PUBLISHED');
 			chapterCollection.setChapters(mediaResource.chapters);
+			//chapterCollection.setActiveChapter(chapterCollection.getChapters()[0]);
 			chapterCollection.saveOnServer();
 		} else {
 			alert('The data could not be published');
 		}
+	}
+
+	$scope.unpublishResource = function() {
+		dataService.publishResource(chapterCollection.getCuratedChapters(), true, $scope.resourceUnpublished);
+	}
+
+	$scope.resourceUnpublished = function(mediaResource) {
+		chapterCollection.removeCuratedChapterPublicationURIs();
+		alert('The data was removed from the LinkedTV platform');
 	}
 	
 });

@@ -4,8 +4,8 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 		console.debug('Querying enrichments using ' + query);
 		console.debug(dimension);
 		var fetchUrl = '/dimension?q=' + query.split('+').join(',');
-		fetchUrl += '&d=' + dimension.service;
-		fetchUrl += '&params=' + JSON.stringify(dimension.params)
+		fetchUrl += '&d=' + JSON.stringify(dimension);
+		//fetchUrl += '&params=' + JSON.stringify(dimension.params)
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -22,9 +22,9 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 	}
 
 	function formatServiceResponse(data, dimension) {
-		if(dimension.service == 'TvEnricher') {
+		if(dimension.service.id == 'TvEnricher') {
 			return formatTvEnricherResponse(data, dimension);
-		} else if(dimension.service == 'TvNewsEnricher') {
+		} else if(dimension.service.id == 'TvNewsEnricher') {
 			return formatTvNewsEnricherResponse(data, dimension);
 		}
 		return null;
@@ -82,7 +82,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data
 		var eSources = [];//always empty in this case
-		if(dimension.params.dimension != 'tweets') { //TODO make sure that Tweets can also be shown (build another formatXXX function)
+		if(dimension.service.params.dimension != 'tweets') { //TODO make sure that Tweets can also be shown (build another formatXXX function)
 			_.each(data, function(e){
 				var enrichment = {
 					label : e.title,

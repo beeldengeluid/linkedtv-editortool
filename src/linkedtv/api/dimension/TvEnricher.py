@@ -14,18 +14,26 @@ class TvEnricher(DimensionService):
         self.BASE_URL = 'http://linkedtv.eurecom.fr/tvenricher/api'
         self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
 
-    def fetch(self, query, params):
-        return self.__formatResponse(self.__search(query, params))
+    def fetch(self, query, dimension):
+        if self.__isValidDimension(dimension):
+            return self.__formatResponse(self.__search(query, dimension))
+        return None
 
-    def __search(self, query, params):
+    def __isValidDimension(self, dimension):
+        if dimension.has_key('service'):
+            if dimension['service'].has_key('id') and dimension['service'].has_key('params'):
+                return dimension['service']['params'].has_key('dimension')
+        return False
+
+    def __search(self, query, dimension):
         #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v        
         http = httplib2.Http()
-        url = self.__getServiceUrl(query, params)     
+        url = self.__getServiceUrl(query, dimension)     
         print url    
         headers = {'Content-type': 'application/json'}
         resp, content = http.request(url, 'GET', headers=headers)
         if content:
-            if params['dimension'] == 'Solr':
+            if dimension['service']['params']['dimension'] == 'Solr':
                 enrichments = []
                 mfs = simplejson.loads(content)
                 for mf in mfs:
@@ -41,35 +49,15 @@ class TvEnricher(DimensionService):
         else:
             return None
 
-    def __formatResponse(self, data):        
-        print 'Implement this!'
+    def __formatResponse(self, data):
         return data
 
-    def __getServiceUrl(self, query, params):
+    def __getServiceUrl(self, query, dimension):
         query = urllib.quote(' '.join(query))
-        url = '%s/entity/enrichment/%s?q=%s' % (self.BASE_URL, params['dimension'], query)
-        if params.has_key('index'):        
-            url = '%s&index=%s' % (url, params['index'])
+        url = '%s/entity/enrichment/%s?q=%s' % (self.BASE_URL, dimension['service']['params']['dimension'], query)
+        if dimension['service']['params'].has_key('index'):        
+            url = '%s&index=%s' % (url, dimension['service']['params']['index'])
         return url
-
-    """
-    def __formatResponse(self, content, query, params):
-        resp = None
-        if params['dimension'] == 'Solr':
-            enrichments = []
-            mfs = simplejson.loads(content)
-            for mf in mfs:
-                mf = mf.replace('\r', '').replace('\n', '')
-                mf = mf[len('http://data.linkedtv.eu/media/'):]
-                mf = mf[0:mf.find('#')]
-                videoData = self.__getVideoData(mf)
-                enrichments.append({'micropostUrl' : mf, 'posterUrl' : videoData['poster'],
-                 'micropost' : {'plainText' : videoData['title']} })
-            resp = { 'enrichments' : { '%s' % ' '.join(query) : {'LinkedTV' : enrichments } } }
-        else:
-            resp = { 'enrichments' : simplejson.loads(content) } # service is already included in the content
-        return resp
-    """
 
     #this is basically copied from the (also crappy Api class)
     def __getVideoData(self, resourceUri):
