@@ -1,9 +1,10 @@
 class Entity(object):
 
-	def __init__(self, uri, label, entityType=None):
+	def __init__(self, uri, label, entityType = None, etURI = None):
 		self.uri = uri
-		self.label = label
+		self.label = label		
 		self.type = entityType
+		self.etURI = etURI
 
 	def setUri(self, uri):
 		self.uri = uri
@@ -22,3 +23,9 @@ class Entity(object):
 
 	def getType(self):
 		return self.type
+
+	def setEtURI(self, etURI):
+		self.etURI = etURI
+
+	def getEtURI(self):
+		return self.etURI

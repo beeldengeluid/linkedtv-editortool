@@ -39,14 +39,15 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$scope.activeTemplate = null;
 	}
 
+	/*
 	$scope.generateUri = function() {
 		return 'http://linkedtv.eu/' + new Date().getTime();
-	}
+	}*/
 
 	//TODO this function formats the stored triples in the form of the user friendly template
 	$scope.setTemplate = function(template) {
 		$scope.activeTemplate = template;
-		$scope.card.uri = $scope.generateUri();//always assign a custom ID to a card based on a template
+		//$scope.card.uri = $scope.generateUri();//always assign a custom ID to a card based on a template
 	};
 
 	$scope.addToTemplate = function(triple) {
@@ -159,18 +160,24 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.updateCardProperties = function() {
 		//make sure to copy the poster to the card
 		$scope.card.poster = $scope.poster;
-
+		
+		/*
 		//if there is no uri yet add it
 		if(!$scope.card.uri) {
 			$scope.card.uri = $scope.generateUri();
-		}
+		}*/
 
-		//add the filled out template to card properties
-		if($scope.card.template) {
-			console.debug($scope.card.template);
-			_.each($scope.card.template.properties, function(p) {
-				$scope.card[p.key] = p.value;
+		//use the template properties to fill the enrichment's properties and entity list
+		if($scope.activeTemplate) {
+			var entities = [];
+			_.each($scope.activeTemplate.properties, function(p) {
+				if(p.type == 'literal') {
+					$scope.card[p.key] = p.value;
+				} else if (p.type == 'entity' && p.value != undefined) {
+					entities.push(p.value);
+				}
 			});
+			$scope.card.entities = entities;
 		}
 	};
 

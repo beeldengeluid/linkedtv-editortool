@@ -111,14 +111,14 @@ class CuratedDataLoader(DataLoader):
                                   'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start,
                                   'end' : end, 'label' : label, 'relevance' : r, 'confidence' : c})
                     """
-                    shots.append(Shot(label, start, end, mfURI, annotationURI, bodyURI, r, c))
+                    shots.append(Shot(label, None, start, end, mfURI, annotationURI, bodyURI, r, c))
                 elif RDFType == '%sChapter' % self.LINKEDTV_ONTOLOGY_PF:
                     """
                     chapters.append({'ETmfURI' : ETmfURI, 'ETannotationURI' : ETannotationURI, 'ETbodyURI' : ETbodyURI,
                                      'mfURI' : mfURI, 'annotationURI' : annotationURI, 'bodyURI' : bodyURI, 'start' : start, 'end' : end,
                                      'label' : label, 'relevance' : r, 'confidence' : c, 'segmentType' : segmentType})
                     """
-                    chapters.append(Chapter(label, start, end, mfURI, annotationURI, bodyURI, r, c))
+                    chapters.append(Chapter(label, None, start, end, mfURI, annotationURI, bodyURI, r, c))
                 elif RDFType.find(self.NERD_ONTOLOGY_PF) != -1 or RDFType.find(self.DBPEDIA_ONTOLOGY_PF) != -1:
                     """
                     nes.append({'ETenrichmentURI' : ETenrichmentURI, 'ETmfURI' : ETmfURI, 'ETannotationURI' : ETannotationURI, 'ETbodyURI' : ETbodyURI,
@@ -127,7 +127,7 @@ class CuratedDataLoader(DataLoader):
                                 'subTypes' : self.__getDCTypes(DCType), 'disambiguationURL' : OWLSameAs, 'relevance' : r, 'confidence' : c,
                                 'url' : vocabURL})
                     """
-                    nes.append(NamedEntity(label, self.__getNEType(DCType, RDFType, OWLSameAs), 
+                    nes.append(NamedEntity(label, None, self.__getNEType(DCType, RDFType, OWLSameAs), 
                         self.__getDCTypes(DCType), OWLSameAs, start, end, mfURI, annotationURI, bodyURI, r, c))
 
             #load the curated enrichments (NEEDS TO BE CHANGED)
@@ -218,7 +218,7 @@ class CuratedDataLoader(DataLoader):
                                     'annotationURI' : annotationURI, 'ne' : entityLabel, 'poster' : poster,
                                     'socialInteraction' : socialInteraction, 'bodyProv' : bodyProv})
                 """                            
-                enrichments.append(Enrichment(entityLabel, start, end, None, None, bodyURI, 1, 1, deepLink, poster, source, creator,
+                enrichments.append(Enrichment(entityLabel, None, start, end, None, None, bodyURI, 1, 1, deepLink, poster, source, creator,
                     date, [], socialInteraction, DCType))
 
         return enrichments    

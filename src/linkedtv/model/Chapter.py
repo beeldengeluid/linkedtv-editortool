@@ -17,9 +17,9 @@ from linkedtv.model.Annotation import Annotation
 
 class Chapter(Annotation):
 
-	def __init__(self, label, start, end, mfURI = None, annotationURI = None, bodyURI = None, 
+	def __init__(self, label, description = None, start = 0, end = 0, mfURI = None, annotationURI = None, bodyURI = None, 
 			relevance = 1, confidence = 1, poster = None, dimensions = {}, _type = 'auto'):
-		Annotation.__init__(self, label, start, end, mfURI, annotationURI, bodyURI, relevance, confidence)
+		Annotation.__init__(self, label, description, start, end, mfURI, annotationURI, bodyURI, relevance, confidence)
 		self.poster = poster
 		self.dimensions = dimensions
 		self.type = _type

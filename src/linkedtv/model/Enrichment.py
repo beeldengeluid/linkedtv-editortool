@@ -2,10 +2,10 @@ from linkedtv.model.Annotation import Annotation
 
 class Enrichment(Annotation):
 
-	def __init__(self, label,  start = 0, end = 0, mfURI = None, annotationURI = None, bodyURI = None, 
+	def __init__(self, label,  description = None, start = 0, end = 0, mfURI = None, annotationURI = None, bodyURI = None, 
 		relevance = 1, confidence = 1, uri = None, poster = None, source=None, creator=None, date=None, entities=None,
 		socialInteraction=None, DCType=None):
-		Annotation.__init__(self, label, start, end, mfURI, annotationURI, bodyURI, relevance, confidence)
+		Annotation.__init__(self, label, description, start, end, mfURI, annotationURI, bodyURI, relevance, confidence)
 		self.uri = uri #actually it should be url, but it's too much hassle too update for now
 		self.poster = poster
 		self.source = source

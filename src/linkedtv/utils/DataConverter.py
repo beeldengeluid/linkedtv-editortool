@@ -39,20 +39,13 @@ class DataConverter():
 							c['dimensions'][key]['service'] #service (including id and params)
 						)
 						#fill the list of Enrichment objects and add it as annotations for the Dimension object
-						annotations = []
-						"""
-						"$$hashKey":"07H", ---> TODO remove in the client
-						"description":"No description",
-						"entitySource":"rotterdam", ---> TODO change this to entities in the client!!!!
-						"poster":"http://fotothek.slub-dresden.de/thumbs/df_hauptkatalog_0087678.jpg",
-						"uri":"http://data.europeana.eu/item/01004/17D098123E29E7EFAC2C7A0003029C07DA4A3978",
-						"label":"Kallmorgen, Friedrich, Rotterdamer Hafen",
-						"source":"Europeana"
-						"""
+						annotations = []						
 						if c['dimensions'][key].has_key('annotations'):
 							for e in c['dimensions'][key]['annotations']:
 								#mandatory fields first (TODO make sure these are always present in the client!!)
 								annotation = Enrichment(e['label'])
+								if e.has_key('description'):
+									annotation.setDescription(e['description'])
 								if e.has_key('uri'):
 									annotation.setUri(e['uri'])
 								if e.has_key('poster'):
@@ -70,7 +63,15 @@ class DataConverter():
 								if e.has_key('date'):
 									annotation.setDate(e['date'])
 								if e.has_key('entities'):
-									annotation.setEntities(e['entities'])
+									entities = []
+									for ne in e['entities']:
+										entity = Entity(ne['uri'], ne['label'])
+										if ne.has_key('type'):
+											entity.setType(ne['type'])
+										if ne.has_key('etURI'):
+											entity.setEtURI(ne['etURI'])
+										entities.append(entity)										
+									annotation.setEntities(entities)
 								if e.has_key('socialInteraction'):
 									annotation.setSocialInteraction(e['socialInteraction'])
 								if e.has_key('mfURI'):

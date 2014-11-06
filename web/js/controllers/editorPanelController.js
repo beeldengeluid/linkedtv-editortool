@@ -24,7 +24,7 @@ angular.module('linkedtv').controller('editorPanelController',
 		if(mediaResource.chapters) {
 			console.debug('RESOURCE WAS PUBLISHED');
 			chapterCollection.setChapters(mediaResource.chapters);
-			//chapterCollection.setActiveChapter(chapterCollection.getChapters()[0]);
+			chapterCollection.setActiveChapter(chapterCollection.getChapters()[0]);
 			chapterCollection.saveOnServer();
 		} else {
 			alert('The data could not be published');

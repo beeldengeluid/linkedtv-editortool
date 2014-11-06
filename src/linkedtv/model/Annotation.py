@@ -4,8 +4,10 @@ super class of: Concept, Shot, Chapter and NamedEntity
 
 class Annotation(object):
 
-	def __init__(self, label, start, end, mfURI = None, annotationURI = None, bodyURI = None, relevance = 0, confidence = 0):
+	def __init__(self, label, description = None, start = 0, end = 0, 
+		mfURI = None, annotationURI = None, bodyURI = None, relevance = 0, confidence = 0):
 		self.label = label
+		self.description = description
 		self.start = start
 		self.end = end
 		self.mfURI = mfURI
@@ -19,6 +21,12 @@ class Annotation(object):
 
 	def getLabel(self):
 		return self.label
+
+	def setDescription(self, description):
+		self.description = description
+
+	def getDescription(self):
+		return self.description
 
 	def setStart(self, start):
 		self.start = start

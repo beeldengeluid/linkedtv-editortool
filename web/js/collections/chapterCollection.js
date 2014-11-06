@@ -98,7 +98,11 @@ angular.module('linkedtv').factory('chapterCollection',
 					delete a.mfURI;
 					delete a.bodyURI;
 					delete a.annotationURI;
-				})	
+					//TODO test this!!
+					_.each(a.entities, function(e) {
+						delete e.etURI;
+					});
+				});				
 			});	
 			delete c.mfURI;
 			delete c.bodyURI;
@@ -204,7 +208,6 @@ angular.module('linkedtv').factory('chapterCollection',
 			}
 		} else {
 			//add a new dimension (add the config properties + a list to hold the annotations)
-			console.debug('======ADDING A NEW ENRICHMENT DIMENSION!!====');
 			_activeChapter.dimensions[dimension.id] = {
 				id : dimension.id,
 				label : dimension.label,

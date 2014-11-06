@@ -4,5 +4,6 @@ from .Dimension import Dimension
 from .Shot import Shot
 from .Concept import Concept
 from .NamedEntity import NamedEntity
+from .Entity import Entity
 from .Enrichment import Enrichment
 from .MediaResource import MediaResource
