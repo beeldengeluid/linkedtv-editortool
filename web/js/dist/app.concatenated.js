@@ -524,32 +524,6 @@ linkedtv.run(function($rootScope, conf) {
 		})
 	}
 
-	//TODO also remove the URIs from the annotations
-	function removeCuratedChapterPublicationURIs() {
-		var chapters = getCuratedChapters();
-		console.debug('CURATED CHAPTERS');
-		console.debug(chapters);
-		_.each(chapters, function(c) {
-			_.each(c.dimensions, function(k, v) {
-				_.each(k.annotations, function(a) {
-					delete a.mfURI;
-					delete a.bodyURI;
-					delete a.annotationURI;
-					//TODO test this!!
-					_.each(a.entities, function(e) {
-						delete e.etURI;
-					});
-				});				
-			});	
-			delete c.mfURI;
-			delete c.bodyURI;
-			delete c.annotationURI;
-			console.debug(c);
-		});
-		//make sure the URIs are removed from Redis as well
-		saveOnServer();
-	}
-
 	function setActiveChapter(activeChapter) {
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
@@ -675,8 +649,7 @@ linkedtv.run(function($rootScope, conf) {
 		saveChapter : saveChapter,
 		saveChapterLink : saveChapterLink,
 		saveChapterLinks : saveChapterLinks,
-		addObserver : addObserver,
-		removeCuratedChapterPublicationURIs : removeCuratedChapterPublicationURIs
+		addObserver : addObserver
 	}
 
 }]);;angular.module('linkedtv').factory('entityCollection', ['timeUtils', function(timeUtils) {
@@ -1495,15 +1468,8 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	$scope.resourcePublished = function(mediaResource) {
-		if(mediaResource.chapters) {
-			console.debug('RESOURCE WAS PUBLISHED');
-			console.debug(mediaResource);
-			chapterCollection.setChapters(mediaResource.chapters);
-			chapterCollection.setActiveChapter(chapterCollection.getChapters()[0]);
-			chapterCollection.saveOnServer();
-		} else {
-			alert('The data could not be published');
-		}
+		//TODO animate some stuff
+		alert('The data was published in the LinkedTV platform');		
 	}
 
 	$scope.unpublishResource = function() {
@@ -1511,7 +1477,7 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	$scope.resourceUnpublished = function(mediaResource) {
-		chapterCollection.removeCuratedChapterPublicationURIs();
+		//TODO animate some stuff
 		alert('The data was removed from the LinkedTV platform');
 	}
 	

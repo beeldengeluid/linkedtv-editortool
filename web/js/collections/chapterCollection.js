@@ -87,32 +87,6 @@ angular.module('linkedtv').factory('chapterCollection',
 		})
 	}
 
-	//TODO also remove the URIs from the annotations
-	function removeCuratedChapterPublicationURIs() {
-		var chapters = getCuratedChapters();
-		console.debug('CURATED CHAPTERS');
-		console.debug(chapters);
-		_.each(chapters, function(c) {
-			_.each(c.dimensions, function(k, v) {
-				_.each(k.annotations, function(a) {
-					delete a.mfURI;
-					delete a.bodyURI;
-					delete a.annotationURI;
-					//TODO test this!!
-					_.each(a.entities, function(e) {
-						delete e.etURI;
-					});
-				});				
-			});	
-			delete c.mfURI;
-			delete c.bodyURI;
-			delete c.annotationURI;
-			console.debug(c);
-		});
-		//make sure the URIs are removed from Redis as well
-		saveOnServer();
-	}
-
 	function setActiveChapter(activeChapter) {
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
@@ -238,8 +212,7 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveChapter : saveChapter,
 		saveChapterLink : saveChapterLink,
 		saveChapterLinks : saveChapterLinks,
-		addObserver : addObserver,
-		removeCuratedChapterPublicationURIs : removeCuratedChapterPublicationURIs
+		addObserver : addObserver
 	}
 
 }]);

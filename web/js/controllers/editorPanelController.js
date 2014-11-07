@@ -21,15 +21,8 @@ angular.module('linkedtv').controller('editorPanelController',
 	}
 
 	$scope.resourcePublished = function(mediaResource) {
-		if(mediaResource.chapters) {
-			console.debug('RESOURCE WAS PUBLISHED');
-			console.debug(mediaResource);
-			chapterCollection.setChapters(mediaResource.chapters);
-			chapterCollection.setActiveChapter(chapterCollection.getChapters()[0]);
-			chapterCollection.saveOnServer();
-		} else {
-			alert('The data could not be published');
-		}
+		//TODO animate some stuff
+		alert('The data was published in the LinkedTV platform');		
 	}
 
 	$scope.unpublishResource = function() {
@@ -37,7 +30,7 @@ angular.module('linkedtv').controller('editorPanelController',
 	}
 
 	$scope.resourceUnpublished = function(mediaResource) {
-		chapterCollection.removeCuratedChapterPublicationURIs();
+		//TODO animate some stuff
 		alert('The data was removed from the LinkedTV platform');
 	}
 	

@@ -27,13 +27,8 @@ class LinkedTVPublishingPoint(PublishingPoint):
 	def __init__(self):
 		print self.__getCurrentDateTime()
 		#connection details
-		#self.SPARQL_ENDPOINT = 'http://zorin.beeldengeluid.nl:3020/sparql/'
 		self.SPARQL_ENDPOINT = 'http://data.linkedtv.eu/sparql'
 		self.SAVE_GRAPH = 'http://data.linkedtv.eu/graph/et_v2'
-
-		#save types
-		self.DELETE_ACTION = 'delete'
-		self.SAVE_ACTION = 'save'
 
 		#external ontology prefixes
 		self.NERD_ONTO_PF = 'http://nerd.eurecom.fr/ontology#'
@@ -100,14 +95,14 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		#Construct the URIs
 		mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, mediaResourceUri, start, end)
-		bodyURI = '%s/%s' % (self.LTV_CHAPTER_PF, uuid.uuid1())		
+		bodyURI = '%s/%s' % (self.LTV_CHAPTER_PF, uuid.uuid1())
 		aURI = '%s/%s' % (self.LTV_ANNOTATION_PF, uuid.uuid1())
 						
 		query.append('INSERT { ')
 		
 		#media fragment
-		query.append('<%s> rdf:type <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
-		query.append('rdf:type <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
+		query.append('<%s> a <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
+		query.append('a <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
 		query.append('ma:isFragmentOf <%s/%s> ; ' % (self.LTV_MEDIA_PF, mediaResourceUri))
 		query.append('ma:duration "%s"^^xsd:float ; ' % duration)
 		query.append('nsa:temporalStart "%s"^^xsd:float ; ' % start)
@@ -115,15 +110,15 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('nsa:temporalUnit "npt" . ')
 
 		#body -> type=chapter + label
-		query.append('<%s> rdf:type <%sChapter> ; ' % (bodyURI, self.LTV_ONTO_PF))
+		query.append('<%s> a <%sChapter> ; ' % (bodyURI, self.LTV_ONTO_PF))
 		query.append('rdfs:label "%s"' % chapter.getLabel())
 		if chapter.getPoster():
 			query.append(' ; linkedtv:hasPoster <%s>' % chapter.getPoster())
 		query.append(' . ')
 
 		#annotation targets the media fragment & links to the body
-		query.append('<%s> rdf:type <%s> ; ' % (aURI, self.OA_ANNOTATION))
-		query.append('rdf:type <%s> ; ' % self.PROV_ENTITY)
+		query.append('<%s> a <%s> ; ' % (aURI, self.OA_ANNOTATION))
+		query.append('a <%s> ; ' % self.PROV_ENTITY)
 		query.append('oa:hasTarget <%s> ; ' % mfURI)
 		query.append('oa:hasBody <%s> ; ' % bodyURI)
 		query.append('prov:wasAttributedTo <%s> ; ' % self.PROV_ET_URI)
@@ -176,8 +171,8 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		if duration != '0':
 			#First create the media fragment => self.LTV_MEDIA_PF/UUID/#t=1931.24,1934.639
-			query.append('<%s> rdf:type <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
-			query.append('rdf:type <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
+			query.append('<%s> a <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
+			query.append('a <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
 			query.append('ma:isFragmentOf <%s/%s> ; ' % (self.LTV_MEDIA_PF, mediaResourceUri))
 			query.append('ma:duration "%s"^^xsd:float ; ' % duration)
 			query.append('nsa:temporalStart "%s"^^xsd:float ; ' % start)
@@ -185,8 +180,8 @@ class LinkedTVPublishingPoint(PublishingPoint):
 			query.append('nsa:temporalUnit "npt" . ')		
 
 		#Create the body containing the enrichment info            
-		query.append('<%s> rdf:type <%s> ; ' % (bodyURI, self.MEDIA_RESOURCE))
-		query.append('rdf:type <%s> ; ' % self.RELATED_CONTENT)
+		query.append('<%s> a <%s> ; ' % (bodyURI, self.MEDIA_RESOURCE))
+		query.append('a <%s> ; ' % self.RELATED_CONTENT)
 		query.append('rdfs:label "%s"' % annotation.getLabel())
 		if annotation.getUri():
 			query.append(' ; ma:locator "%s"' % annotation.getUri())#voor IC templates is deze leeg
@@ -205,8 +200,8 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append(' . ')
 
 		#Then create the annotation to tie everything together
-		query.append('<%s> rdf:type <%s> ; ' % (aURI, self.OA_ANNOTATION))
-		query.append('rdf:type <%s> ; ' % self.PROV_ENTITY)
+		query.append('<%s> a <%s> ; ' % (aURI, self.OA_ANNOTATION))
+		query.append('a <%s> ; ' % self.PROV_ENTITY)
 		query.append('oa:motivatedBy <%s> ; ' % self.MOTIVATION_LINKING)
 		#If the enrichment has a start & end time, link to the custom entity
 		if duration != '0':
@@ -237,16 +232,16 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('INSERT { ')
 
 		#create the entity
-		query.append('<%s> rdf:type <%sEntity> ; ' % (etURI, self.LTV_ONTO_PF))	
-		query.append('rdf:type <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
+		query.append('<%s> a <%sEntity> ; ' % (etURI, self.LTV_ONTO_PF))	
+		query.append('a <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
 		query.append('owl:sameAs <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
 		query.append('dc:type <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type					
 		query.append('rdfs:label "%s" ; ' % entity.getLabel())
 		if entity.getUri():
 			query.append('ma:locator "%s" ; ' % entity.getUri())
 		query.append('dc:source "%s" ; ' % self.PROV_ET_SOURCE)
-		query.append('linkedtv:hasConfidence "%s" ; ' % self.ET_CONFIDENCE)
-		query.append('linkedtv:hasRelevance "%s" . ' % self.ET_RELEVANCE)
+		query.append('linkedtv:hasConfidence "%s"^^xsd:float ; ' % self.ET_CONFIDENCE)
+		query.append('linkedtv:hasRelevance "%s"^^xsd:float . ' % self.ET_RELEVANCE)
 
 		#relate the entity to the annotation
 		query.append('<%s> prov:wasDerivedFrom <%s> . ' % (annotationURI, etURI))
@@ -280,7 +275,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('?annotation ?p1 ?o1 . ')
 		query.append('?mediaFragment ?p2 ?o2 . ')
 		query.append('?body ?p3 ?o3 . ')
-		query.append('?annotation rdf:type <%s> . ' % self.OA_ANNOTATION)
+		query.append('?annotation a <%s> . ' % self.OA_ANNOTATION)
 		query.append('?annotation prov:wasAttributedTo <%s> . ' % self.PROV_ET_URI)
 		query.append('?annotation oa:hasTarget ?mediaFragment . ')
 		query.append('?annotation oa:hasBody ?body . ')		
