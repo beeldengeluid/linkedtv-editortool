@@ -79,7 +79,12 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 
 	$scope.addEnrichment = function(enrichment) {
 		//add the active entities so it's clear on what basis the enrichment was found
-		enrichment.entities = $scope.activeEntities;
+		var entities = []
+		_.each($scope.activeEntities, function(e, i){
+			console.debug(e)
+			entities.push(e);
+		});
+		enrichment.entities = entities;
 		$scope.savedEnrichments.push(enrichment);
 	}
 

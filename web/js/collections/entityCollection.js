@@ -18,7 +18,7 @@ angular.module('linkedtv').factory('entityCollection', ['timeUtils', function(ti
 	}
 
 	function updateChapterEntities(chapter) {
-		if(chapter) {
+		if(chapter) {			
 			//first filter all the entities to be only of the selected chapter
 			var entities = _.filter(_entities, function(item) {
 				if(item.start >= chapter.start && item.end <=  chapter.end) {
@@ -55,10 +55,9 @@ angular.module('linkedtv').factory('entityCollection', ['timeUtils', function(ti
 					_chapterEntities.push(temp);
 				}
 			}			
-			//TODO sort the entities
 			_chapterEntities.sort(function(a, b) {
 				return parseFloat(b.confidence) - parseFloat(a.confidence);
-			});
+			});			
 		}
 	}
 

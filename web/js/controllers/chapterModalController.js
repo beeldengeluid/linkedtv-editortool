@@ -5,10 +5,10 @@ angular.module('linkedtv').controller('chapterModalController',
 	$scope.chapter = chapter || {};
 
 	$scope.saveChapter = function () {
-		if($scope.chapter.label) {
+		if($scope.chapter.label && $scope.chapter.start && $scope.chapter.end) {
 			$modalInstance.close($scope.chapter);
 		} else {
-			alert('Please add a title');
+			alert('Please fill out the entire form');
 		}
 	};
 

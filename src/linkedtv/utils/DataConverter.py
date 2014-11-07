@@ -11,10 +11,10 @@ class DataConverter():
 			chapters = []
 			for c in saveData['chapters']:
 				chapter = Chapter(
-					c['label'], 
-					c['start'], 
-					c['end'],
+					c['label']					
 				)
+				chapter.setStart(c['start'])
+				chapter.setEnd(c['end'])
 				if c.has_key('type'):
 					chapter.setType(c['type']);
 				if c.has_key('mfURI'):
@@ -65,12 +65,19 @@ class DataConverter():
 								if e.has_key('entities'):
 									entities = []
 									for ne in e['entities']:
-										entity = Entity(ne['uri'], ne['label'])
+										print ne
+										entity = Entity()
+										if ne.has_key('uri'):#in case of a DBpedia NE (chosen by user)
+											entity.setUri(ne['uri'])
+										if ne.has_key('disambiguationURL'):#in case of an autogen NE
+											entity.setUri(ne['disambiguationURL'])
+										if ne.has_key('label'):
+											entity.setLabel(ne['label'])
 										if ne.has_key('type'):
 											entity.setType(ne['type'])
 										if ne.has_key('etURI'):
 											entity.setEtURI(ne['etURI'])
-										entities.append(entity)										
+										entities.append(entity)
 									annotation.setEntities(entities)
 								if e.has_key('socialInteraction'):
 									annotation.setSocialInteraction(e['socialInteraction'])

@@ -41,7 +41,7 @@ class DataLoader(object):
 	def getNEType(self, DCType, RDFType, OWLSameAs):
 		"""The RDF should be the correct one, however in some cases the OWLSameAs or DCType makes more sense"""
 		#TODO maybe later add some intelligence to this! Now handling on the client side...
-		if(RDFType.find(self.DBPEDIA_ONTOLOGY_PF) == -1):                
+		if(RDFType.find(self.DBPEDIA_ONTOLOGY_PF) == -1):
 			return RDFType[len(self.NERD_ONTOLOGY_PF):]
 		else:
 			return RDFType[len(self.DBPEDIA_ONTOLOGY_PF):]

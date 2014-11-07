@@ -153,28 +153,26 @@ angular.module('linkedtv').controller('informationCardModalController',
 	//----------------------------VALIDATION AND DATA FORMATTING------------------------------
 
 	$scope.isProperlyFilledOut = function() {
-		//TODO
+		if(!$scope.card.label || $scope.card.label == '') {
+			return false;
+		}
 		return true;
 	};
 
 	$scope.updateCardProperties = function() {
 		//make sure to copy the poster to the card
 		$scope.card.poster = $scope.poster;
-		
-		/*
-		//if there is no uri yet add it
-		if(!$scope.card.uri) {
-			$scope.card.uri = $scope.generateUri();
-		}*/
 
 		//use the template properties to fill the enrichment's properties and entity list
 		if($scope.activeTemplate) {
 			var entities = [];
 			_.each($scope.activeTemplate.properties, function(p) {
-				if(p.type == 'literal') {
-					$scope.card[p.key] = p.value;
-				} else if (p.type == 'entity' && p.value != undefined) {
-					entities.push(p.value);
+				if(p.value != undefined) {
+					if(p.type == 'literal') {
+						$scope.card[p.key] = p.value;
+					} else if (p.type == 'entity') {
+						entities.push(p.value);
+					}
 				}
 			});
 			$scope.card.entities = entities;

@@ -23,6 +23,7 @@ angular.module('linkedtv').controller('editorPanelController',
 	$scope.resourcePublished = function(mediaResource) {
 		if(mediaResource.chapters) {
 			console.debug('RESOURCE WAS PUBLISHED');
+			console.debug(mediaResource);
 			chapterCollection.setChapters(mediaResource.chapters);
 			chapterCollection.setActiveChapter(chapterCollection.getChapters()[0]);
 			chapterCollection.saveOnServer();

@@ -1,6 +1,6 @@
 class Entity(object):
 
-	def __init__(self, uri, label, entityType = None, etURI = None):
+	def __init__(self, uri = None, label = None, entityType = None, etURI = None):
 		self.uri = uri
 		self.label = label		
 		self.type = entityType

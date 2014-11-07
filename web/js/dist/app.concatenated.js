@@ -594,6 +594,8 @@ linkedtv.run(function($rootScope, conf) {
 	function saveChapter(chapter) {
 		var exists = false;
 		chapter.type = TYPE_CURATED;
+		chapter.start = parseInt(chapter.start);
+		chapter.end = parseInt(chapter.end);
 		for(c in _chapters) {
 			if(_chapters[c].guid == chapter.guid) {
 				setBasicProperties(chapter, false);
@@ -697,7 +699,7 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	function updateChapterEntities(chapter) {
-		if(chapter) {
+		if(chapter) {			
 			//first filter all the entities to be only of the selected chapter
 			var entities = _.filter(_entities, function(item) {
 				if(item.start >= chapter.start && item.end <=  chapter.end) {
@@ -734,10 +736,9 @@ linkedtv.run(function($rootScope, conf) {
 					_chapterEntities.push(temp);
 				}
 			}			
-			//TODO sort the entities
 			_chapterEntities.sort(function(a, b) {
 				return parseFloat(b.confidence) - parseFloat(a.confidence);
-			});
+			});			
 		}
 	}
 
@@ -1454,10 +1455,10 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.chapter = chapter || {};
 
 	$scope.saveChapter = function () {
-		if($scope.chapter.label) {
+		if($scope.chapter.label && $scope.chapter.start && $scope.chapter.end) {
 			$modalInstance.close($scope.chapter);
 		} else {
-			alert('Please add a title');
+			alert('Please fill out the entire form');
 		}
 	};
 
@@ -1496,6 +1497,7 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.resourcePublished = function(mediaResource) {
 		if(mediaResource.chapters) {
 			console.debug('RESOURCE WAS PUBLISHED');
+			console.debug(mediaResource);
 			chapterCollection.setChapters(mediaResource.chapters);
 			chapterCollection.setActiveChapter(chapterCollection.getChapters()[0]);
 			chapterCollection.saveOnServer();
@@ -1761,28 +1763,26 @@ angular.module('linkedtv').controller('informationCardModalController',
 	//----------------------------VALIDATION AND DATA FORMATTING------------------------------
 
 	$scope.isProperlyFilledOut = function() {
-		//TODO
+		if(!$scope.card.label || $scope.card.label == '') {
+			return false;
+		}
 		return true;
 	};
 
 	$scope.updateCardProperties = function() {
 		//make sure to copy the poster to the card
 		$scope.card.poster = $scope.poster;
-		
-		/*
-		//if there is no uri yet add it
-		if(!$scope.card.uri) {
-			$scope.card.uri = $scope.generateUri();
-		}*/
 
 		//use the template properties to fill the enrichment's properties and entity list
 		if($scope.activeTemplate) {
 			var entities = [];
 			_.each($scope.activeTemplate.properties, function(p) {
-				if(p.type == 'literal') {
-					$scope.card[p.key] = p.value;
-				} else if (p.type == 'entity' && p.value != undefined) {
-					entities.push(p.value);
+				if(p.value != undefined) {
+					if(p.type == 'literal') {
+						$scope.card[p.key] = p.value;
+					} else if (p.type == 'entity') {
+						entities.push(p.value);
+					}
 				}
 			});
 			$scope.card.entities = entities;
@@ -1915,7 +1915,12 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.addEnrichment = function(enrichment) {
 		//add the active entities so it's clear on what basis the enrichment was found
-		enrichment.entities = $scope.activeEntities;
+		var entities = []
+		_.each($scope.activeEntities, function(e, i){
+			console.debug(e)
+			entities.push(e);
+		});
+		enrichment.entities = entities;
 		$scope.savedEnrichments.push(enrichment);
 	}
 

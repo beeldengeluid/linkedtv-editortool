@@ -157,6 +157,8 @@ angular.module('linkedtv').factory('chapterCollection',
 	function saveChapter(chapter) {
 		var exists = false;
 		chapter.type = TYPE_CURATED;
+		chapter.start = parseInt(chapter.start);
+		chapter.end = parseInt(chapter.end);
 		for(c in _chapters) {
 			if(_chapters[c].guid == chapter.guid) {
 				setBasicProperties(chapter, false);

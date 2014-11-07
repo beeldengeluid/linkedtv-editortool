@@ -64,47 +64,29 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		#provenance
 		self.PROV_ET_SOURCE = 'editor_tool'
-		self.PROV_ET_URI = 'http://data.linkedtv.eu/organization/SV/EditorTool'
+		self.PROV_ET_URI = 'http://data.linkedtv.eu/organization/SV/EditorToolv2'
 
-	def publish(self, mediaResource):		
+	def publish(self, mediaResource):
 		#TODO implement the adding of triples to the LinkedTV store
-		return self.__saveMediaResourceTriples(mediaResource, self.SAVE_ACTION)
+		return self.__saveMediaResourceTriples(mediaResource)
 
 	def unpublish(self, mediaResource):
 		print 'unpublishing this mediaresource'
-		#return self.__saveMediaResourceTriples(mediaResource, self.DELETE_ACTION)
-		self.__deleteCuratedDataFromMediaResource(mediaResource)
+		self.__deleteCuratedDataFromMediaResource(mediaResource.getId())
 		return mediaResource
 
-	def __saveMediaResourceTriples(self, mediaResource, action):
-		self.__deleteCuratedDataFromMediaResource(mediaResource)
+	def __saveMediaResourceTriples(self, mediaResource):
+		self.__deleteCuratedDataFromMediaResource(mediaResource.getId())
 		print 'Saving mediaresource: %s' % mediaResource.getId()
 		for chapter in mediaResource.getChapters():
 			if chapter.getType() == 'curated':
 				print 'Saving curated chapter'
-				resourceUris = self.__saveChapterTriples(mediaResource.getId(), chapter, action)
-				if resourceUris:
-					chapter.setMfURI(resourceUris['mfURI'])
-					chapter.setAnnotationURI(resourceUris['annotationURI'])
-					chapter.setBodyURI(resourceUris['bodyURI'])
+				self.__saveChapterTriples(mediaResource.getId(), chapter)
 		return mediaResource
 
 
-	def __saveChapterTriples(self, mediaResourceUri, chapter, action):
-		print 'Saving chapter (%s): %s' % (action, chapter.getLabel())
-		dimensions = chapter.getDimensions()
-		for k in dimensions.keys():			
-			d = dimensions[k]
-			for a in d.getAnnotations():
-				resourceUris = self.__saveAnnotationTriples(mediaResourceUri, d, a, action)
-				if resourceUris:
-					a.setMfURI(resourceUris['mfURI'])
-					a.setAnnotationURI(resourceUris['annotationURI'])
-					a.setBodyURI(resourceUris['bodyURI'])				
-				for e in a.getEntities():
-					etURI = self.__saveEntityTriples(a.getAnnotationURI(), e, action)
-					e.setEtURI(etURI)
-
+	def __saveChapterTriples(self, mediaResourceUri, chapter):
+		print 'Saving chapter: %s' % chapter.getLabel()
 		print '-' * 150
 
 		#prepare some variables
@@ -114,87 +96,63 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		
 		#Head part of the query
 		query = self.__getQueryPrefix()
-
-		#Construct the DELETE part of the query and make sure to initialize the mfURI, bodyURI and aURI
 		query.append('WITH <%s> ' % self.SAVE_GRAPH)
-		#query.append('DELETE { ')
-		#construct the media fragment URI
-		if chapter.getMfURI():
-			mfURI = chapter.getMfURI()
-			#query.append('<%s> ?p1 ?o1 . ' % mfURI)
-		else:
-			mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, uuid.uuid1(), start, end)
-		#construct the body URI
-		if chapter.getBodyURI():
-			bodyURI = chapter.getBodyURI()
-			#query.append('<%s> ?p2 ?o2 . ' % bodyURI)
-		else:
-			bodyURI = '%s/%s' % (self.LTV_CHAPTER_PF, uuid.uuid1())  
-		#construct the annotation URI
-		if chapter.getAnnotationURI():
-			aURI = chapter.getAnnotationURI()
-			#query.append('<%s> ?p3 ?o3' % aURI)
-		else:
-			aURI = '%s/%s' % (self.LTV_ANNOTATION_PF, uuid.uuid1())
-		#query.append('} ')
+
+		#Construct the URIs
+		mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, mediaResourceUri, start, end)
+		bodyURI = '%s/%s' % (self.LTV_CHAPTER_PF, uuid.uuid1())		
+		aURI = '%s/%s' % (self.LTV_ANNOTATION_PF, uuid.uuid1())
+						
+		query.append('INSERT { ')
 		
-		#Do not INSERT data when the action is DELETE_ACTION
-		if(action == self.SAVE_ACTION):
-			query.append('INSERT { ')
-			
-			#media fragment
-			query.append('<%s> rdf:type <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
-			query.append('rdf:type <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
-			query.append('ma:isFragmentOf <%s/%s> ; ' % (self.LTV_MEDIA_PF, mediaResourceUri))
-			query.append('ma:duration "%s"^^xsd:float ; ' % duration)
-			query.append('nsa:temporalStart "%s"^^xsd:float ; ' % start)
-			query.append('nsa:temporalEnd "%s"^^xsd:float ; ' % end)
-			query.append('nsa:temporalUnit "npt" . ')
+		#media fragment
+		query.append('<%s> rdf:type <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
+		query.append('rdf:type <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
+		query.append('ma:isFragmentOf <%s/%s> ; ' % (self.LTV_MEDIA_PF, mediaResourceUri))
+		query.append('ma:duration "%s"^^xsd:float ; ' % duration)
+		query.append('nsa:temporalStart "%s"^^xsd:float ; ' % start)
+		query.append('nsa:temporalEnd "%s"^^xsd:float ; ' % end)
+		query.append('nsa:temporalUnit "npt" . ')
 
-			#body -> type=chapter + label
-			query.append('<%s> rdf:type <%sChapter> ; ' % (bodyURI, self.LTV_ONTO_PF))
-			query.append('rdfs:label "%s"' % chapter.getLabel())
-			if chapter.getPoster():
-				query.append(' ; linkedtv:hasPoster <%s>' % chapter.getPoster())
-			query.append(' . ')
+		#body -> type=chapter + label
+		query.append('<%s> rdf:type <%sChapter> ; ' % (bodyURI, self.LTV_ONTO_PF))
+		query.append('rdfs:label "%s"' % chapter.getLabel())
+		if chapter.getPoster():
+			query.append(' ; linkedtv:hasPoster <%s>' % chapter.getPoster())
+		query.append(' . ')
 
-			#annotation targets the media fragment & links to the body
-			query.append('<%s> rdf:type <%s> ; ' % (aURI, self.OA_ANNOTATION))
-			query.append('rdf:type <%s> ; ' % self.PROV_ENTITY)
-			query.append('oa:hasTarget <%s> ; ' % mfURI)
-			query.append('oa:hasBody <%s> ; ' % bodyURI)
-			query.append('prov:wasAttributedTo <%s> ; ' % self.PROV_ET_URI)
-			query.append('prov:startedAtTime "%s"^^xsd:dateTime . ' % self.__getCurrentDateTime())
+		#annotation targets the media fragment & links to the body
+		query.append('<%s> rdf:type <%s> ; ' % (aURI, self.OA_ANNOTATION))
+		query.append('rdf:type <%s> ; ' % self.PROV_ENTITY)
+		query.append('oa:hasTarget <%s> ; ' % mfURI)
+		query.append('oa:hasBody <%s> ; ' % bodyURI)
+		query.append('prov:wasAttributedTo <%s> ; ' % self.PROV_ET_URI)
+		query.append('prov:startedAtTime "%s"^^xsd:dateTime . ' % self.__getCurrentDateTime())
 
 
-			query.append('} ')
-		"""
-		#query.append('WHERE {')
-		#Only for UPDATE and DELETE, otherwise only the INSERT part is executed (with an empty DELETE block)
-		if chapter.getMfURI():
-			query.append('<%s> ?p1 ?o1 . ' % mfURI)
-			query.append('<%s> ?p2 ?o2 . ' % bodyURI)
-			query.append('<%s> ?p3 ?o3' % aURI)
-		query.append('}')
-		"""
+		query.append('} ')
 		print '\n\nSAVING CHAPTER-------------------------------------'
 		print ''.join(query)
 		print '\nEND SAVING CHAPTER-------------------------------------'
 
-		resp = self.__sendSearchRequest(''.join(query))
-		jsonData = None
-		try:
-			print resp
-			jsonData = simplejson.loads(resp)            
-		except JSONDecodeError, e:
-			print e
-			return None
-		
-		return {'mfURI' : mfURI, 'bodyURI' : bodyURI, 'annotationURI' : aURI}		
+		if self.__sendVirtuosoRequest(''.join(query)):
+			#If succesfully saved, save the enrichments (and related entities)
+			dimensions = chapter.getDimensions()
+			for k in dimensions.keys():
+				d = dimensions[k]
+				for a in d.getAnnotations():
+					resourceUris = self.__saveAnnotationTriples(mediaResourceUri, d, a, mfURI)
+					if resourceUris and a.getEntities():
+						for e in a.getEntities():
+							etURI = self.__saveEntityTriples(resourceUris['annotationURI'], e)
+							e.setEtURI(etURI)
+
+			return {'mfURI' : mfURI, 'bodyURI' : bodyURI, 'annotationURI' : aURI}
+		return None
 
 	#TOOD fix dit: enrichments hebben geen mfURI en geen annotationURI!!!
-	def __saveAnnotationTriples(self, mediaResourceUri, dimension, annotation, action):
-		print 'Saving annotation (%s): %s' % (action, annotation.getLabel())
+	def __saveAnnotationTriples(self, mediaResourceUri, dimension, annotation, chapterMfURI):
+		print 'Saving annotation: %s' % annotation.getLabel()
 		isInformationCard = self.__isInformationCard(dimension)
 		start = TimeUtils.toStringSeconds(annotation.getStart())
 		end = TimeUtils.toStringSeconds(annotation.getStart())
@@ -205,36 +163,18 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		
 		#The graph storing the ET data
 		query.append('WITH <%s> ' % self.SAVE_GRAPH)
-
-		#query.append('DELETE { ')
-		if annotation.getMfURI():
-			mfURI = annotation.getMfURI()
-			#query.append('<%s> ?p1 ?o1 . ' % mfURI)
-		else:
-			mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, uuid.uuid1(), start, end)
-
-		if annotation.getBodyURI():
-			bodyURI = annotation.getBodyURI()
-			#query.append('<%s> ?p2 ?o2 . ' % bodyURI)
-		else:
-			if isInformationCard:
-				bodyURI = '%s/%s' % (self.LTV_INFORMATION_CARD_PF, uuid.uuid1())
-			else:
-				bodyURI = '%s/%s' % (self.LTV_MEDIA_PF, uuid.uuid1())
-
-		if annotation.getAnnotationURI():
-			aURI = annotation.getAnnotationURI()
-			#query.append('<%s> ?p3 ?o3 . ' % aURI)
-		else:
-			aURI = '%s/%s' % (self.LTV_ANNOTATION_PF, uuid.uuid1())
-
-		#query.append('} ')        
 		
-		if(action == self.SAVE_ACTION):
-			query.append('INSERT { ')
-			
-			#TODO make sure to refer to the chapter mediafragment
+		#Construct the URIs
+		mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, mediaResourceUri, start, end)
+		if isInformationCard:
+			bodyURI = '%s/%s' % (self.LTV_INFORMATION_CARD_PF, uuid.uuid1())
+		else:
+			bodyURI = '%s/%s' % (self.LTV_MEDIA_PF, uuid.uuid1())		
+		aURI = '%s/%s' % (self.LTV_ANNOTATION_PF, uuid.uuid1())
 
+		query.append('INSERT { ')
+
+		if duration != '0':
 			#First create the media fragment => self.LTV_MEDIA_PF/UUID/#t=1931.24,1934.639
 			query.append('<%s> rdf:type <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
 			query.append('rdf:type <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
@@ -242,137 +182,82 @@ class LinkedTVPublishingPoint(PublishingPoint):
 			query.append('ma:duration "%s"^^xsd:float ; ' % duration)
 			query.append('nsa:temporalStart "%s"^^xsd:float ; ' % start)
 			query.append('nsa:temporalEnd "%s"^^xsd:float ; ' % end)
-			query.append('nsa:temporalUnit "npt" . ')			
+			query.append('nsa:temporalUnit "npt" . ')		
 
-			#Create the body containing the enrichment info            
-			query.append('<%s> rdf:type <%s> ; ' % (bodyURI, self.MEDIA_RESOURCE))
-			query.append('rdf:type <%s> ; ' % self.RELATED_CONTENT)
-			query.append('rdfs:label "%s"' % annotation.getLabel())
-			if annotation.getUri():
-				query.append(' ; ma:locator <%s>' % annotation.getUri())#voor IC templates is deze leeg
-			if annotation.getDescription():
-				query.append(' ; rdfs:comment "%s"' % annotation.getDescription())
-			if annotation.getPoster():
-				query.append(' ; linkedtv:hasPoster <%s>' % annotation.getPoster())
-			if annotation.getCreator():
-				query.append(' ; dc:creator "%s"' % annotation.getCreator())
-			if annotation.getDate():
-				query.append(' ; dc:date "%s"' % annotation.getDate())#TODO format the date!
-			if annotation.getSource():
-				query.append(' ; dc:source "%s"' % annotation.getSource())
-			else:
-				query.append(' ; dc:source "%s"' % self.PROV_ET_SOURCE)
-			query.append(' . ')
+		#Create the body containing the enrichment info            
+		query.append('<%s> rdf:type <%s> ; ' % (bodyURI, self.MEDIA_RESOURCE))
+		query.append('rdf:type <%s> ; ' % self.RELATED_CONTENT)
+		query.append('rdfs:label "%s"' % annotation.getLabel())
+		if annotation.getUri():
+			query.append(' ; ma:locator "%s"' % annotation.getUri())#voor IC templates is deze leeg
+		if annotation.getDescription():
+			query.append(' ; rdfs:comment "%s"' % annotation.getDescription())
+		if annotation.getPoster():
+			query.append(' ; linkedtv:hasPoster "%s"' % annotation.getPoster())
+		if annotation.getCreator():
+			query.append(' ; dc:creator "%s"' % annotation.getCreator())
+		if annotation.getDate():
+			query.append(' ; dc:date "%s"' % annotation.getDate())#TODO format the date!
+		if annotation.getSource():
+			query.append(' ; dc:source "%s"' % annotation.getSource())
+		else:
+			query.append(' ; dc:source "%s"' % self.PROV_ET_SOURCE)
+		query.append(' . ')
 
-			#Then create the annotation to tie everything together
-			query.append('<%s> rdf:type <%s> ; ' % (aURI, self.OA_ANNOTATION))
-			query.append('rdf:type <%s> ; ' % self.PROV_ENTITY)
-			query.append('oa:motivatedBy <%s> ; ' % self.MOTIVATION_LINKING)
+		#Then create the annotation to tie everything together
+		query.append('<%s> rdf:type <%s> ; ' % (aURI, self.OA_ANNOTATION))
+		query.append('rdf:type <%s> ; ' % self.PROV_ENTITY)
+		query.append('oa:motivatedBy <%s> ; ' % self.MOTIVATION_LINKING)
+		#If the enrichment has a start & end time, link to the custom entity
+		if duration != '0':
 			query.append('oa:hasTarget <%s> ; ' % mfURI)
-			query.append('oa:hasBody <%s> ; ' % bodyURI)
-			query.append('prov:wasAttributedTo <%s> ; ' % self.PROV_ET_URI)
-			query.append('linkedtv:partOfDimension "%s" ; ' % dimension.getLabel())
-			query.append('prov:startedAtTime "%s"^^xsd:dateTime . ' % self.__getCurrentDateTime())
-
-			#moved to different function			
-
-
-			query.append(' } ')
-		
-		#The WHERE part, used for the selection of sources (only for DELETE in this case)
-		"""
-		query.append('WHERE {')
-		if annotation.getMfURI():
-			query.append('<%s> ?p1 ?o1 . ' % mfURI)
-			query.append('<%s> ?p2 ?o2 . ' % bodyURI)
-			query.append('<%s> ?p3 ?o3 . ' % aURI)
-			#todo add something to reference related entities            
-		query.append('}')
-		"""
+		else: #related to the chapter mediafragment
+			query.append('oa:hasTarget <%s> ; ' % chapterMfURI)
+		query.append('oa:hasBody <%s> ; ' % bodyURI)
+		query.append('prov:wasAttributedTo <%s> ; ' % self.PROV_ET_URI)
+		query.append('linkedtv:partOfDimension "%s" ; ' % dimension.getLabel())
+		query.append('prov:startedAtTime "%s"^^xsd:dateTime . ' % self.__getCurrentDateTime())
+		query.append(' } ')
+				
 		print '\n\nSAVING ANNOTATIONS & ENRICHMENTS-------------------------------------'
 		print ''.join(query)
 		print '\nEND SAVING ANNOTATIONS & ENRICHMENTS-------------------------------------'
-
 		
-		resp = self.__sendSearchRequest(''.join(query))
-		jsonData = None
-		try:
-			print resp
-			jsonData = simplejson.loads(resp)            
-		except JSONDecodeError, e:
-			print e
-			return None
-		
-		return {'mfURI' : mfURI, 'bodyURI' : bodyURI, 'annotationURI' : aURI}
+		if self.__sendVirtuosoRequest(''.join(query)):				
+			return {'mfURI' : mfURI, 'bodyURI' : bodyURI, 'annotationURI' : aURI}
+		return None
 	
-	"""TODO FINISH THIS!!!"""
-	def __saveEntityTriples(self, annotationURI, entity, action):		
+	def __saveEntityTriples(self, annotationURI, entity):		
 		query = self.__getQueryPrefix()
 		query.append('WITH <%s> ' % self.SAVE_GRAPH)
-		#query.append('DELETE { ')
-		if entity.getEtURI():
-			etURI = entity.getEtURI()
-			#query.append('<%s> ?p1 ?o1 . ' % etURI)
-		else:
-			etURI = '%s/%s' % (self.LTV_ENTITY_PF, uuid.uuid1())
+		
+		#Construct the URI	
+		etURI = '%s/%s' % (self.LTV_ENTITY_PF, uuid.uuid1())
+		
+		query.append('INSERT { ')
 
-		#query.append('} ')
-		if action == self.SAVE_ACTION:
-			query.append('INSERT { ')
-
-			#create the entity
-			query.append('<%s> rdf:type <%sEntity> ; ' % (etURI, self.LTV_ONTO_PF))	
-			query.append('rdf:type <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
-			query.append('owl:sameAs <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
-			query.append('dc:type <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type					
-			query.append('rdfs:label "%s" ; ' % entity.getLabel())
+		#create the entity
+		query.append('<%s> rdf:type <%sEntity> ; ' % (etURI, self.LTV_ONTO_PF))	
+		query.append('rdf:type <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
+		query.append('owl:sameAs <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
+		query.append('dc:type <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type					
+		query.append('rdfs:label "%s" ; ' % entity.getLabel())
+		if entity.getUri():
 			query.append('ma:locator "%s" ; ' % entity.getUri())
-			query.append('dc:source "%s" ; ' % self.PROV_ET_SOURCE)
-			query.append('linkedtv:hasConfidence "%s" ; ' % self.ET_CONFIDENCE)
-			query.append('linkedtv:hasRelevance "%s" . ' % self.ET_RELEVANCE)
+		query.append('dc:source "%s" ; ' % self.PROV_ET_SOURCE)
+		query.append('linkedtv:hasConfidence "%s" ; ' % self.ET_CONFIDENCE)
+		query.append('linkedtv:hasRelevance "%s" . ' % self.ET_RELEVANCE)
 
-			#relate the entity to the annotation
-			query.append('<%s> prov:wasDerivedFrom <%s> . ' % (annotationURI, etURI))
-			query.append(' } ')
-		"""
-		query.append('WHERE {')
-		if entity.getEtURI():
-			query.append('<%s> ?p1 ?o1 . ' % etURI)				 
-		query.append('}')
-		"""
+		#relate the entity to the annotation
+		query.append('<%s> prov:wasDerivedFrom <%s> . ' % (annotationURI, etURI))
+		query.append(' } ')
+		
 		print '\n\nSAVING ENTITIES-------------------------------------'
 		print ''.join(query)
-		print '\nEND SAVING ENTITIES-------------------------------------'		
-		resp = self.__sendSearchRequest(''.join(query))
-		jsonData = None
-		try:
-			print resp
-			jsonData = simplejson.loads(resp)            
-		except JSONDecodeError, e:
-			print e
-			return None
-		
-		return etURI
-
-	"""TODO implement this and get rid of the update code"""
-	def __deleteCuratedDataFromMediaResource(self, mediaResource):
-		print 'Deleting curated mediaResource data for %s' % mediaResource.getId()
-		for chapter in mediaResource.getChapters():
-			if chapter.getType() == 'curated':				
-				self.__deleteResource(chapter.getMfURI())
-				self.__deleteResource(chapter.getAnnotationURI())
-				self.__deleteResource(chapter.getBodyURI())
-				dimensions = chapter.getDimensions()
-				for k in dimensions.keys():			
-					d = dimensions[k]
-					for a in d.getAnnotations():
-						self.__deleteResource(a.getMfURI())
-						self.__deleteResource(a.getAnnotationURI())
-						self.__deleteResource(a.getBodyURI())
-						for e in a.getEntities():
-							self.__deleteResource(e.getEtURI())
-				
-		return True
+		print '\nEND SAVING ENTITIES-------------------------------------'	
+		if self.__sendVirtuosoRequest(''.join(query)):				
+			return etURI
+		return None
 
 	def __deleteResource(self, uri):
 		print 'Deleting %s' % uri
@@ -380,14 +265,32 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('WITH <http://data.linkedtv.eu/graph/et_v2> ')
 		query.append('DELETE { <%s> ?p ?o }' % uri)
 		query.append('WHERE { <%s> ?p ?o }' % uri)
-		resp = self.__sendSearchRequest(''.join(query))
-		jsonData = None
-		try:
-			print resp
-			jsonData = simplejson.loads(resp)            
-		except JSONDecodeError, e:
-			print e
-			return None
+		return self.__sendVirtuosoRequest(''.join(query))
+		
+	def __deleteCuratedDataFromMediaResource(self, mediaResourceUri):
+		print 'Deleting curated data for %s' % mediaResourceUri
+		query = self.__getQueryPrefix()
+		query.append('WITH <http://data.linkedtv.eu/graph/et_v2> ')
+		query.append('DELETE { ')
+		query.append('?annotation ?p1 ?o1 . ')
+		query.append('?mediaFragment ?p2 ?o2 . ')
+		query.append('?body ?p3 ?o3 . ')
+		query.append('?entity ?p4 ?o4 . ')
+		query.append(' } WHERE {')
+		query.append('?annotation ?p1 ?o1 . ')
+		query.append('?mediaFragment ?p2 ?o2 . ')
+		query.append('?body ?p3 ?o3 . ')
+		query.append('?annotation rdf:type <%s> . ' % self.OA_ANNOTATION)
+		query.append('?annotation prov:wasAttributedTo <%s> . ' % self.PROV_ET_URI)
+		query.append('?annotation oa:hasTarget ?mediaFragment . ')
+		query.append('?annotation oa:hasBody ?body . ')		
+		query.append('?mediaFragment ma:isFragmentOf <%s/%s> . ' % (self.LTV_MEDIA_PF, mediaResourceUri))
+		query.append('OPTIONAL { ')
+		query.append('?annotation prov:wasDerivedFrom ?entity . ')
+		query.append('?entity ?p4 ?o4 .')
+		query.append('}}')
+		print ''.join(query)
+		return self.__sendVirtuosoRequest(''.join(query))		
 
 	def __isInformationCard(self, dimension):
 		return dimension.getService() and dimension.getService().has_key('id') and dimension.getService()['id'] == 'informationCards'
@@ -409,7 +312,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ')
 		return query
 
-	def __sendSearchRequest(self, query):
+	def __sendVirtuosoRequest(self, query):
 		cmd_arr = []
 		cmd_arr.append('curl')
 		cmd_arr.append('-X')
@@ -421,8 +324,13 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		cmd_arr.append('query=%s' % urllib.quote(query.encode('utf-8'), ''))
 		p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
 		stdout, stderr = p1.communicate()
-		if stdout:
-			return stdout
+		if stdout:			
+			try:
+				print stdout
+				simplejson.loads(stdout)
+				return True
+			except JSONDecodeError, e:
+				print e				
 		else:
 			logger.error(stderr)
-		return None
+		return False
