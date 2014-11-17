@@ -36,11 +36,10 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		#annotation type prefixes
 		self.LTV_ONTO_PF = 'http://data.linkedtv.eu/ontologies/core#'
-		self.LTV_ENTITY_PF = 'http://data.linkedtv.eu/entity'
-		self.LTV_INFORMATION_CARD_PF = 'http://data.linkedtv.eu/informationcard'
+		self.LTV_ENTITY_PF = 'http://data.linkedtv.eu/entity'		
 		self.LTV_CHAPTER_PF = 'http://data.linkedtv.eu/chapter'
 		self.LTV_ANNOTATION_PF = 'http://data.linkedtv.eu/annotation'
-		self.LTV_MEDIA_PF = 'http://data.linkedtv.eu/media'
+		self.LTV_MEDIA_PF = 'http://data.linkedtv.eu/media'		
 
 		#motivation
 		self.MOTIVATION_LINKING = 'http://www.w3.org/ns/oa#linking'
@@ -140,7 +139,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 					if resourceUris and a.getEntities():
 						for e in a.getEntities():
 							etURI = self.__saveEntityTriples(resourceUris['annotationURI'], e)
-							e.setEtURI(etURI)
+							#e.setEtURI(etURI)
 
 			return {'mfURI' : mfURI, 'bodyURI' : bodyURI, 'annotationURI' : aURI}
 		return None
@@ -161,10 +160,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		
 		#Construct the URIs
 		mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, mediaResourceUri, start, end)
-		if isInformationCard:
-			bodyURI = '%s/%s' % (self.LTV_INFORMATION_CARD_PF, uuid.uuid1())
-		else:
-			bodyURI = '%s/%s' % (self.LTV_MEDIA_PF, uuid.uuid1())		
+		bodyURI = '%s/%s' % (self.LTV_MEDIA_PF, uuid.uuid1())		
 		aURI = '%s/%s' % (self.LTV_ANNOTATION_PF, uuid.uuid1())
 
 		query.append('INSERT { ')
@@ -184,11 +180,11 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('a <%s> ; ' % self.RELATED_CONTENT)
 		query.append('rdfs:label "%s"' % annotation.getLabel())
 		if annotation.getUri():
-			query.append(' ; ma:locator "%s"' % annotation.getUri())#voor IC templates is deze leeg
+			query.append(' ; ma:locator <%s>' % annotation.getUri())#voor IC templates is deze leeg
 		if annotation.getDescription():
 			query.append(' ; rdfs:comment "%s"' % annotation.getDescription())
 		if annotation.getPoster():
-			query.append(' ; linkedtv:hasPoster "%s"' % annotation.getPoster())
+			query.append(' ; linkedtv:hasPoster <%s>' % annotation.getPoster())
 		if annotation.getCreator():
 			query.append(' ; dc:creator "%s"' % annotation.getCreator())
 		if annotation.getDate():
@@ -203,14 +199,14 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('<%s> a <%s> ; ' % (aURI, self.OA_ANNOTATION))
 		query.append('a <%s> ; ' % self.PROV_ENTITY)
 		query.append('oa:motivatedBy <%s> ; ' % self.MOTIVATION_LINKING)
+		query.append('oa:motivatedBy <%s/%s> ; ' % (self.LTV_ONTO_PF, dimension.getLabel().replace(' ', '')))
 		#If the enrichment has a start & end time, link to the custom entity
 		if duration != '0':
 			query.append('oa:hasTarget <%s> ; ' % mfURI)
 		else: #related to the chapter mediafragment
 			query.append('oa:hasTarget <%s> ; ' % chapterMfURI)
 		query.append('oa:hasBody <%s> ; ' % bodyURI)
-		query.append('prov:wasAttributedTo <%s> ; ' % self.PROV_ET_URI)
-		query.append('linkedtv:partOfDimension "%s" ; ' % dimension.getLabel())
+		query.append('prov:wasAttributedTo <%s> ; ' % self.PROV_ET_URI)		
 		query.append('prov:startedAtTime "%s"^^xsd:dateTime . ' % self.__getCurrentDateTime())
 		query.append(' } ')
 				
@@ -222,36 +218,44 @@ class LinkedTVPublishingPoint(PublishingPoint):
 			return {'mfURI' : mfURI, 'bodyURI' : bodyURI, 'annotationURI' : aURI}
 		return None
 	
-	def __saveEntityTriples(self, annotationURI, entity):		
+	def __saveEntityTriples(self, annotationURI, entity):
 		query = self.__getQueryPrefix()
-		query.append('WITH <%s> ' % self.SAVE_GRAPH)
 		
-		#Construct the URI	
+		#in this mode only the URI of the entity will be stored in the GRAPH
+		if entity.getUri():
+			query.append('WITH <%s> ' % self.SAVE_GRAPH)
+			query.append('INSERT { ')
+			query.append('<%s> prov:wasDerivedFrom <%s> . ' % (annotationURI, entity.getUri()))
+			query.append(' } ')
+
+		#in this mode also the properties of the entity are stored (in a new entity with a newly generated URI)
+		"""
+		query.append('WITH <%s> ' % self.SAVE_GRAPH)
+		#Construct the URI
 		etURI = '%s/%s' % (self.LTV_ENTITY_PF, uuid.uuid1())
 		
-		query.append('INSERT { ')
-
+		query.append('INSERT { ')		
 		#create the entity
-		query.append('<%s> a <%sEntity> ; ' % (etURI, self.LTV_ONTO_PF))	
+		query.append('<%s> a <%sEntity> ; ' % (etURI, self.LTV_ONTO_PF))
 		query.append('a <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
-		query.append('owl:sameAs <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type
 		query.append('dc:type <%s/%s> ; ' % (self.DBPEDIA_ONTOLOGY_PF, entity.getType()))#get an actual type					
 		query.append('rdfs:label "%s" ; ' % entity.getLabel())
 		if entity.getUri():
-			query.append('ma:locator "%s" ; ' % entity.getUri())
+			query.append('owl:sameAs <%s> ; ' % entity.getUri())
 		query.append('dc:source "%s" ; ' % self.PROV_ET_SOURCE)
 		query.append('linkedtv:hasConfidence "%s"^^xsd:float ; ' % self.ET_CONFIDENCE)
-		query.append('linkedtv:hasRelevance "%s"^^xsd:float . ' % self.ET_RELEVANCE)
+		query.append('linkedtv:hasRelevance "%s"^^xsd:float . ' % self.ET_RELEVANCE)		
 
 		#relate the entity to the annotation
 		query.append('<%s> prov:wasDerivedFrom <%s> . ' % (annotationURI, etURI))
 		query.append(' } ')
-		
+		"""		
 		print '\n\nSAVING ENTITIES-------------------------------------'
 		print ''.join(query)
-		print '\nEND SAVING ENTITIES-------------------------------------'	
-		if self.__sendVirtuosoRequest(''.join(query)):				
-			return etURI
+		print '\nEND SAVING ENTITIES-------------------------------------'
+		if self.__sendVirtuosoRequest(''.join(query)):
+			#return etURI
+			return True
 		return None
 
 	def __deleteResource(self, uri):

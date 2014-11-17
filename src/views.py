@@ -92,8 +92,11 @@ def load_curated_et(request):
     if resourceUri:
         api = Api()
         resp = api.load_curated_et(resourceUri)
-        if resp:
-            return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+        if resp:            
+            httpResp = HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+            #to enable CORS
+            httpResp['Access-Control-Allow-Origin'] = '*'
+            return httpResp
     return HttpResponse(__getErrorMessage('Could not load curated data'), mimetype='application/json')
 
 """New Saving function"""

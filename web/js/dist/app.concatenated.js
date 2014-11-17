@@ -79,7 +79,7 @@ var rbbConfig = {
 	dimensions : [
 		{
 			id : 'maintopic',
-			label : 'Information cards',
+			label : 'Information Cards',
 			service : {
 				id : 'informationCards'
 			}
@@ -96,7 +96,7 @@ var rbbConfig = {
 		},		
 		{		
 			id : 'tvne_2',
-			label : 'Other media',
+			label : 'Other Media',
 			service : {
 				id :'TvNewsEnricher',
 				params : {
@@ -116,7 +116,7 @@ var rbbConfig = {
 		},
 		{		
 			id : 'tvne_4',
-			label : 'In depth',
+			label : 'In Depth',
 			service : {
 				id : 'TvNewsEnricher',
 				params : {
@@ -126,7 +126,7 @@ var rbbConfig = {
 		},
 		{
 			id : 'tvne_5',
-			label : 'Tweets',
+			label : 'Social Media',
 			service : {
 				id :'TvNewsEnricher',
 				params : {
@@ -136,7 +136,7 @@ var rbbConfig = {
 		},
 		{
 			id : 'tve_1',
-			label : 'Related news',
+			label : 'Related Chapter',
 			service : {
 				id :'TvEnricher',
 				params : {
@@ -152,14 +152,14 @@ var tkkConfig = {
 	dimensions : [
 		{
 			id : 'maintopic',//check this
-			label : 'The art object',
+			label : 'Art Object',
 			service : {
 				id :'informationCards'
 			}
 		},
 		{
 			id : 'tve_1',
-			label : 'Background information',
+			label : 'Background',
 			service : {
 				id : 'TvEnricher',
 				params : {
@@ -169,7 +169,7 @@ var tkkConfig = {
 		},
 		{
 			id : 'tve_2',
-			label : 'Related Europeana objects',
+			label : 'Related Art Work',
 			service : {
 				id : 'TvEnricher',
 				params : {
@@ -179,7 +179,7 @@ var tkkConfig = {
 		},
 		{
 			id : 'tve_3',
-			label : 'Related fragments',
+			label : 'Related Chapter',
 			service : {
 				id : 'TvEnricher',
 				params : {
@@ -195,14 +195,14 @@ var trialConfig = {
 	dimensions : [
 		{
 			id : 'maintopic',
-			label : 'Main topics',
+			label : 'Main Topics',
 			service : {
 				id : 'informationCards'
 			}
 		},
 		{
 			id : 'freshMedia',
-			label : 'Background information',
+			label : 'Background Information',
 			service : {
 				id : 'TvEnricher'
 			}
