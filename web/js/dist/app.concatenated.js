@@ -229,15 +229,15 @@ linkedtv.run(function($rootScope, conf) {
 	var urlParts = window.location.pathname.split('/');	
 
 	//set the provider as a property of the rootScope
-	if(urlParts && urlParts.length >= 2) {
-		$rootScope.provider = urlParts[1];
+	if(urlParts && urlParts.length >= 3) {
+		$rootScope.provider = urlParts[2];
 		conf.programmeConfig = programmeConfigs[$rootScope.provider];
 		conf.templates = informationCardTemplates[$rootScope.provider];
 	}
 
 	//set the resourceUri as a property of the rootScope
-	if(urlParts && urlParts.length >= 3 && !trialId) {
-		$rootScope.resourceUri = urlParts[2];
+	if(urlParts && urlParts.length >= 4 && !trialId) {
+		$rootScope.resourceUri = urlParts[3];
 	} else if (trialId) {		
 		$rootScope.resourceUri = trialId;
 	}
@@ -1986,7 +1986,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	};
 
 	$scope.setActiveVideo = function(video) {
-		window.location.assign('http://' + location.host + '/' + $rootScope.provider + '/' + video.id);
+		window.location.assign('http://' + location.host + '/user/' + $rootScope.provider + '/' + video.id);
 	};
 
 	//add the update function as an observer to the videoCollection

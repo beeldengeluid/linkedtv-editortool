@@ -5,8 +5,8 @@ urlpatterns = patterns('',
     #views
     url(r'^$', 'views.main'),
     url(r'^trial$', 'views.trial'),
-    url(r'^(?P<pub>\w+)/$', 'views.provider'),
-    url(r'^(?P<pub>\w+)/(?P<id>.*)/$', 'views.provider'),
+    url(r'^user/(?P<pub>\w+)/$', 'views.provider'),
+    url(r'^user/(?P<pub>\w+)/(?P<id>.*)/$', 'views.provider'),
     url(r'^login$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     url(r'^logout$', 'views.logout_user'),
     
