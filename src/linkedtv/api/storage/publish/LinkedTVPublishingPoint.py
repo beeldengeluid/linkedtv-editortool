@@ -16,19 +16,20 @@ from subprocess import Popen, PIPE
 import uuid
 import urllib
 import simplejson
+import logging
 from simplejson import JSONDecodeError
 from linkedtv.api.storage.publish.PublishingPoint import PublishingPoint
 from linkedtv.utils.TimeUtils import TimeUtils
-#from linkedtv.LinkedtvSettings import LTV_SAVE_GRAPH, LTV_SPARQL_ENDPOINT
 
+logger = logging.getLogger(__name__)
 
 class LinkedTVPublishingPoint(PublishingPoint):
 
-	def __init__(self):
-		print self.__getCurrentDateTime()
+	def __init__(self):		
 		#connection details
 		self.SPARQL_ENDPOINT = 'http://data.linkedtv.eu/sparql'
 		self.SAVE_GRAPH = 'http://data.linkedtv.eu/graph/et_v2'
+		#self.SAVE_GRAPH = 'http://data.linkedtv.eu/graph/linkedtv'
 
 		#external ontology prefixes
 		self.NERD_ONTO_PF = 'http://nerd.eurecom.fr/ontology#'
@@ -64,14 +65,12 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		#TODO implement the adding of triples to the LinkedTV store
 		return self.__saveMediaResourceTriples(mediaResource)
 
-	def unpublish(self, mediaResource):
-		print 'unpublishing this mediaresource'
+	def unpublish(self, mediaResource):		
 		self.__deleteCuratedDataFromMediaResource(mediaResource.getId())
 		return mediaResource
 
 	def __saveMediaResourceTriples(self, mediaResource):
-		self.__deleteCuratedDataFromMediaResource(mediaResource.getId())
-		print 'Saving mediaresource: %s' % mediaResource.getId()
+		self.__deleteCuratedDataFromMediaResource(mediaResource.getId())		
 		for chapter in mediaResource.getChapters():
 			if chapter.getType() == 'curated':
 				print 'Saving curated chapter'
@@ -80,9 +79,6 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 
 	def __saveChapterTriples(self, mediaResourceUri, chapter):
-		print 'Saving chapter: %s' % chapter.getLabel()
-		print '-' * 150
-
 		#prepare some variables
 		start = TimeUtils.toStringSeconds(chapter.getStart())
 		end = TimeUtils.toStringSeconds(chapter.getEnd())
@@ -109,7 +105,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('nsa:temporalUnit "npt" . ')
 
 		#body -> type=chapter + label
-		query.append('<%s> a <%sChapter> ; ' % (bodyURI, self.LTV_ONTO_PF))
+		query.append('<%s> a <%sChapter> ; ' % (bodyURI, self.LTV_ONTO_PF))		
 		query.append('rdfs:label "%s"' % chapter.getLabel())
 		if chapter.getPoster():
 			query.append(' ; linkedtv:hasPoster <%s>' % chapter.getPoster())
@@ -125,9 +121,9 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 
 		query.append('} ')
-		print '\n\nSAVING CHAPTER-------------------------------------'
-		print ''.join(query)
-		print '\nEND SAVING CHAPTER-------------------------------------'
+		logger.debug('\n\nSAVING CHAPTER-------------------------------------')
+		logger.debug(''.join(query))
+		logger.debug('\nEND SAVING CHAPTER-------------------------------------')
 
 		if self.__sendVirtuosoRequest(''.join(query)):
 			#If succesfully saved, save the enrichments (and related entities)
@@ -145,8 +141,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		return None
 
 	#TOOD fix dit: enrichments hebben geen mfURI en geen annotationURI!!!
-	def __saveAnnotationTriples(self, mediaResourceUri, dimension, annotation, chapterMfURI):
-		print 'Saving annotation: %s' % annotation.getLabel()
+	def __saveAnnotationTriples(self, mediaResourceUri, dimension, annotation, chapterMfURI):		
 		isInformationCard = self.__isInformationCard(dimension)
 		start = TimeUtils.toStringSeconds(annotation.getStart())
 		end = TimeUtils.toStringSeconds(annotation.getStart())
@@ -199,7 +194,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('<%s> a <%s> ; ' % (aURI, self.OA_ANNOTATION))
 		query.append('a <%s> ; ' % self.PROV_ENTITY)
 		query.append('oa:motivatedBy <%s> ; ' % self.MOTIVATION_LINKING)
-		query.append('oa:motivatedBy <%s/%s> ; ' % (self.LTV_ONTO_PF, dimension.getLabel().replace(' ', '')))
+		query.append('oa:motivatedBy <%s%s> ; ' % (self.LTV_ONTO_PF, dimension.getLabel().replace(' ', '')))
 		#If the enrichment has a start & end time, link to the custom entity
 		if duration != '0':
 			query.append('oa:hasTarget <%s> ; ' % mfURI)
@@ -210,9 +205,9 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('prov:startedAtTime "%s"^^xsd:dateTime . ' % self.__getCurrentDateTime())
 		query.append(' } ')
 				
-		print '\n\nSAVING ANNOTATIONS & ENRICHMENTS-------------------------------------'
-		print ''.join(query)
-		print '\nEND SAVING ANNOTATIONS & ENRICHMENTS-------------------------------------'
+		logger.debug('\n\nSAVING ANNOTATIONS & ENRICHMENTS-------------------------------------')
+		logger.debug(''.join(query))
+		logger.debug('\nEND SAVING ANNOTATIONS & ENRICHMENTS-------------------------------------')
 		
 		if self.__sendVirtuosoRequest(''.join(query)):				
 			return {'mfURI' : mfURI, 'bodyURI' : bodyURI, 'annotationURI' : aURI}
@@ -249,27 +244,19 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		#relate the entity to the annotation
 		query.append('<%s> prov:wasDerivedFrom <%s> . ' % (annotationURI, etURI))
 		query.append(' } ')
-		"""		
-		print '\n\nSAVING ENTITIES-------------------------------------'
-		print ''.join(query)
-		print '\nEND SAVING ENTITIES-------------------------------------'
+		"""
+
+		logger.debug('\n\nSAVING ENTITIES-------------------------------------')
+		logger.debug(''.join(query))
+		logger.debug('\nEND SAVING ENTITIES-------------------------------------')
 		if self.__sendVirtuosoRequest(''.join(query)):
 			#return etURI
 			return True
 		return None
-
-	def __deleteResource(self, uri):
-		print 'Deleting %s' % uri
-		query = []
-		query.append('WITH <http://data.linkedtv.eu/graph/et_v2> ')
-		query.append('DELETE { <%s> ?p ?o }' % uri)
-		query.append('WHERE { <%s> ?p ?o }' % uri)
-		return self.__sendVirtuosoRequest(''.join(query))
 		
-	def __deleteCuratedDataFromMediaResource(self, mediaResourceUri):
-		print 'Deleting curated data for %s' % mediaResourceUri
+	def __deleteCuratedDataFromMediaResource(self, mediaResourceUri):		
 		query = self.__getQueryPrefix()
-		query.append('WITH <http://data.linkedtv.eu/graph/et_v2> ')
+		query.append('WITH <%s> ' % self.SAVE_GRAPH)
 		query.append('DELETE { ')
 		query.append('?annotation ?p1 ?o1 . ')
 		query.append('?mediaFragment ?p2 ?o2 . ')
@@ -288,7 +275,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('?annotation prov:wasDerivedFrom ?entity . ')
 		query.append('?entity ?p4 ?o4 .')
 		query.append('}}')
-		print ''.join(query)
+		logger.debug(''.join(query))
 		return self.__sendVirtuosoRequest(''.join(query))		
 
 	def __isInformationCard(self, dimension):
@@ -325,7 +312,6 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		stdout, stderr = p1.communicate()
 		if stdout:			
 			try:
-				print stdout
 				simplejson.loads(stdout)
 				return True
 			except JSONDecodeError, e:
