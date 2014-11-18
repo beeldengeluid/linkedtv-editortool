@@ -2,7 +2,7 @@ var informationCardTemplates = {
 
 	//FIXME the RBB types are directly taken from the DBpedia types
 	rbb : [
-		{ 
+		{
 			label : 'Film',
 			properties : [
 				{key : 'label', type: 'literal', optional : false},
@@ -13,8 +13,8 @@ var informationCardTemplates = {
 				{key : 'starring', type: 'entity', optional : true}
 			]
 		},
-		{ 
-			label : 'Organization',			
+		{
+			label : 'Organization',
 			properties : [
 				{key : 'label', type: 'literal', optional : false},
 				{key : 'founder', type: 'entity', optional : false},
@@ -24,7 +24,7 @@ var informationCardTemplates = {
 				{key : 'founding date', type: 'entity', optional : false},
 				{key : 'founding location', type: 'entity', optional : false},
 				{key : 'number of employees', type: 'literal', optional : false}
-			]	
+			]
 		},
 		{
 			label : 'Political party',
@@ -43,7 +43,7 @@ var informationCardTemplates = {
 				{key : 'label', type: 'literal', optional : false},
 				{key : 'party', type: 'entity', optional : false},
 				{key : 'active since', type: 'literal', optional : false},
-				{key : 'active till', type: 'literal', optional : false}				
+				{key : 'active till', type: 'literal', optional : false}
 			]
 		},
 		{
@@ -57,7 +57,7 @@ var informationCardTemplates = {
 		}
 	],
 
-	sv : [		
+	sv : [
 		{
 			label : 'Art object',
 			properties : [
@@ -93,8 +93,8 @@ var rbbConfig = {
 					dimension : 'opinion'
 				}
 			}
-		},		
-		{		
+		},
+		{
 			id : 'tvne_2',
 			label : 'Other Media',
 			service : {
@@ -104,17 +104,17 @@ var rbbConfig = {
 				}
 			}
 		},
-		{		
+		{
 			id : 'tvne_3',
 			label : 'Timeline',
-			service : { 
+			service : {
 				id : 'TvNewsEnricher',
 				params : {
 					dimension : 'timeline'
 				}
 			}
 		},
-		{		
+		{
 			id : 'tvne_4',
 			label : 'In Depth',
 			service : {
@@ -141,7 +141,8 @@ var rbbConfig = {
 				id :'TvEnricher',
 				params : {
 					dimension : 'Solr',
-					index : 'RBB'
+					index : 'RBB',
+					granularity : 'Chapter'
 				}
 			}
 		}
@@ -184,7 +185,8 @@ var tkkConfig = {
 				id : 'TvEnricher',
 				params : {
 					dimension : 'Solr',
-					index : 'SV'
+					index : 'SV',
+					granularity : 'Chapter'
 				}
 			}
 		}
@@ -221,8 +223,8 @@ var programmeConfigs = {
 var config = angular.module('configuration', []).constant('conf', {
 	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
 	chapterSlotsMap : {'rbb' : 8, 'sv' : 6},
-	loadingImage : '/site_media/images/loading.gif'	
-});	;var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
+	loadingImage : '/site_media/images/loading.gif'
+});;var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
 
 linkedtv.run(function($rootScope, conf) {
 
@@ -956,7 +958,7 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 }]);;angular.module('linkedtv').factory('enrichmentService', [function(){
-	
+
 	function search(query, dimension, callback) {
 		console.debug('Querying enrichments using ' + query);
 		console.debug(dimension);
@@ -968,7 +970,7 @@ linkedtv.run(function($rootScope, conf) {
 			dataType : 'json',
 			url : fetchUrl,
 			success : function(json) {
-				var enrichments = json.error ? null : json.enrichments;	
+				var enrichments = json.error ? null : json.enrichments;
 				callback(formatServiceResponse(enrichments, dimension));
 			},
 			error : function(err) {
@@ -990,7 +992,7 @@ linkedtv.run(function($rootScope, conf) {
 	function formatTvEnricherResponse(data, dimension) {
 		var temp = [];//will contain enrichments
 		var sources = [];
-		var eSources = [];		
+		var eSources = [];
 		for (var es in data) {
 			//if not added already, add the entity source to the list of possible sources
 			if(eSources.indexOf(es) == -1) {
@@ -1003,13 +1005,13 @@ linkedtv.run(function($rootScope, conf) {
 				if(sources.indexOf(s) == -1 && enrichmentsOfSource.length > 0) {
 					sources.push(s);
 				}
-				//loop through the eventual enrichments and add them to temp				
+				//loop through the eventual enrichments and add them to temp
 				_.each(enrichmentsOfSource, function(e) {
 					//set what you can right away
 					var enrichment = {
 						label : 'No title',
 						description : 'No description',//TODO if it's there fetch it from the data
-						uri : e.micropostUrl,
+						uri : formatUri(e, dimension),
 						source : s, //add the source to each enrichment (for filtering)
 						entitySource : es //add the source entities to each enrichment (for filtering)
 					};
@@ -1017,8 +1019,8 @@ linkedtv.run(function($rootScope, conf) {
 					if(e.posterUrl && isValidPosterFormat(e.posterUrl)) {
 						enrichment.poster = e.posterUrl;
 					} else if(e.mediaUrl && isValidPosterFormat(e.mediaUrl)) {
-						enrichment.poster = e.mediaUrl;						
-					}					
+						enrichment.poster = e.mediaUrl;
+					}
 					//set the correct label
 					if(e.micropost && e.micropost.plainText) {
 						enrichment.label = e.micropost.plainText;
@@ -1031,6 +1033,15 @@ linkedtv.run(function($rootScope, conf) {
 			return null;
 		}
 		return {enrichmentSources : sources, enrichmentEntitySources : eSources, allEnrichments : temp}
+	}
+
+	//really crappy bad function, later this needs to be modelled & mapped in a nice way
+	function formatUri(enrichment, dimension) {
+		var url = enrichment.micropostUrl;
+		if(dimension.label == 'Related Chapter') {
+			return 'http://api.linkedtv.eu/mediaresource/' + url;
+		}
+		return url;
 	}
 
 	function formatTvNewsEnricherResponse(data, dimension) {

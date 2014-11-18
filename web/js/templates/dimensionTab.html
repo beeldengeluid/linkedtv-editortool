@@ -1,7 +1,7 @@
 <div class="tab-content">
-	
 
-	<div class="dimensions">				
+
+	<div class="dimensions">
 		<div class="row" ng-repeat=" d in conf.programmeConfig.dimensions">
 			<div class="col-md-12">
 				<foldable title="{{d.label}}" collapsed="collapsed"></foldable>
@@ -9,13 +9,13 @@
 
 					<ul class="enrichments">
 
-						<li ng-repeat="e in activeChapter.dimensions[d.id].annotations track by $index" 
+						<li ng-repeat="e in activeChapter.dimensions[d.id].annotations track by $index"
 							ng-click="setActiveLink($index)" ng-dblclick="editLink(d, e)" title="{{e.label}}">
 							<div class="thumbnail" ng-if="e.label">
 								<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
 								<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
-	
+
 								<div class="caption">
 									<a href="{{e.uri}}" target="_external">{{e.label | limitTo:30}}</a>
 								</div>
@@ -24,7 +24,7 @@
 						<li ng-click="setActiveLink(enrichments.length)" ng-dblclick="editLink(d)" title="Add new enrichment">
 							<div class="thumbnail">
 
-								<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="...">		      
+								<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="...">
 
 								<div ng-if="d.service.id == 'informationCards'" class="caption">
 									New
@@ -34,7 +34,7 @@
 								</div>
 						    </div>
 						</li>
-					</ul>					
+					</ul>
 				</div>
 			</div>
 

@@ -1,8 +1,9 @@
 /*
 TODO:
 	- properly import the programme configs from an external file
+	- make sure there is a separate property that directly maps to the RDF dimension
 
-READ:	
+READ:
 	- RBB types => http://www.linkedtv.eu/wiki/index.php/Annotation_types_in_RBB#Proposal_for_common_entity_types
 	- TKK types => http://www.linkedtv.eu/wiki/index.php/Creating_rich_descriptions_of_cultural_artefacts_out_of_a_TV_program
 */
@@ -11,7 +12,7 @@ var informationCardTemplates = {
 
 	//FIXME the RBB types are directly taken from the DBpedia types
 	rbb : [
-		{ 
+		{
 			label : 'Film',
 			properties : [
 				{key : 'label', type: 'literal', optional : false},
@@ -22,8 +23,8 @@ var informationCardTemplates = {
 				{key : 'starring', type: 'entity', optional : true}
 			]
 		},
-		{ 
-			label : 'Organization',			
+		{
+			label : 'Organization',
 			properties : [
 				{key : 'label', type: 'literal', optional : false},
 				{key : 'founder', type: 'entity', optional : false},
@@ -33,7 +34,7 @@ var informationCardTemplates = {
 				{key : 'founding date', type: 'entity', optional : false},
 				{key : 'founding location', type: 'entity', optional : false},
 				{key : 'number of employees', type: 'literal', optional : false}
-			]	
+			]
 		},
 		{
 			label : 'Political party',
@@ -52,7 +53,7 @@ var informationCardTemplates = {
 				{key : 'label', type: 'literal', optional : false},
 				{key : 'party', type: 'entity', optional : false},
 				{key : 'active since', type: 'literal', optional : false},
-				{key : 'active till', type: 'literal', optional : false}				
+				{key : 'active till', type: 'literal', optional : false}
 			]
 		},
 		{
@@ -66,7 +67,7 @@ var informationCardTemplates = {
 		}
 	],
 
-	sv : [		
+	sv : [
 		{
 			label : 'Art object',
 			properties : [
@@ -102,8 +103,8 @@ var rbbConfig = {
 					dimension : 'opinion'
 				}
 			}
-		},		
-		{		
+		},
+		{
 			id : 'tvne_2',
 			label : 'Other Media',
 			service : {
@@ -113,17 +114,17 @@ var rbbConfig = {
 				}
 			}
 		},
-		{		
+		{
 			id : 'tvne_3',
 			label : 'Timeline',
-			service : { 
+			service : {
 				id : 'TvNewsEnricher',
 				params : {
 					dimension : 'timeline'
 				}
 			}
 		},
-		{		
+		{
 			id : 'tvne_4',
 			label : 'In Depth',
 			service : {
@@ -150,7 +151,8 @@ var rbbConfig = {
 				id :'TvEnricher',
 				params : {
 					dimension : 'Solr',
-					index : 'RBB'
+					index : 'RBB',
+					granularity : 'Chapter'
 				}
 			}
 		}
@@ -193,7 +195,8 @@ var tkkConfig = {
 				id : 'TvEnricher',
 				params : {
 					dimension : 'Solr',
-					index : 'SV'
+					index : 'SV',
+					granularity : 'Chapter'
 				}
 			}
 		}
@@ -230,5 +233,5 @@ var programmeConfigs = {
 var config = angular.module('configuration', []).constant('conf', {
 	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
 	chapterSlotsMap : {'rbb' : 8, 'sv' : 6},
-	loadingImage : '/site_media/images/loading.gif'	
-});	
+	loadingImage : '/site_media/images/loading.gif'
+});

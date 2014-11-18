@@ -1,5 +1,5 @@
 angular.module('linkedtv').factory('enrichmentService', [function(){
-	
+
 	function search(query, dimension, callback) {
 		console.debug('Querying enrichments using ' + query);
 		console.debug(dimension);
@@ -11,7 +11,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 			dataType : 'json',
 			url : fetchUrl,
 			success : function(json) {
-				var enrichments = json.error ? null : json.enrichments;	
+				var enrichments = json.error ? null : json.enrichments;
 				callback(formatServiceResponse(enrichments, dimension));
 			},
 			error : function(err) {
@@ -33,7 +33,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 	function formatTvEnricherResponse(data, dimension) {
 		var temp = [];//will contain enrichments
 		var sources = [];
-		var eSources = [];		
+		var eSources = [];
 		for (var es in data) {
 			//if not added already, add the entity source to the list of possible sources
 			if(eSources.indexOf(es) == -1) {
@@ -46,13 +46,13 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 				if(sources.indexOf(s) == -1 && enrichmentsOfSource.length > 0) {
 					sources.push(s);
 				}
-				//loop through the eventual enrichments and add them to temp				
+				//loop through the eventual enrichments and add them to temp
 				_.each(enrichmentsOfSource, function(e) {
 					//set what you can right away
 					var enrichment = {
 						label : 'No title',
 						description : 'No description',//TODO if it's there fetch it from the data
-						uri : e.micropostUrl,
+						uri : formatUri(e, dimension),
 						source : s, //add the source to each enrichment (for filtering)
 						entitySource : es //add the source entities to each enrichment (for filtering)
 					};
@@ -60,8 +60,8 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 					if(e.posterUrl && isValidPosterFormat(e.posterUrl)) {
 						enrichment.poster = e.posterUrl;
 					} else if(e.mediaUrl && isValidPosterFormat(e.mediaUrl)) {
-						enrichment.poster = e.mediaUrl;						
-					}					
+						enrichment.poster = e.mediaUrl;
+					}
 					//set the correct label
 					if(e.micropost && e.micropost.plainText) {
 						enrichment.label = e.micropost.plainText;
@@ -74,6 +74,15 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 			return null;
 		}
 		return {enrichmentSources : sources, enrichmentEntitySources : eSources, allEnrichments : temp}
+	}
+
+	//really crappy bad function, later this needs to be modelled & mapped in a nice way
+	function formatUri(enrichment, dimension) {
+		var url = enrichment.micropostUrl;
+		if(dimension.label == 'Related Chapter') {
+			return 'http://api.linkedtv.eu/mediaresource/' + url;
+		}
+		return url;
 	}
 
 	function formatTvNewsEnricherResponse(data, dimension) {
