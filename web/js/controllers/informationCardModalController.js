@@ -39,15 +39,14 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$scope.activeTemplate = null;
 	}
 
-	/*
 	$scope.generateUri = function() {
 		return 'http://linkedtv.eu/' + new Date().getTime();
-	}*/
+	}
 
 	//TODO this function formats the stored triples in the form of the user friendly template
 	$scope.setTemplate = function(template) {
 		$scope.activeTemplate = template;
-		//$scope.card.uri = $scope.generateUri();//always assign a custom ID to a card based on a template
+		$scope.card.uri = $scope.generateUri();//always assign a custom ID to a card based on a template
 	};
 
 	$scope.addToTemplate = function(triple) {
@@ -162,6 +161,10 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.updateCardProperties = function() {
 		//make sure to copy the poster to the card
 		$scope.card.poster = $scope.poster;
+
+		if(!$scope.card.uri) {
+			$scope.card.uri = $scope.generateUri();
+		}
 
 		//use the template properties to fill the enrichment's properties and entity list
 		if($scope.activeTemplate) {

@@ -44,7 +44,9 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 		});
 	};
 
-	function openCardDialog(dimension, link) {		
+	function openCardDialog(dimension, link) {
+		console.debug('This is the card you are looking for (1)');
+		console.debug(link);
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/informationCardModal.html',
 			controller: 'informationCardModalController',

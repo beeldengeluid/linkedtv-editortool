@@ -13,4 +13,7 @@ class TimeUtils():
 
     @staticmethod
     def toMillis(sec):
-        return int(float(sec) * 1000)
+        try:
+            int(float(sec) * 1000)
+        except ValueError, e:
+            return 0

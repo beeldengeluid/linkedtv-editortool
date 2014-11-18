@@ -174,7 +174,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('<%s> a <%s> ; ' % (bodyURI, self.MEDIA_RESOURCE))
 		query.append('a <%s> ; ' % self.RELATED_CONTENT)
 		query.append('rdfs:label "%s"' % annotation.getLabel())
-		if annotation.getUri():
+		if annotation.getUri() and annotation.getUri().find('http://linkedtv.eu/') == -1:
 			query.append(' ; ma:locator <%s>' % annotation.getUri())#voor IC templates is deze leeg
 		if annotation.getDescription():
 			query.append(' ; rdfs:comment "%s"' % annotation.getDescription())
