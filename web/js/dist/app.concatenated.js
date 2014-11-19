@@ -1499,11 +1499,11 @@ linkedtv.run(function($rootScope, conf) {
 		alert('The data was removed from the LinkedTV platform');
 	}
 	
-});;angular.module('linkedtv').controller('enrichmentController', 
-	function($rootScope, $scope, $modal, conf, chapterCollection, 
+});;angular.module('linkedtv').controller('enrichmentController',
+	function($rootScope, $scope, $modal, conf, chapterCollection,
 		entityCollection, enrichmentService, entityProxyService, enrichmentUtils) {
-	
-	$scope.enrichmentUtils = enrichmentUtils;	
+
+	$scope.enrichmentUtils = enrichmentUtils;
 	$scope.activeChapter = null;//holds the up-to-date active chapter
 	$scope.activeLinkIndex = 0;//selected slot
 
@@ -1513,15 +1513,17 @@ linkedtv.run(function($rootScope, conf) {
 		$scope.activeChapter = newValue;
 	});
 
-	$scope.editLink = function(dimension, link) {
-		if(dimension.service.id != 'informationCards') {
-			if(link) {
-				enrichmentUtils.openLinkDialog(dimension, link);
-			} else {
-				enrichmentUtils.openMultipleLinkDialog(dimension);
-			}
+	$scope.editSingleEnrichment = function(dimension, enrichment) {
+		if(dimension.service.id == 'informationCards') {
+			enrichmentUtils.openCardDialog(dimension, enrichment);
 		} else {
-			enrichmentUtils.openCardDialog(dimension, link);
+			enrichmentUtils.openLinkDialog(dimension, enrichment);
+		}
+	}
+
+	$scope.editMultipleEnrichments = function(dimension) {
+		if(dimension.service.id != 'informationCards') {
+			enrichmentUtils.openMultipleLinkDialog(dimension);
 		}
 	}
 
@@ -1532,8 +1534,8 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.isCardSelected = function(index) {
 		return $scope.activeLinkIndex == index ? 'selected' : '';
 	};
-	
-	
+
+
 });;angular.module('linkedtv').controller('entityController', 
 	function($scope, entityCollection) {
 	
@@ -1799,28 +1801,32 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$modalInstance.close({dimension : $scope.dimension, link : $scope.card});
 	};
 	
-}]);;angular.module('linkedtv').controller('linkModalController', 
+}]);;angular.module('linkedtv').controller('linkModalController',
 	['$scope', '$modalInstance', 'dimension', 'link', function ($scope, $modalInstance, dimension, link) {
-		
 
-	$scope.link = link;	
+
+	$scope.link = link || {};
 	$scope.dimension = dimension;//currently selected dimension
 
 	//----------------------------BUTTON PANEL------------------------------
 
-	$scope.ok = function () {		
-		$modalInstance.close({dimension: $scope.dimension, link : $scope.link});
+	$scope.ok = function () {
+		if($scope.link.uri && $scope.link.label) {
+			$modalInstance.close({dimension: $scope.dimension, link : $scope.link});
+		} else {
+			alert('Please enter a URI and a label');
+		}
 	};
 
 	$scope.cancel = function () {
 		$modalInstance.dismiss('cancel');
-	};	
+	};
 
 	$scope.removeLink = function() {
 		$scope.link.remove = true;
-		$modalInstance.close({dimension: $scope.dimension, link : $scope.link});	
+		$modalInstance.close({dimension: $scope.dimension, link : $scope.link});
 	}
-	
+
 }]);;angular.module('linkedtv').controller('multipleLinkModalController', 
 	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentService', 'chapterCollection', 
 	'entityCollection', 'enrichmentUtils', 'entityUtils', 'dimension', 

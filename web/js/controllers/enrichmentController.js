@@ -1,8 +1,8 @@
-angular.module('linkedtv').controller('enrichmentController', 
-	function($rootScope, $scope, $modal, conf, chapterCollection, 
+angular.module('linkedtv').controller('enrichmentController',
+	function($rootScope, $scope, $modal, conf, chapterCollection,
 		entityCollection, enrichmentService, entityProxyService, enrichmentUtils) {
-	
-	$scope.enrichmentUtils = enrichmentUtils;	
+
+	$scope.enrichmentUtils = enrichmentUtils;
 	$scope.activeChapter = null;//holds the up-to-date active chapter
 	$scope.activeLinkIndex = 0;//selected slot
 
@@ -12,15 +12,17 @@ angular.module('linkedtv').controller('enrichmentController',
 		$scope.activeChapter = newValue;
 	});
 
-	$scope.editLink = function(dimension, link) {
-		if(dimension.service.id != 'informationCards') {
-			if(link) {
-				enrichmentUtils.openLinkDialog(dimension, link);
-			} else {
-				enrichmentUtils.openMultipleLinkDialog(dimension);
-			}
+	$scope.editSingleEnrichment = function(dimension, enrichment) {
+		if(dimension.service.id == 'informationCards') {
+			enrichmentUtils.openCardDialog(dimension, enrichment);
 		} else {
-			enrichmentUtils.openCardDialog(dimension, link);
+			enrichmentUtils.openLinkDialog(dimension, enrichment);
+		}
+	}
+
+	$scope.editMultipleEnrichments = function(dimension) {
+		if(dimension.service.id != 'informationCards') {
+			enrichmentUtils.openMultipleLinkDialog(dimension);
 		}
 	}
 
@@ -31,6 +33,6 @@ angular.module('linkedtv').controller('enrichmentController',
 	$scope.isCardSelected = function(index) {
 		return $scope.activeLinkIndex == index ? 'selected' : '';
 	};
-	
-	
+
+
 });

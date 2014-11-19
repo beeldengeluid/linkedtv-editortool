@@ -11,14 +11,14 @@
 		@include single-box-shadow;
 		border: 1px solid #a3a3a3;
 
-		.caption {			
+		.caption {
 			background-color:$lightmustard;
 		}
 		a {
 			color: $wonderblue;
 		}
 	}
-	
+
 }
 
 /* Mixins - panel header menu holding glyphicons */
@@ -36,25 +36,26 @@
 		i {
 			color: $color;
 		}
-	}	
+	}
 }
 
 @mixin mediaSlots {
 	list-style:none;
-
+	margin: 0px;
+	padding: 0px;
 	li {
-		
 		cursor:pointer;
 		float:left;
 		margin:$defaultItemMargin;
 		text-align:center;
 		width:121px;
+		height:141px;
 
 		.thumbnail {
 			border:1px solid white;
 			width:120px;
 			max-height: 150px;
-			overflow:hidden;			
+			overflow:hidden;
 			img {
 				height:$imageHeight;
 			}
@@ -62,10 +63,10 @@
 				overflow:hidden;
 				padding-top:2px;
 				.status-icon {
-					float:left;					
+					float:left;
 				}
 			}
-			
+
 		}
 
 		&:hover {
@@ -80,7 +81,7 @@
 
 @mixin thumbnail ($width:320px) {
 	width:$width;
-	@include activeSlot;	
+	@include activeSlot;
 }
 
 .foldable {
@@ -93,7 +94,7 @@
 	background-color: gainsboro;
 
 	&:hover {
-		background-color: whitesmoke;	
+		background-color: whitesmoke;
 	}
 
 	.glyphicon {
@@ -115,7 +116,7 @@
 	li {
 		@if $inlineBlock {
 			display:inline-block;
-		} @else {		
+		} @else {
 			display:inline;
 		}
 	}
@@ -123,4 +124,10 @@
 
 .panel-custom {
 	margin:$defaultMargin;
+}
+
+.button-panel {
+	width:100%;
+	padding-bottom:$defaultMargin / 2;
+	border-bottom:1px solid $bordergrey;
 }
