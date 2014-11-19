@@ -24,12 +24,12 @@ from linkedtv.model.MediaResource import MediaResource
 from linkedtv.utils.DataConverter import DataConverter
 
 class Api():
-    
+
     def __init__(self):
         self.END_POINT = LTV_API_ENDPOINT
         self.DATA_END_POINT = LTV_DATA_ENDPOINT
         self.autogenDataLoader = AutogenDataLoader()
-        self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])    
+        self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
 
 
     """-------------------------LOAD, SAVE AND EXPORT MEDIA RESOURCES-------------------------"""
@@ -40,14 +40,14 @@ class Api():
             mediaResource = self.__getAllAnnotationsOfResource(resourceUri, False)
         """Get the mediaresource metadata and the playout URL"""
         print 'getting video metadata'
-        videoMetadata = self.__getVideoData(resourceUri)        
+        videoMetadata = self.__getVideoData(resourceUri)
         if videoMetadata:
-            videoMetadata = simplejson.loads(videoMetadata)        
+            videoMetadata = simplejson.loads(videoMetadata)
         vph = VideoPlayoutHandler()
         mediaResource.setVideoMetadata(videoMetadata)
         if videoMetadata:
             print 'Getting playout URL'
-            playoutURL = 'none'#vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
+            playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
             mediaResource.setPlayoutUrl(playoutURL)
         if videoMetadata:
             if videoMetadata['mediaResource']['mediaResourceRelationSet']:
@@ -59,7 +59,7 @@ class Api():
         resp = simplejson.dumps(mediaResource, default=lambda obj: obj.__dict__)
         return resp
 
-    
+
     def load_curated_ltv(self, resourceUri):
         sep = SaveEndpoint()
         return sep.loadCuratedResource(resourceUri)
@@ -151,15 +151,15 @@ class Api():
         resp = fetcher.getNoterikThumbnailByMillis(millis, baseUrl)
 
     #directly uses the linkedTV platform
-    def __getVideoData(self, resourceUri):        
+    def __getVideoData(self, resourceUri):
         pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
-        http = httplib2.Http()      
-        url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri        
+        http = httplib2.Http()
+        url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri
         headers = {
             'Accept' : 'application/json',
             'Authorization' : 'Basic %s' % pw,
         }
-        resp, content = http.request(url, 'GET', headers=headers)        
+        resp, content = http.request(url, 'GET', headers=headers)
         if resp and resp['status'] == '200':
             return content
         return None

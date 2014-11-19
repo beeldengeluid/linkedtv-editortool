@@ -1,6 +1,6 @@
-angular.module('linkedtv').controller('chapterController', 
+angular.module('linkedtv').controller('chapterController',
 	function($scope, $modal, chapterCollection, chapterService, playerService) {
-	
+
 	$scope.allChapters = [];
 	$scope.chapters = [];
 	$scope.showCuratedOnly = false;
@@ -45,20 +45,22 @@ angular.module('linkedtv').controller('chapterController',
 		$scope.openChapterDialog(null);
 	}
 
-	$scope.openChapterDialog = function(chapter) {		
+	$scope.openChapterDialog = function(chapter) {
 		if(chapter) {
 			chapter = {//copy the chapter
 				annotationURI: chapter.annotationURI,
-				bodyURI: chapter.bodyURI, 
+				bodyURI: chapter.bodyURI,
 				confidence: chapter.confidence,
 				dimensions: chapter.dimensions,
 				end: chapter.end,
+				prettyEnd: chapter.prettyEnd,
 				guid: chapter.guid,
-				label: chapter.label, 
+				label: chapter.label,
 				mfURI: chapter.mfURI,
 				poster: chapter.poster,
 				relevance: chapter.relevance,
-				start: chapter.start, 
+				start: chapter.start,
+				prettyStart: chapter.prettyStart,
 				type: chapter.type
 			}
 		}
@@ -66,7 +68,7 @@ angular.module('linkedtv').controller('chapterController',
 			templateUrl: '/site_media/js/templates/chapterModal.html',
 			controller: 'chapterModalController',
 			size: 'lg',
-			resolve: {				
+			resolve: {
 				chapter : function () {
 					return chapter;
 				}
@@ -74,7 +76,7 @@ angular.module('linkedtv').controller('chapterController',
 		});
 
 		//when the modal is closed (using 'ok', or 'cancel')
-		modalInstance.result.then(function (chapter) {			
+		modalInstance.result.then(function (chapter) {
 			console.debug(chapter);
 			if(chapter.remove) {
 				chapterCollection.removeChapter(chapter);
@@ -82,7 +84,7 @@ angular.module('linkedtv').controller('chapterController',
 				//update the chapter collection
 				chapterCollection.saveChapter(chapter);
 			}
-			
+
 		}, function () {
 			console.debug('Modal dismissed at: ' + new Date());
 		});
