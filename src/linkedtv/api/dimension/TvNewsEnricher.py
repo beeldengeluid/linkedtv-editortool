@@ -1,31 +1,31 @@
 """
 [Opinion]
 curl -X GET "http://linkedtv.eurecom.fr/newsenricher/api/opinion?
-query=snowden+russian+asylum&startdate=20130703&enddate=20130716&cse=CSE_ID&limit=50" 
+query=snowden+russian+asylum&startdate=20130703&enddate=20130716&cse=CSE_ID&limit=50"
 --header "Content-Type:application/json" -v
 
 [Other media]
 curl -X GET "http://linkedtv.eurecom.fr/newsenricher/api/othermedia?
-query=snowden+russian+asylum&startdate=20130703&enddate=20130716&cse=CSE_ID&limit=50" 
+query=snowden+russian+asylum&startdate=20130703&enddate=20130716&cse=CSE_ID&limit=50"
 --header "Content-Type:application/json" -v
 
 [Timeline]
 curl -X GET "http://linkedtv.eurecom.fr/newsenricher/api/timeline?
-query=snowden&startdate=20130313&enddate=20140116&cse=CSE_ID&limit=50" 
+query=snowden&startdate=20130313&enddate=20140116&cse=CSE_ID&limit=50"
 --header "Content-Type:application/json" -v
 
 [In depth]
 curl -X GET "http://linkedtv.eurecom.fr/newsenricher/api/indepth?
-query=snowden&startdate=20130313&enddate=20140116&cse=CSE_ID&limit=50" 
+query=snowden&startdate=20130313&enddate=20140116&cse=CSE_ID&limit=50"
 --header "Content-Type:application/json" -v
 
 [Tweets]
 curl -X GET "http://linkedtv.eurecom.fr/newsenricher/api/tweets?
-query=snowden+asylum&startdate=20140421&enddate=20140429&limit=50" 
+query=snowden+asylum&startdate=20140421&enddate=20140429&limit=50"
 --header "Content-Type:application/json" -v
 
 curl -X GET "http://linkedtv.eurecom.fr/newsenricher/api/tweets?
-query=snowden+asylum&startdate=20140421&enddate=20140429&lat=51.5085300&lon=-0.1257400&rad=50&limit=50" 
+query=snowden+asylum&startdate=20140421&enddate=20140429&lat=51.5085300&lon=-0.1257400&rad=50&limit=50"
 --header "Content-Type:text/xml" -v
 
 """
@@ -38,11 +38,11 @@ from datetime import date, timedelta
 from linkedtv.api.dimension.DimensionService import DimensionService
 
 class TvNewsEnricher(DimensionService):
-	
+
 	def __init__(self):
 		DimensionService.__init__(self, 'TvNewsEnricher')
 		self.BASE_URL = 'http://linkedtv.eurecom.fr/newsenricher/api'
-		self.googleCustomSearchEngines = {#https://www.google.com/cse/publicurl?cx=		
+		self.googleCustomSearchEngines = {#https://www.google.com/cse/publicurl?cx=
 			'opinion' : '014567755836058125714:2yq5yptluxs',
 			'othermedia' : '014567755836058125714:c1kdam3wyey',
 			'indepth' : '014567755836058125714:0opyehd0oiu',
@@ -51,9 +51,9 @@ class TvNewsEnricher(DimensionService):
 		self.searchPeriod = 7 # days
 		self.searchLimit = 50
 
-	def fetch(self, query, dimension):
+	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
-			return self.__formatResponse(self.__search(query, params))
+			return self.__formatResponse(self.__search(query, entities, params))
 		return None
 
 	def __isValidDimension(self, dimension):
@@ -62,12 +62,12 @@ class TvNewsEnricher(DimensionService):
 				return dimension['service']['params'].has_key('dimension')
 		return False
 
-	def __search(self, query, dimension):
+	def __search(self, query, entities, dimension):
 		DimensionService.__search(self, query, params)
-		http = httplib2.Http()		
+		http = httplib2.Http()
 		url = self.__getServiceUrl(query, dimension)
 		headers = {'Content-type': 'application/json'}
-		resp, content = http.request(url, 'GET', headers=headers)		
+		resp, content = http.request(url, 'GET', headers=headers)
 		if content:
 			return self.__formatResponse(content, dimension['service']['params']['dimension'])
 		else:

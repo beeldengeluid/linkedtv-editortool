@@ -1,7 +1,7 @@
 angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootScope) {
-	
+
 	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
-	function getResourceData(loadData, callback) {		
+	function getResourceData(loadData, callback) {
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -34,8 +34,6 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 
 	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
 	function saveResource(chapters, action) {
-		console.debug('Saving resource...');
-		console.debug(chapters);
 		action = action == undefined ? 'save' : action; //not used on the server (yet?)
 		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
 		$.ajax({
@@ -59,7 +57,6 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 	}
 
 	function publishResource(chapters, unpublish, callback) {
-		console.debug('Exporting resource...');
 		var saveData = {uri : $rootScope.resourceUri, chapters : chapters};
 		var url = '/publish?pp=LinkedTV'; //currently no other publishing points are supported
 		if(unpublish)  {

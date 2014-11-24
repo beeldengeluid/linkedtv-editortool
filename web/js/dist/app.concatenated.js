@@ -62,8 +62,10 @@ var informationCardTemplates = {
 			label : 'Art object',
 			properties : [
 				{key : 'label', type: 'literal', optional : false},
-				{key : 'description', type : 'literal', optional : false},
+				{key : 'description', type : 'literal', optional : true},
+				{key : 'type', type: 'literal', optional : true},
 				{key : 'creator', type : 'entity', optional : true},
+				{key : 'creation location', type : 'entity', optional : true},
 				{key : 'period', type : 'entity', optional : true},
 				{key : 'material', type : 'entity', optional : true},
 				{key : 'style', type : 'entity', optional : true},
@@ -80,6 +82,7 @@ var rbbConfig = {
 		{
 			id : 'maintopic',
 			label : 'Information Cards',
+			linkedtvDimension : 'Background',
 			service : {
 				id : 'informationCards'
 			}
@@ -87,6 +90,7 @@ var rbbConfig = {
 		{
 			id : 'tvne_1',
 			label : 'Opinion',
+			linkedtvDimension : 'Opinion',
 			service : {
 				id: 'TvNewsEnricher',
 				params : {
@@ -97,6 +101,7 @@ var rbbConfig = {
 		{
 			id : 'tvne_2',
 			label : 'Other Media',
+			linkedtvDimension : 'OtherMedia',
 			service : {
 				id :'TvNewsEnricher',
 				params : {
@@ -107,6 +112,7 @@ var rbbConfig = {
 		{
 			id : 'tvne_3',
 			label : 'Timeline',
+			linkedtvDimension : 'Timeline',
 			service : {
 				id : 'TvNewsEnricher',
 				params : {
@@ -117,6 +123,7 @@ var rbbConfig = {
 		{
 			id : 'tvne_4',
 			label : 'In Depth',
+			linkedtvDimension : 'InDepth',
 			service : {
 				id : 'TvNewsEnricher',
 				params : {
@@ -127,6 +134,7 @@ var rbbConfig = {
 		{
 			id : 'tvne_5',
 			label : 'Social Media',
+			linkedtvDimension : 'SocialMedia',
 			service : {
 				id :'TvNewsEnricher',
 				params : {
@@ -137,6 +145,7 @@ var rbbConfig = {
 		{
 			id : 'tve_1',
 			label : 'Related Chapter',
+			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id :'TvEnricher',
 				params : {
@@ -154,6 +163,7 @@ var tkkConfig = {
 		{
 			id : 'maintopic',//check this
 			label : 'Art Object',
+			linkedtvDimension : 'ArtObject',
 			service : {
 				id :'informationCards'
 			}
@@ -161,6 +171,7 @@ var tkkConfig = {
 		{
 			id : 'tve_1',
 			label : 'Background',
+			linkedtvDimension : 'Background',
 			service : {
 				id : 'TvEnricher',
 				params : {
@@ -171,6 +182,7 @@ var tkkConfig = {
 		{
 			id : 'tve_2',
 			label : 'Related Art Work',
+			linkedtvDimension : 'RelatedArtWork',
 			service : {
 				id : 'TvEnricher',
 				params : {
@@ -181,6 +193,7 @@ var tkkConfig = {
 		{
 			id : 'tve_3',
 			label : 'Related Chapter',
+			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id : 'TvEnricher',
 				params : {
@@ -198,6 +211,7 @@ var trialConfig = {
 		{
 			id : 'maintopic',
 			label : 'Main Topics',
+			linkedtvDimension : 'Background',
 			service : {
 				id : 'informationCards'
 			}
@@ -205,6 +219,7 @@ var trialConfig = {
 		{
 			id : 'freshMedia',
 			label : 'Background Information',
+			linkedtvDimension : 'Background',
 			service : {
 				id : 'TvEnricher'
 			}
@@ -487,17 +502,28 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	//important function that makes sure that chapters have dimensions assigned to them at all times
+	//also makes sure the correct thumbnail is set and that the start and end times are available in human readable format
 	function setBasicProperties(chapter, updateGuid) {
 		if(updateGuid) {
 			chapter.guid = _.uniqueId('chapter_');
-			//chapter.label = chapter.label.replace(/ /g,'');
+			if(!chapter.dimensions) {
+				var dimensions = {};
+				_.each(conf.programmeConfig.dimensions, function(d) {
+					var temp = {};
+					_.each(d, function(value, key) {
+						if(key != '$$hashKey') {//FIXME ugly!
+							temp[key] = value;
+						}
+					});
+					dimensions[d.id] = temp;
+				});
+				chapter.dimensions = dimensions;
+			}
 		}
 		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
 		chapter.prettyStart = timeUtils.toPrettyTime(chapter.start);
 		chapter.prettyEnd = timeUtils.toPrettyTime(chapter.end);
-		if(!chapter.dimensions) {
-			chapter.dimensions = {};
-		}
 	}
 
 	function addObserver(observer) {
@@ -537,7 +563,6 @@ linkedtv.run(function($rootScope, conf) {
 
 	//TODO waarom wordt deze zo vaak aangeroepen
 	function getActiveChapter() {
-		//console.debug(_activeChapter);
 		return _activeChapter;
 	}
 
@@ -594,13 +619,10 @@ linkedtv.run(function($rootScope, conf) {
 		saveOnServer();
 	}
 
+	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
+	// you also need to update this (when you want to add a property to a dimension)!!! (below also)
 	function saveChapterLinks(dimension, links) {
-		_activeChapter.dimensions[dimension.id] = {
-			id : dimension.id,
-			label : dimension.label,
-			service : dimension.service,
-			annotations : links
-		};
+		_activeChapter.dimensions[dimension.id].annotations = links;
 		//update the chapter collection
 		saveChapter(_activeChapter);
 	}
@@ -613,7 +635,7 @@ linkedtv.run(function($rootScope, conf) {
 					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
 				}
 			}
-		} else if(_activeChapter.dimensions[dimension.id]) {
+		} else if(_activeChapter.dimensions[dimension.id].annotations) {
 			var exists = false;
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++){
 				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
@@ -626,12 +648,7 @@ linkedtv.run(function($rootScope, conf) {
 			}
 		} else {
 			//add a new dimension (add the config properties + a list to hold the annotations)
-			_activeChapter.dimensions[dimension.id] = {
-				id : dimension.id,
-				label : dimension.label,
-				service : dimension.service,
-				annotations : [link]
-			};
+			_activeChapter.dimensions[dimension.id].annotations = [link];
 		}
 		saveChapter(_activeChapter);
 	}
@@ -866,9 +883,9 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 }]);;angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootScope) {
-	
+
 	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
-	function getResourceData(loadData, callback) {		
+	function getResourceData(loadData, callback) {
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -901,8 +918,6 @@ linkedtv.run(function($rootScope, conf) {
 
 	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
 	function saveResource(chapters, action) {
-		console.debug('Saving resource...');
-		console.debug(chapters);
 		action = action == undefined ? 'save' : action; //not used on the server (yet?)
 		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
 		$.ajax({
@@ -926,7 +941,6 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	function publishResource(chapters, unpublish, callback) {
-		console.debug('Exporting resource...');
 		var saveData = {uri : $rootScope.resourceUri, chapters : chapters};
 		var url = '/publish?pp=LinkedTV'; //currently no other publishing points are supported
 		if(unpublish)  {
@@ -960,16 +974,20 @@ linkedtv.run(function($rootScope, conf) {
 
 }]);;angular.module('linkedtv').factory('enrichmentService', [function(){
 
-	function search(query, dimension, callback) {
+	function search(query, entities, dimension, callback) {
 		console.debug('Querying enrichments using ' + query);
 		console.debug(dimension);
-		var fetchUrl = '/dimension?q=' + query.split('+').join(',');
-		fetchUrl += '&d=' + JSON.stringify(dimension);
-		//fetchUrl += '&params=' + JSON.stringify(dimension.params)
+		console.debug(entities);
+		var data = {
+			'query' : query.split('+').join(','),
+			'dimension' : dimension,
+			'entities' : entities
+		};
 		$.ajax({
-			method: 'GET',
+			method: 'POST',
+			data: JSON.stringify(data),
 			dataType : 'json',
-			url : fetchUrl,
+			url : '/dimension',
 			success : function(json) {
 				var enrichments = json.error ? null : json.enrichments;
 				callback(formatServiceResponse(enrichments, dimension));
@@ -1827,17 +1845,17 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$modalInstance.close({dimension: $scope.dimension, link : $scope.link});
 	}
 
-}]);;angular.module('linkedtv').controller('multipleLinkModalController', 
-	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentService', 'chapterCollection', 
-	'entityCollection', 'enrichmentUtils', 'entityUtils', 'dimension', 
+}]);;angular.module('linkedtv').controller('multipleLinkModalController',
+	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentService', 'chapterCollection',
+	'entityCollection', 'enrichmentUtils', 'entityUtils', 'dimension',
 	function ($scope, $modalInstance, $rootScope, entityProxyService, enrichmentService, chapterCollection,
 	 entityCollection, enrichmentUtils, entityUtils, dimension) {
-	
+
 	//collapse states
 	$scope.enrichmentsCollapsed = false;
 	$scope.savedEnrichmentsCollapsed = false;
 	$scope.entitiesCollapsed = false;
-	
+
 	$scope.nothingFound = false;
 	$scope.fetchButtonText = 'Find links'
 
@@ -1848,7 +1866,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	//populate the 3 levels of entities
 	$scope.combinedEnrichments =  chapterCollection.getAllEnrichmentsOfChapter() || []; //get the combined enrichments from all dimensions
-	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection	
+	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection
 	$scope.expandedEntities = chapterCollection.getActiveChapter().expandedEntities || [];
 
 	$scope.savedEnrichments = chapterCollection.getSavedEnrichmentsOfDimension(dimension) || null;
@@ -1856,13 +1874,13 @@ angular.module('linkedtv').controller('informationCardModalController',
 	//used to formulate the enrichment query for the TVenricher (or another service)
 	$scope.enrichmentQuery = '';//the query that will be sent to the enrichmentService
 	$scope.activeEntities = {};//selected entities
-	
+
 
 	$scope.allEnrichments = null; //all fetched enrichments (unfiltered)
 	$scope.enrichments = [];//fetched & filtered enrichment
 	$scope.enrichmentSources = null; //allEnrichments filtered by link source
 	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
-	
+
 	$scope.activeEnrichmentSource = null; //current source filter
 	$scope.activeEnrichmentEntitySource = null; //current entity source filter
 
@@ -1873,14 +1891,18 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$scope.enrichmentQuery = $('#e_query').val();//FIXME ugly hack, somehow the ng-model does not work in this form!!!
 		if ($scope.enrichmentQuery) {
 			//enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.dimension, $scope.onSearchEnrichments);
-			enrichmentService.search($scope.enrichmentQuery, $scope.dimension, $scope.onSearchEnrichments);
+			var entities = [];
+			_.each($scope.activeEntities, function(value, key) {
+				entities.push(value);
+			});
+			enrichmentService.search($scope.enrichmentQuery, entities, $scope.dimension, $scope.onSearchEnrichments);
 		}
 	};
 
 	$scope.onSearchEnrichments = function(enrichments) {
 		//reset the button and the selected entities
 		$scope.fetchButtonText = 'Find links';
-		$scope.enrichmentsCollapsed = false;		
+		$scope.enrichmentsCollapsed = false;
 		if(enrichments) {
 			//apply the enrichments to the scope
 			$scope.$apply(function() {
@@ -1896,7 +1918,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 						return e;
 				}
 		});
-			});			
+			});
 		} else {
 			alert('No enrichments found');
 			$scope.$apply(function() {
@@ -1979,8 +2001,8 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.cancel = function () {
 		$modalInstance.dismiss('cancel');
-	};	
-	
+	};
+
 }]);;angular.module('linkedtv').controller('playerController', function($sce, $scope, videoModel, playerService){
 	
 	$scope.canPlayVideo = false;

@@ -18,6 +18,5 @@ class DimensionHandler(object):
 	def getRegisteredServices(self):
 		return self.registeredServices.keys()
 
-	def fetch(self, query, dimension):
-		return self.registeredServices[dimension['service']['id']].fetch(query, dimension)
-		
+	def fetch(self, query, entities, dimension):
+		return self.registeredServices[dimension['service']['id']].fetch(query, entities, dimension)

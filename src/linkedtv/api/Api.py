@@ -109,9 +109,9 @@ class Api():
 
     """-------------------------DIMENSION HANDLING-------------------------"""
 
-    def dimension(self, query, dimension):
+    def dimension(self, query, entities, dimension):
         dh = DimensionHandler()
-        return dh.fetch(query, dimension)
+        return dh.fetch(query, entities, dimension)
 
     def dimensions(self):
         dh = DimensionHandler()

@@ -47,17 +47,28 @@ angular.module('linkedtv').factory('chapterCollection',
 		});
 	}
 
+	//important function that makes sure that chapters have dimensions assigned to them at all times
+	//also makes sure the correct thumbnail is set and that the start and end times are available in human readable format
 	function setBasicProperties(chapter, updateGuid) {
 		if(updateGuid) {
 			chapter.guid = _.uniqueId('chapter_');
-			//chapter.label = chapter.label.replace(/ /g,'');
+			if(!chapter.dimensions) {
+				var dimensions = {};
+				_.each(conf.programmeConfig.dimensions, function(d) {
+					var temp = {};
+					_.each(d, function(value, key) {
+						if(key != '$$hashKey') {//FIXME ugly!
+							temp[key] = value;
+						}
+					});
+					dimensions[d.id] = temp;
+				});
+				chapter.dimensions = dimensions;
+			}
 		}
 		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
 		chapter.prettyStart = timeUtils.toPrettyTime(chapter.start);
 		chapter.prettyEnd = timeUtils.toPrettyTime(chapter.end);
-		if(!chapter.dimensions) {
-			chapter.dimensions = {};
-		}
 	}
 
 	function addObserver(observer) {
@@ -97,7 +108,6 @@ angular.module('linkedtv').factory('chapterCollection',
 
 	//TODO waarom wordt deze zo vaak aangeroepen
 	function getActiveChapter() {
-		//console.debug(_activeChapter);
 		return _activeChapter;
 	}
 
@@ -154,13 +164,10 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveOnServer();
 	}
 
+	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
+	// you also need to update this (when you want to add a property to a dimension)!!! (below also)
 	function saveChapterLinks(dimension, links) {
-		_activeChapter.dimensions[dimension.id] = {
-			id : dimension.id,
-			label : dimension.label,
-			service : dimension.service,
-			annotations : links
-		};
+		_activeChapter.dimensions[dimension.id].annotations = links;
 		//update the chapter collection
 		saveChapter(_activeChapter);
 	}
@@ -173,7 +180,7 @@ angular.module('linkedtv').factory('chapterCollection',
 					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
 				}
 			}
-		} else if(_activeChapter.dimensions[dimension.id]) {
+		} else if(_activeChapter.dimensions[dimension.id].annotations) {
 			var exists = false;
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++){
 				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
@@ -186,12 +193,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			}
 		} else {
 			//add a new dimension (add the config properties + a list to hold the annotations)
-			_activeChapter.dimensions[dimension.id] = {
-				id : dimension.id,
-				label : dimension.label,
-				service : dimension.service,
-				annotations : [link]
-			};
+			_activeChapter.dimensions[dimension.id].annotations = [link];
 		}
 		saveChapter(_activeChapter);
 	}

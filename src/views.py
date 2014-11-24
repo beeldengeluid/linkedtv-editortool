@@ -29,7 +29,7 @@ def __getClientIP(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-""" 
+"""
 *********************************************************************************************************
 Calls rendering HTML pages
 *********************************************************************************************************
@@ -48,8 +48,8 @@ def trial(request):
 @login_required
 def provider(request, pub = '', id = ''):
     authorized = False
-    if pub:       
-        for g in request.user.groups.all():            
+    if pub:
+        for g in request.user.groups.all():
             if(g.name.lower() == pub):
                 authorized = True
                 break
@@ -57,9 +57,9 @@ def provider(request, pub = '', id = ''):
         print 'you (%s) are not authorized to view this page' % pub
         return render_to_response('index.html', {'user' : request.user})
     return render_to_response('edit.html', {'user' : request.user})
-    
-    
-""" 
+
+
+"""
 *********************************************************************************************************
 REST API CALLS (loading & saving data, fetching images and video etc)
 *********************************************************************************************************
@@ -92,7 +92,7 @@ def load_curated_et(request):
     if resourceUri:
         api = Api()
         resp = api.load_curated_et(resourceUri)
-        if resp:            
+        if resp:
             httpResp = HttpResponse(simplejson.dumps(resp), mimetype='application/json')
             #to enable CORS
             httpResp['Access-Control-Allow-Origin'] = '*'
@@ -109,7 +109,7 @@ def save_et(request):
     if resp:
         return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse(__getErrorMessage('Malformed POST data'), mimetype='application/json')
-    
+
 
 """for exporting a resource to the LinkedTV platform"""
 @csrf_exempt
@@ -120,7 +120,7 @@ def publish(request):
     if publishingPoint:
         api = Api()
         try:
-            saveData = simplejson.loads(saveData)            
+            saveData = simplejson.loads(saveData)
             resp = api.publish(publishingPoint, saveData, delete == 'true')
         except JSONDecodeError, e:
             print e
@@ -136,12 +136,12 @@ def image(request):
     millis = request.GET.get('ms', None)
     baseUrl = request.GET.get('baseUrl', None)
     if millis and baseUrl:
-        api = Api()        
+        api = Api()
         resp = api.image(millis, baseUrl)
         if resp:
             return HttpResponse(resp, mimetype='image/jpeg')
         else:
-            return HttpResponseRedirect('/site_media/images/snowscreen.gif')    
+            return HttpResponseRedirect('/site_media/images/snowscreen.gif')
     return HttpResponse("{'error' : 'Please provide the moment in time by milliseconds'}", mimetype='application/json')
 
 def videos(request):
@@ -153,20 +153,19 @@ def videos(request):
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
-
+@csrf_exempt
 def dimension(request):
     print 'Testing the new dimension'
-    query = request.GET.get('q', None)
-    dimension = request.GET.get('d', None)
+    data = request.body
     try:
-        dimension = simplejson.loads(dimension)
+        data = simplejson.loads(data)
     except JSONDecodeError, e:
-        print 'Invalid dimension data'
-        print dimension
-        dimension = None
-    if query and dimension:
+        print 'Data not formatted properly!'
+        print data
+        data = None
+    if data:
         api = Api()
-        resp = api.dimension(query.split(','), dimension)
+        resp = api.dimension(data['query'].split(','), data['entities'], data['dimension'])
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
         else:
@@ -177,11 +176,11 @@ def dimensions(request):
     api = Api()
     resp = api.dimensions()
     if resp:
-        return HttpResponse(simplejson.dumps(resp), mimetype='application/json')    
+        return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
     return HttpResponse(__getErrorMessage('No services have been registered!'), mimetype='application/json')
 
 
-""" 
+"""
 *********************************************************************************************************
 External APIs from LinkedTV WP2
 *********************************************************************************************************

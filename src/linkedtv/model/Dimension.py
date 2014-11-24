@@ -1,10 +1,11 @@
 
 
 class Dimension(object):
-	
-	def __init__(self, _id, label, service = None, annotations = []):
+
+	def __init__(self, _id, label, linkedtvDimension = None, service = None, annotations = []):
 		self.id = _id
-		self.label = label		
+		self.label = label
+		self.linkedtvDimension = linkedtvDimension
 		self.service = service
 		self.annotations = annotations
 
@@ -19,6 +20,12 @@ class Dimension(object):
 
 	def getLabel(self):
 		return self.label
+
+	def setLinkedtvDimension(self, linkedtvDimension):
+		self.linkedtvDimension = linkedtvDimension
+
+	def getLinkedtvDimension(self):
+		return self.linkedtvDimension
 
 	def setAnnotations(self, annotations):
 		self.annotations = annotations

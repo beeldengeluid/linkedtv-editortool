@@ -1,15 +1,19 @@
 angular.module('linkedtv').factory('enrichmentService', [function(){
 
-	function search(query, dimension, callback) {
+	function search(query, entities, dimension, callback) {
 		console.debug('Querying enrichments using ' + query);
 		console.debug(dimension);
-		var fetchUrl = '/dimension?q=' + query.split('+').join(',');
-		fetchUrl += '&d=' + JSON.stringify(dimension);
-		//fetchUrl += '&params=' + JSON.stringify(dimension.params)
+		console.debug(entities);
+		var data = {
+			'query' : query.split('+').join(','),
+			'dimension' : dimension,
+			'entities' : entities
+		};
 		$.ajax({
-			method: 'GET',
+			method: 'POST',
+			data: JSON.stringify(data),
 			dataType : 'json',
-			url : fetchUrl,
+			url : '/dimension',
 			success : function(json) {
 				var enrichments = json.error ? null : json.enrichments;
 				callback(formatServiceResponse(enrichments, dimension));

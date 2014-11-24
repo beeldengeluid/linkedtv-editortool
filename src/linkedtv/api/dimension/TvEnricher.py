@@ -15,9 +15,9 @@ class TvEnricher(DimensionService):
         self.BASE_URL = 'http://linkedtv.eurecom.fr/tvenricher/api'
         self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
 
-    def fetch(self, query, dimension):
+    def fetch(self, query, entities, dimension):
         if self.__isValidDimension(dimension):
-            return self.__formatResponse(self.__search(query, dimension))
+            return self.__formatResponse(self.__search(query, entities, dimension))
         return None
 
     def __isValidDimension(self, dimension):
@@ -26,7 +26,7 @@ class TvEnricher(DimensionService):
                 return dimension['service']['params'].has_key('dimension')
         return False
 
-    def __search(self, query, dimension):
+    def __search(self, query, entities, dimension):
         #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v
         http = httplib2.Http()
         url = self.__getServiceUrl(query, dimension)
@@ -37,9 +37,8 @@ class TvEnricher(DimensionService):
             if dimension['service']['params']['dimension'] == 'Solr':
                 enrichments = []
                 mfs = simplejson.loads(content)
-                print content
-                for mf in mfs:
-                    mf = mf.replace('\r', '').replace('\n', '')
+                for obj in mfs:
+                    mf = obj['mf_id']
                     mf = mf[len('http://data.linkedtv.eu/media/'):]
                     videoData = self.__getMediaFragmentData(mf)
                     enrichments.append({'micropostUrl' : mf, 'posterUrl' : videoData['poster'],

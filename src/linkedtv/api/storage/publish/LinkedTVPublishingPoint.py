@@ -194,7 +194,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('<%s> a <%s> ; ' % (aURI, self.OA_ANNOTATION))
 		query.append('a <%s> ; ' % self.PROV_ENTITY)
 		query.append('oa:motivatedBy <%s> ; ' % self.MOTIVATION_LINKING)
-		query.append('oa:motivatedBy <%s%s> ; ' % (self.LTV_ONTO_PF, dimension.getLabel().replace(' ', '')))
+		query.append('oa:motivatedBy <%s%s> ; ' % (self.LTV_ONTO_PF, dimension.getLinkedtvDimension()))
 		#If the enrichment has a start & end time, link to the custom entity
 		if duration != '0':
 			query.append('oa:hasTarget <%s> ; ' % mfURI)

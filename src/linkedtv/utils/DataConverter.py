@@ -1,6 +1,6 @@
 from linkedtv.model import *
 
-class DataConverter():	
+class DataConverter():
 
 	@staticmethod
 	def convertSaveData(saveData):
@@ -11,7 +11,7 @@ class DataConverter():
 			chapters = []
 			for c in saveData['chapters']:
 				chapter = Chapter(
-					c['label']					
+					c['label']
 				)
 				chapter.setStart(c['start'])
 				chapter.setEnd(c['end'])
@@ -32,14 +32,16 @@ class DataConverter():
 				if c.has_key('dimensions'):
 					dimensions = {}
 					for key in c['dimensions']:
+						print key
 						print c['dimensions'][key]
 						dimension = Dimension(
 							key, #id
 							c['dimensions'][key]['label'], #label
+							c['dimensions'][key]['linkedtvDimension'],#used to create a linkedtv:dimension RDF triple
 							c['dimensions'][key]['service'] #service (including id and params)
 						)
 						#fill the list of Enrichment objects and add it as annotations for the Dimension object
-						annotations = []						
+						annotations = []
 						if c['dimensions'][key].has_key('annotations'):
 							for e in c['dimensions'][key]['annotations']:
 								#mandatory fields first (TODO make sure these are always present in the client!!)
@@ -50,7 +52,7 @@ class DataConverter():
 									annotation.setUri(e['uri'])
 								if e.has_key('poster'):
 									annotation.setPoster(e['poster'])
-																	
+
 								#add the optional properties
 								if e.has_key('start'):
 									annotation.setStart(e['start'])
@@ -99,7 +101,7 @@ class DataConverter():
 						#add the dimension to the list
 						dimensions[key] = dimension
 
-					#add the dimensions to the chapter	
+					#add the dimensions to the chapter
 					chapter.setDimensions(dimensions)
 
 				#add the chapter to the list
@@ -107,5 +109,5 @@ class DataConverter():
 
 			#add the chapters to the mediaresource
 			mr.setChapters(chapters)
-		
+
 		return mr
