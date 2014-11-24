@@ -66,10 +66,11 @@
                             <input class="form-control" ng-model="activeTemplate.properties[$index].value">
                         </div>
                         <div ng-if="p.type == 'entity'" class="form-group">
-                            <dbpedia-autocomplete target="auto_{{$index}}" entity="activeTemplate.properties[$index].value"></dbpedia-autocomplete>
+                            <dbpedia-autocomplete target="auto_{{$index}}" entity="activeTemplate.properties[$index].value">
+                            </dbpedia-autocomplete>
                         </div>
                         <div ng-if="p.type == 'entity'" class="form-group">
-                            <input class="form-control" ng-model="activeTemplate.properties[$index].value.label" 
+                            <input class="form-control" ng-model="activeTemplate.properties[$index].value.label"
                             placeholder="Entity label">
                         </div>
                         <div class="form-group">
@@ -77,6 +78,10 @@
                         </div>
                         <div class="form-group" ng-if="$last">
                             <i class="glyphicon glyphicon-plus interactive" ng-click="addToTemplate()"></i>
+                        </div>
+                        <div class="form-group">
+                            <i ng-if="p.type == 'entity' && activeTemplate.properties[$index].value.uri" class="glyphicon glyphicon-cloud" style="color:red;" title="You have added an entity"></i>
+                            <i ng-if="p.type == 'entity' && !activeTemplate.properties[$index].value.uri" class="glyphicon glyphicon-pencil" style="color:red;" title="The filled in value is just a text string"></i>
                         </div>
                     </form>
                 </div>
@@ -89,7 +94,7 @@
                     </div>
                 </div>
 
-            </div>           
+            </div>
         </div><!-- END OF card-edit-form -->
 
     </div>
@@ -97,12 +102,12 @@
     <div class="row">
         <div class="col-md-12">
             <!-- not sure yet why, but it's really needed to use $parent.poster instead of poster...-->
-            <shot-selector title="Select a shot to use as poster for this information card" 
+            <shot-selector title="Select a shot to use as poster for this information card"
             poster="$parent.poster" chapter="true" collapsed="true"></shot-selector>
         </div>
     </div>
 
-    
+
 
     <!-- display entities -->
     <div class="row">
@@ -126,7 +131,7 @@
                             <div class="form-group">
                                 <label>Search</label>
                                 <dbpedia-autocomplete target="auto_main" entity="foundEntity"></dbpedia-autocomplete>
-                                <div ng-if="foundEntity" ng-click="fetchExtraInfo(foundEntity)" 
+                                <div ng-if="foundEntity" ng-click="fetchExtraInfo(foundEntity)"
                                     class="label label-default entity" title="{{foundEntity.label}}">
                                     {{foundEntity.label}}
                                 </div>
@@ -135,7 +140,7 @@
                     </div>
                 </div>
             </div>
-        </div>            
+        </div>
 
     </div>
 
@@ -146,7 +151,7 @@
                 <foldable title="Show fetched data" collapsed="fetchedDataCollapsed"></foldable>
                 <div collapse="fetchedDataCollapsed">
                     <h4>
-                        Fetched properties                        
+                        Fetched properties
                         <button type="button" class="btn btn-primary" ng-click="useAsTemplate()">Use as card</button>
                     </h4>
 
@@ -160,14 +165,14 @@
                                     <li>Value</li>
                                 </ul>
                             </header>
-                            <form class="form-inline" role="form" ng-repeat="triple in fetchedTriples" 
+                            <form class="form-inline" role="form" ng-repeat="triple in fetchedTriples"
                                 ng-click="nextTriple($index)" ng-if="!isReserved(triple.key)">
                                 <div class="form-group">
                                     <input disabled class="form-control" value="{{triple.key}}">
                                 </div>
                                 <div class="form-group">
                                     <div class="textarea" ng-if="!triple.uris[triple.index]">{{triple.values[triple.index]}}</div>
-                                    <div ng-if="triple.uris[triple.index]" ng-click="fetchExtraInfo(triple.uris[triple.index])" 
+                                    <div ng-if="triple.uris[triple.index]" ng-click="fetchExtraInfo(triple.uris[triple.index])"
                                         class="label label-default entity" title="{{triple.values[triple.index]}}">
                                         {{triple.values[triple.index]}}
                                     </div>
@@ -199,7 +204,7 @@
                     </div>
                 </div>
 
-                
+
             </div>
         </div>
     </div>
@@ -207,7 +212,7 @@
 </div>
 
 <div class="modal-footer">
-    <button class="btn btn-default" ng-click="cancel()">Cancel</button>    
+    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
     <button class="btn btn-primary" ng-click="ok()">Save</button>
     <button class="btn btn-danger" ng-click="removeCard()">Delete</button>
 </div>

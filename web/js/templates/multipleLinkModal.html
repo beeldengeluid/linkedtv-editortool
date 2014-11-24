@@ -18,13 +18,13 @@
 
 				<ul ng-show="savedEnrichments.length > 0" class="enrichments">
 					<li ng-repeat="e in savedEnrichments track by $index">
-						<div class="thumbnail" ng-if="e.uri" ng-dblclick="removeEnrichment($index)" title="{{e.description}}">
+						<div class="thumbnail" ng-if="e.url" ng-dblclick="removeEnrichment($index)" title="{{e.description}}">
 							<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
 							<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
 
 							<div class="caption">
-								<a href="{{e.uri}}" target="_external">{{e.label | limitTo:30}}</a>
+								<a href="{{e.url}}" target="_external">{{e.label | limitTo:30}}</a>
 							</div>
 						</div>
 					</li>
@@ -63,7 +63,6 @@
 								<div ng-click="addQueryEntity(e)"
 								class="label label-default entity" title="{{e.label}}">
 								{{e.label}}<!-- TODO add the amount again-->
-									<i ng-if="e.disambiguationURL.indexOf('dbpedia') != -1" class="glyphicon glyphicon-star"></i>
 								</div>
 							</li>
 						</ul>
@@ -80,7 +79,7 @@
 									<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
 									<div class="caption">
-										<a href="{{e.uri}}" target="_external">
+										<a href="{{e.url}}" target="_external">
 											{{e.label | limitTo : 20 || 'No label' | limitTo : 20}}
 										</a>
 									</div>
@@ -179,13 +178,13 @@
 				<div class="col-md-12">
 					<ul class="enrichments">
 						<li ng-repeat="e in enrichments">
-							<div class="thumbnail" ng-if="e.uri" ng-click="addEnrichment(e)" title="{{e.description}}">
+							<div class="thumbnail" ng-if="e.url" ng-click="addEnrichment(e)" title="{{e.description}}">
 								<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
 								<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="Create new chapter">
 
 								<div class="caption">
-									<a href="{{e.uri}}" target="_external">
+									<a href="{{e.url}}" target="_external">
 										{{e.label | limitTo:28}}
 									</a>
 								</div>

@@ -14,10 +14,9 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			console.debug('I saved some enrichments');
 			chapterCollection.saveChapterLinks(data.dimension, data.enrichments);
 		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
+			//
 		});
 	};
 
@@ -40,18 +39,16 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 		modalInstance.result.then(function (data) {
 			chapterCollection.saveChapterLink(data.dimension, data.link);
 		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
+			//
 		});
 	};
 
 	function openCardDialog(dimension, link) {
-		console.debug('This is the card you are looking for (1)');
-		console.debug(link);
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/informationCardModal.html',
 			controller: 'informationCardModalController',
 			size: 'lg',
-			resolve: {				
+			resolve: {
 				dimension : function () {
 					return dimension;
 				},
@@ -65,13 +62,13 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 		modalInstance.result.then(function (data) {
 			chapterCollection.saveChapterLink(data.dimension, data.link);
 		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
+			//
 		});
 	};
 
 	/*------------------------formatting service specific functions (could also be done on server...)---------------------*/
 
-	
+
 
 	return {
 		openMultipleLinkDialog : openMultipleLinkDialog,

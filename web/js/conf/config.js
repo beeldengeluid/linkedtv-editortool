@@ -90,26 +90,31 @@ var informationCardTemplates = {
 var rbbConfig = {
 	dimensions : [
 		{
-			id : 'maintopic',
-			label : 'Information Cards',
-			linkedtvDimension : 'Background',
+			id : 'tve_1',
+			label : 'Similar Media',
+			linkedtvDimension : 'SimilarMedia',
 			service : {
-				id : 'informationCards'
-			}
-		},
-		{
-			id : 'tvne_1',
-			label : 'Opinion',
-			linkedtvDimension : 'Opinion',
-			service : {
-				id: 'TvNewsEnricher',
+				id :'TvEnricher',
 				params : {
-					dimension : 'opinion'
+					dimension : 'Solr',
+					index : 'RBB',
+					granularity : 'Chapter'
 				}
 			}
 		},
 		{
-			id : 'tvne_2',
+			id : 'tve_2',
+			label : 'Recent Media',
+			linkedtvDimension : 'RecentMedia',
+			service : {
+				id : 'TvEnricher',
+				params : {
+					dimension : 'RBB'
+				}
+			}
+		},
+		{
+			id : 'tvne_1',
 			label : 'Other Media',
 			linkedtvDimension : 'OtherMedia',
 			service : {
@@ -120,48 +125,13 @@ var rbbConfig = {
 			}
 		},
 		{
-			id : 'tvne_3',
-			label : 'Timeline',
-			linkedtvDimension : 'Timeline',
-			service : {
-				id : 'TvNewsEnricher',
-				params : {
-					dimension : 'timeline'
-				}
-			}
-		},
-		{
-			id : 'tvne_4',
-			label : 'In Depth',
-			linkedtvDimension : 'InDepth',
-			service : {
-				id : 'TvNewsEnricher',
-				params : {
-					dimension : 'indepth'
-				}
-			}
-		},
-		{
-			id : 'tvne_5',
-			label : 'Social Media',
-			linkedtvDimension : 'SocialMedia',
+			id : 'tvne_2',
+			label : 'History',
+			linkedtvDimension : 'History',
 			service : {
 				id :'TvNewsEnricher',
 				params : {
-					dimension : 'tweets'
-				}
-			}
-		},
-		{
-			id : 'tve_1',
-			label : 'Related Chapter',
-			linkedtvDimension : 'RelatedChapter',
-			service : {
-				id :'TvEnricher',
-				params : {
-					dimension : 'Solr',
-					index : 'RBB',
-					granularity : 'Chapter'
+					dimension : 'othermedia'
 				}
 			}
 		}
@@ -172,7 +142,7 @@ var tkkConfig = {
 	dimensions : [
 		{
 			id : 'maintopic',//check this
-			label : 'Art Object',
+			label : 'About',
 			linkedtvDimension : 'ArtObject',
 			service : {
 				id :'informationCards'

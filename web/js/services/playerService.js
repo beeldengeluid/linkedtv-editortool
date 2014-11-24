@@ -1,5 +1,5 @@
 angular.module('linkedtv').factory('playerService', [function() {
-	
+
 	var _mediaPlaying = false;
 	var _videoPlayer = null;
 
@@ -27,8 +27,8 @@ angular.module('linkedtv').factory('playerService', [function() {
 			return false;
 		}
 	}
-		
-	function getPlayerTime () {		
+
+	function getPlayerTime () {
 		if(_videoPlayer) {
 			return _videoPlayer.currentTime * 1000;
 		}
@@ -37,13 +37,17 @@ angular.module('linkedtv').factory('playerService', [function() {
 
 	function seek(millis) {
 		if(_videoPlayer) {
-			_videoPlayer.currentTime = millis / 1000;
+			try {
+				_videoPlayer.currentTime = millis / 1000;
+			} catch(err) {
+				console.debug(err);
+			}
 		}
 	}
 
 	/*----------------PLAYER EVENTS----------------*/
 
-		
+
 	function onLoadedData(e) {
 		console.debug('loaded data...');
 	}
@@ -51,21 +55,21 @@ angular.module('linkedtv').factory('playerService', [function() {
 	function onLoadStart(e) {
 		console.debug('loading...');
 	}
-	
+
 	function onStalled(e) {
 		console.debug('stalled...');
 	}
-	
+
 	function onError(e) {
 		console.debug('An unknown error occurred.');
 	}
-	
+
 	function onPlay(e) {
 		_mediaPlaying = true;
 		console.debug('play');
 	}
-	
-	function onPause(e) {		
+
+	function onPause(e) {
 		_mediaPlaying = false;
 		console.debug('pause');
 	}

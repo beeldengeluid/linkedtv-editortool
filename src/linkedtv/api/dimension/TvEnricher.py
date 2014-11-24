@@ -33,7 +33,7 @@ class TvEnricher(DimensionService):
         print url
         headers = {'Content-type': 'application/json'}
         resp, content = http.request(url, 'GET', headers=headers)
-        if content:
+        if content and resp and resp['status'] == '200':
             if dimension['service']['params']['dimension'] == 'Solr':
                 enrichments = []
                 mfs = simplejson.loads(content)

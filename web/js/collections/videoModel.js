@@ -1,5 +1,5 @@
 angular.module('linkedtv').factory('videoModel', function() {
-	
+
 	var _video = null;
 
 	function initModelData(resourceData) {
@@ -10,7 +10,7 @@ angular.module('linkedtv').factory('videoModel', function() {
 			}
 			console.debug('Loaded the video data');
 		} else {
-			console.error('No videometadata found!');
+			alert('No video metadata could be loaded from the platform');
 		}
 	}
 

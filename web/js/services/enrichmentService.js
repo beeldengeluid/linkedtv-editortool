@@ -1,9 +1,6 @@
 angular.module('linkedtv').factory('enrichmentService', [function(){
 
 	function search(query, entities, dimension, callback) {
-		console.debug('Querying enrichments using ' + query);
-		console.debug(dimension);
-		console.debug(entities);
 		var data = {
 			'query' : query.split('+').join(','),
 			'dimension' : dimension,
@@ -56,7 +53,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 					var enrichment = {
 						label : 'No title',
 						description : 'No description',//TODO if it's there fetch it from the data
-						uri : formatUri(e, dimension),
+						url : formatUrl(e, dimension),
 						source : s, //add the source to each enrichment (for filtering)
 						entitySource : es //add the source entities to each enrichment (for filtering)
 					};
@@ -81,9 +78,9 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 	}
 
 	//really crappy bad function, later this needs to be modelled & mapped in a nice way
-	function formatUri(enrichment, dimension) {
+	function formatUrl(enrichment, dimension) {
 		var url = enrichment.micropostUrl;
-		if(dimension.label == 'Related Chapter') {
+		if(dimension.service.id == 'RelatedChapter' && dimension.service.params && dimension.service.params.dimension == 'Solr') {
 			return 'http://api.linkedtv.eu/mediaresource/' + url;
 		}
 		return url;

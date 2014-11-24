@@ -80,26 +80,31 @@ var informationCardTemplates = {
 var rbbConfig = {
 	dimensions : [
 		{
-			id : 'maintopic',
-			label : 'Information Cards',
-			linkedtvDimension : 'Background',
+			id : 'tve_1',
+			label : 'Similar Media',
+			linkedtvDimension : 'SimilarMedia',
 			service : {
-				id : 'informationCards'
-			}
-		},
-		{
-			id : 'tvne_1',
-			label : 'Opinion',
-			linkedtvDimension : 'Opinion',
-			service : {
-				id: 'TvNewsEnricher',
+				id :'TvEnricher',
 				params : {
-					dimension : 'opinion'
+					dimension : 'Solr',
+					index : 'RBB',
+					granularity : 'Chapter'
 				}
 			}
 		},
 		{
-			id : 'tvne_2',
+			id : 'tve_2',
+			label : 'Recent Media',
+			linkedtvDimension : 'RecentMedia',
+			service : {
+				id : 'TvEnricher',
+				params : {
+					dimension : 'RBB'
+				}
+			}
+		},
+		{
+			id : 'tvne_1',
 			label : 'Other Media',
 			linkedtvDimension : 'OtherMedia',
 			service : {
@@ -110,48 +115,13 @@ var rbbConfig = {
 			}
 		},
 		{
-			id : 'tvne_3',
-			label : 'Timeline',
-			linkedtvDimension : 'Timeline',
-			service : {
-				id : 'TvNewsEnricher',
-				params : {
-					dimension : 'timeline'
-				}
-			}
-		},
-		{
-			id : 'tvne_4',
-			label : 'In Depth',
-			linkedtvDimension : 'InDepth',
-			service : {
-				id : 'TvNewsEnricher',
-				params : {
-					dimension : 'indepth'
-				}
-			}
-		},
-		{
-			id : 'tvne_5',
-			label : 'Social Media',
-			linkedtvDimension : 'SocialMedia',
+			id : 'tvne_2',
+			label : 'History',
+			linkedtvDimension : 'History',
 			service : {
 				id :'TvNewsEnricher',
 				params : {
-					dimension : 'tweets'
-				}
-			}
-		},
-		{
-			id : 'tve_1',
-			label : 'Related Chapter',
-			linkedtvDimension : 'RelatedChapter',
-			service : {
-				id :'TvEnricher',
-				params : {
-					dimension : 'Solr',
-					index : 'RBB',
-					granularity : 'Chapter'
+					dimension : 'othermedia'
 				}
 			}
 		}
@@ -162,7 +132,7 @@ var tkkConfig = {
 	dimensions : [
 		{
 			id : 'maintopic',//check this
-			label : 'Art Object',
+			label : 'About',
 			linkedtvDimension : 'ArtObject',
 			service : {
 				id :'informationCards'
@@ -278,10 +248,9 @@ linkedtv.run(function($rootScope, conf) {
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			console.debug('I saved some enrichments');
 			chapterCollection.saveChapterLinks(data.dimension, data.enrichments);
 		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
+			//
 		});
 	};
 
@@ -304,18 +273,16 @@ linkedtv.run(function($rootScope, conf) {
 		modalInstance.result.then(function (data) {
 			chapterCollection.saveChapterLink(data.dimension, data.link);
 		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
+			//
 		});
 	};
 
 	function openCardDialog(dimension, link) {
-		console.debug('This is the card you are looking for (1)');
-		console.debug(link);
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/informationCardModal.html',
 			controller: 'informationCardModalController',
 			size: 'lg',
-			resolve: {				
+			resolve: {
 				dimension : function () {
 					return dimension;
 				},
@@ -329,13 +296,13 @@ linkedtv.run(function($rootScope, conf) {
 		modalInstance.result.then(function (data) {
 			chapterCollection.saveChapterLink(data.dimension, data.link);
 		}, function () {
-			console.debug('Modal dismissed at: ' + new Date());
+			//
 		});
 	};
 
 	/*------------------------formatting service specific functions (could also be done on server...)---------------------*/
 
-	
+
 
 	return {
 		openMultipleLinkDialog : openMultipleLinkDialog,
@@ -744,8 +711,9 @@ linkedtv.run(function($rootScope, conf) {
 		updateChapterEntities : updateChapterEntities
 	}
 
-}]);;angular.module('linkedtv').factory('shotCollection', ['imageService', function(imageService) {
-	
+}]);;angular.module('linkedtv').factory('shotCollection', ['imageService', 'timeUtils',
+	function(imageService, timeUtils) {
+
 	var _shots = [];
 	var _groupedChapterShots = {};//stores all the entities grouped by label
 	var _chapterShots = [];//only stores the unique entities (based on labels)
@@ -757,6 +725,8 @@ linkedtv.run(function($rootScope, conf) {
 		_shots = resourceData.shots; //no transformation necessary
 		_.each(_shots, function(s){
 			s.poster = imageService.getThumbnail(_thumbBaseUrl, s.start);
+			s.prettyStart = timeUtils.toPrettyTime(s.start);
+			s.prettyEnd = timeUtils.toPrettyTime(s.end);
 		});
 		_shots.sort(function(a, b) {
 			return parseInt(a.start) - parseInt(b.start);
@@ -787,7 +757,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	return {
 		initCollectionData : initCollectionData,
-		getShots : getShots,		
+		getShots : getShots,
 		getChapterShots : getChapterShots,
 		updateChapterShots : updateChapterShots
 	}
@@ -835,7 +805,7 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 }]);;angular.module('linkedtv').factory('videoModel', function() {
-	
+
 	var _video = null;
 
 	function initModelData(resourceData) {
@@ -846,7 +816,7 @@ linkedtv.run(function($rootScope, conf) {
 			}
 			console.debug('Loaded the video data');
 		} else {
-			console.error('No videometadata found!');
+			alert('No video metadata could be loaded from the platform');
 		}
 	}
 
@@ -975,9 +945,6 @@ linkedtv.run(function($rootScope, conf) {
 }]);;angular.module('linkedtv').factory('enrichmentService', [function(){
 
 	function search(query, entities, dimension, callback) {
-		console.debug('Querying enrichments using ' + query);
-		console.debug(dimension);
-		console.debug(entities);
 		var data = {
 			'query' : query.split('+').join(','),
 			'dimension' : dimension,
@@ -1030,7 +997,7 @@ linkedtv.run(function($rootScope, conf) {
 					var enrichment = {
 						label : 'No title',
 						description : 'No description',//TODO if it's there fetch it from the data
-						uri : formatUri(e, dimension),
+						url : formatUrl(e, dimension),
 						source : s, //add the source to each enrichment (for filtering)
 						entitySource : es //add the source entities to each enrichment (for filtering)
 					};
@@ -1055,9 +1022,9 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	//really crappy bad function, later this needs to be modelled & mapped in a nice way
-	function formatUri(enrichment, dimension) {
+	function formatUrl(enrichment, dimension) {
 		var url = enrichment.micropostUrl;
-		if(dimension.label == 'Related Chapter') {
+		if(dimension.service.id == 'RelatedChapter' && dimension.service.params && dimension.service.params.dimension == 'Solr') {
 			return 'http://api.linkedtv.eu/mediaresource/' + url;
 		}
 		return url;
@@ -1199,7 +1166,7 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 }]);;angular.module('linkedtv').factory('playerService', [function() {
-	
+
 	var _mediaPlaying = false;
 	var _videoPlayer = null;
 
@@ -1227,8 +1194,8 @@ linkedtv.run(function($rootScope, conf) {
 			return false;
 		}
 	}
-		
-	function getPlayerTime () {		
+
+	function getPlayerTime () {
 		if(_videoPlayer) {
 			return _videoPlayer.currentTime * 1000;
 		}
@@ -1237,13 +1204,17 @@ linkedtv.run(function($rootScope, conf) {
 
 	function seek(millis) {
 		if(_videoPlayer) {
-			_videoPlayer.currentTime = millis / 1000;
+			try {
+				_videoPlayer.currentTime = millis / 1000;
+			} catch(err) {
+				console.debug(err);
+			}
 		}
 	}
 
 	/*----------------PLAYER EVENTS----------------*/
 
-		
+
 	function onLoadedData(e) {
 		console.debug('loaded data...');
 	}
@@ -1251,21 +1222,21 @@ linkedtv.run(function($rootScope, conf) {
 	function onLoadStart(e) {
 		console.debug('loading...');
 	}
-	
+
 	function onStalled(e) {
 		console.debug('stalled...');
 	}
-	
+
 	function onError(e) {
 		console.debug('An unknown error occurred.');
 	}
-	
+
 	function onPlay(e) {
 		_mediaPlaying = true;
 		console.debug('play');
 	}
-	
-	function onPause(e) {		
+
+	function onPause(e) {
 		_mediaPlaying = false;
 		console.debug('pause');
 	}

@@ -48,8 +48,10 @@ class DataConverter():
 								annotation = Enrichment(e['label'])
 								if e.has_key('description'):
 									annotation.setDescription(e['description'])
-								if e.has_key('uri'):
+								if e.has_key('uri'):#only used for information cards
 									annotation.setUri(e['uri'])
+								if e.has_key('url'):#mandatory for regular enrichments (optional for ICs)
+									annotation.setUrl(e['url'])
 								if e.has_key('poster'):
 									annotation.setPoster(e['poster'])
 
@@ -67,7 +69,6 @@ class DataConverter():
 								if e.has_key('entities'):
 									entities = []
 									for ne in e['entities']:
-										print ne
 										entity = Entity()
 										if ne.has_key('uri'):#in case of a DBpedia NE (chosen by user)
 											entity.setUri(ne['uri'])

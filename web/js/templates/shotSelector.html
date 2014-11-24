@@ -3,13 +3,13 @@
 	<div ng-if="shots.length > 0">
 		<foldable title="Select shots" collapsed="collapsed"></foldable>
 		<div collapse="collapsed">
-			
+
 			<h3>{{title}}</h3>
 			<ul class="shot-selector">
 				<li ng-repeat="s in shots" id="{{s.start}}" class="{{withinRange(s)}}" ng-click="setSelection(s)">
-					<img src="{{s.poster}}" title="{{s.start}}">
+					<img src="{{s.poster}}" title="{{s.prettyStart}} - {{s.prettyEnd}}">
 				</li>
-			</ul>			
+			</ul>
 		</div>
 	</div>
 

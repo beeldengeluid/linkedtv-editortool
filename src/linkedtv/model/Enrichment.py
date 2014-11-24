@@ -2,9 +2,9 @@ from linkedtv.model.Annotation import Annotation
 
 class Enrichment(Annotation):
 
-	def __init__(self, label,  description = None, start = 0, end = 0, mfURI = None, annotationURI = None, bodyURI = None, 
+	def __init__(self, label,  description = None, start = 0, end = 0, mfURI = None, annotationURI = None, bodyURI = None,
 		relevance = 1, confidence = 1, uri = None, poster = None, source=None, creator=None, date=None, entities=None,
-		socialInteraction=None, DCType=None):
+		socialInteraction=None, DCType=None, url=None):
 		Annotation.__init__(self, label, description, start, end, mfURI, annotationURI, bodyURI, relevance, confidence)
 		self.uri = uri #actually it should be url, but it's too much hassle too update for now
 		self.poster = poster
@@ -14,12 +14,13 @@ class Enrichment(Annotation):
 		self.entities = entities #Entity
 		self.socialInteraction = socialInteraction
 		self.DCType = DCType
+		self.url = url
 
 	def setUri(self, uri):
 		self.uri = uri
 
 	def getUri(self):
-		return self.uri	
+		return self.uri
 
 	def setPoster(self, poster):
 		self.poster = poster
@@ -55,7 +56,7 @@ class Enrichment(Annotation):
 		self.socialInteraction = socialInteraction
 
 	def getSocialInteraction(self):
-		return self.socialInteraction	
+		return self.socialInteraction
 
 	def setDCType(self, DCType):
 		self.DCType = DCType
@@ -63,4 +64,8 @@ class Enrichment(Annotation):
 	def getDCType(self):
 		return self.DCType
 
+	def setUrl(self, url):
+		self.url = url
 
+	def getUrl(self):
+		return self.url

@@ -1,4 +1,4 @@
-<div class="modal-header">    
+<div class="modal-header">
     <h4 class="modal-title">Edit {{dimension.label}}</h4>
 </div>
 
@@ -18,14 +18,13 @@
                             </ul>
                         </header>
 
-                        <!-- SHOW THE URI AT THE TOP -->
                         <form class="form-inline" role="form">
                             <div class="form-group">
-                                <input class="form-control" disabled value="URI">
+                                <input class="form-control" disabled value="URL">
                             </div>
                             <div class="form-group">
-                                <input class="form-control" ng-model="link.uri">
-                            </div>                            
+                                <input class="form-control" ng-model="link.url">
+                            </div>
                         </form>
                         <form class="form-inline" role="form">
                             <div class="form-group">
@@ -33,7 +32,7 @@
                             </div>
                             <div class="form-group">
                                 <input class="form-control" ng-model="link.label">
-                            </div>                            
+                            </div>
                         </form>
                         <form class="form-inline" role="form">
                             <div class="form-group">
@@ -41,7 +40,7 @@
                             </div>
                             <div class="form-group">
                                 <input class="form-control" ng-model="link.poster">
-                            </div>                            
+                            </div>
                         </form>
                         <form class="form-inline" role="form">
                             <div class="form-group">
@@ -49,7 +48,7 @@
                             </div>
                             <div class="form-group">
                                 <input class="form-control" ng-model="link.start">
-                            </div>                            
+                            </div>
                         </form>
                         <form class="form-inline" role="form">
                             <div class="form-group">
@@ -57,9 +56,9 @@
                             </div>
                             <div class="form-group">
                                 <input class="form-control" ng-model="link.end">
-                            </div>                            
+                            </div>
                         </form>
-                        
+
                     </div>
 
                     <!-- this is the spot where the poster is shown -->
@@ -75,15 +74,15 @@
                         </div>
                     </div>
 
-                </div>                
+                </div>
             </div>
-            
+
         </div>
     </div>
 
     <div class="row">
         <div class="col-md-12">
-            <shot-selector title="Select two shots to define the period this information should be shown" 
+            <shot-selector title="Select two shots to define the period this information should be shown"
             start="link.start" end="link.end" chapter="true" collapsed="true"></shot-selector>
         </div>
     </div>
@@ -94,5 +93,5 @@
 	<button class="btn btn-default" ng-click="cancel()">Cancel</button>
     <button class="btn btn-primary" ng-click="ok()">Save</button>
     <button class="btn btn-danger" ng-click="removeLink()">Delete</button>
-    
+
 </div>

@@ -174,8 +174,8 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('<%s> a <%s> ; ' % (bodyURI, self.MEDIA_RESOURCE))
 		query.append('a <%s> ; ' % self.RELATED_CONTENT)
 		query.append('rdfs:label "%s"' % annotation.getLabel())
-		if annotation.getUri() and annotation.getUri().find('http://linkedtv.eu/') == -1:
-			query.append(' ; ma:locator <%s>' % annotation.getUri())#voor IC templates is deze leeg
+		if annotation.getUrl():
+			query.append(' ; ma:locator <%s>' % annotation.getUrl())
 		if annotation.getDescription():
 			query.append(' ; rdfs:comment "%s"' % annotation.getDescription())
 		if annotation.getPoster():
@@ -202,7 +202,11 @@ class LinkedTVPublishingPoint(PublishingPoint):
 			query.append('oa:hasTarget <%s> ; ' % chapterMfURI)
 		query.append('oa:hasBody <%s> ; ' % bodyURI)
 		query.append('prov:wasAttributedTo <%s> ; ' % self.PROV_ET_URI)
+		#if it is an information card without a template directly store the related entity
+		if annotation.getUri() and annotation.getUri().find('http://linkedtv.eu/') == -1:
+			query.append('prov:wasDerivedFrom <%s> ; ' % annotation.getUri())
 		query.append('prov:startedAtTime "%s"^^xsd:dateTime . ' % self.__getCurrentDateTime())
+
 		query.append(' } ')
 
 		logger.debug('\n\nSAVING ANNOTATIONS & ENRICHMENTS-------------------------------------')
