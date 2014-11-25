@@ -80,9 +80,17 @@ var informationCardTemplates = {
 var rbbConfig = {
 	dimensions : [
 		{
+			id : 'maintopic',//check this
+			label : 'Mehr Zu',
+			linkedtvDimension : 'InDepth',
+			service : {
+				id :'informationCards'
+			}
+		},
+		{
 			id : 'tve_1',
-			label : 'Similar Media',
-			linkedtvDimension : 'SimilarMedia',
+			label : 'Related RBB News',
+			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id :'TvEnricher',
 				params : {
@@ -92,36 +100,58 @@ var rbbConfig = {
 				}
 			}
 		},
-		{
+		{//AKTUELL
 			id : 'tve_2',
-			label : 'Recent Media',
-			linkedtvDimension : 'RecentMedia',
+			label : 'Aktuell (1)',
+			linkedtvDimension : 'CurrentEvents',
 			service : {
 				id : 'TvEnricher',
 				params : {
-					dimension : 'RBB'
+					dimension : 'RBB'//+ current date
 				}
 			}
 		},
 		{
 			id : 'tvne_1',
-			label : 'Other Media',
-			linkedtvDimension : 'OtherMedia',
+			label : 'Aktuell (2)',
+			linkedtvDimension : 'CurrentEvents',
 			service : {
-				id :'TvNewsEnricher',
+				id : 'TvNewsEnricher',
 				params : {
-					dimension : 'othermedia'
+					dimension : 'othermedia',//+ current date
+					startDate : '_',
+					endDate : '_'
+				},
+				dynamicParams : {
+					startDate : 'VIDEO_DATE',
+					endDate : 'VIDEO_DATE'
+				}
+			}
+		},
+		{//HISTORY
+			id : 'tve_3',
+			label : 'Hintergrund',
+			linkedtvDimension : 'History',
+			service : {
+				id :'TvEnricher',
+				params : {
+					dimension : 'RBB' //+ current date
 				}
 			}
 		},
 		{
 			id : 'tvne_2',
-			label : 'History',
+			label : 'Hintergrund',
 			linkedtvDimension : 'History',
 			service : {
-				id :'TvNewsEnricher',
+				id : 'TvNewsEnricher',
 				params : {
-					dimension : 'othermedia'
+					dimension : 'othermedia',//+ current date
+					startDate : '20080101',
+					endDate : '_'
+				},
+				dynamicParams : {
+					endDate : 'VIDEO_DATE'
 				}
 			}
 		}
@@ -966,6 +996,10 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	function fillInDynamicProperties = function() {
+
+	}
+
 	function formatServiceResponse(data, dimension) {
 		if(dimension.service.id == 'TvEnricher') {
 			return formatTvEnricherResponse(data, dimension);
@@ -1040,7 +1074,7 @@ linkedtv.run(function($rootScope, conf) {
 			_.each(data, function(e){
 				var enrichment = {
 					label : e.title,
-					uri : e.url,
+					url : e.url,
 					description : e.text
 				}
 				//add the source to the list of possible sources and attach it to the retrieved enrichment
@@ -1057,6 +1091,7 @@ linkedtv.run(function($rootScope, conf) {
 				//TODO add  more data to the enrichment
 			});
 		}
+		console.debug(temp);
 		if(temp.length == 0) {
 			return null;
 		}
@@ -1800,7 +1835,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	//----------------------------BUTTON PANEL------------------------------
 
 	$scope.ok = function () {
-		if($scope.link.uri && $scope.link.label) {
+		if($scope.link.url && $scope.link.label) {
 			$modalInstance.close({dimension: $scope.dimension, link : $scope.link});
 		} else {
 			alert('Please enter a URI and a label');
