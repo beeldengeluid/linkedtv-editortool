@@ -8,7 +8,7 @@ angular.module('linkedtv').controller('linkModalController',
 	//----------------------------BUTTON PANEL------------------------------
 
 	$scope.ok = function () {
-		if($scope.link.uri && $scope.link.label) {
+		if($scope.link.url && $scope.link.label) {
 			$modalInstance.close({dimension: $scope.dimension, link : $scope.link});
 		} else {
 			alert('Please enter a URI and a label');
