@@ -996,7 +996,7 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	function fillInDynamicProperties = function() {
+	function fillInDynamicProperties() {
 
 	}
 
