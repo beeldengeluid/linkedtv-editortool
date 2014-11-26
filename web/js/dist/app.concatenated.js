@@ -1161,7 +1161,7 @@ linkedtv.run(function($rootScope, conf) {
 		_.each(data.items, function(e){
 			var enrichment = {
 				label : e.title.join(' '),
-				url : e.link,
+				url : e.guid,
 				//description : e.text,
 				//date : e.date
 			}
