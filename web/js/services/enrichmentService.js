@@ -143,7 +143,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 		_.each(data.items, function(e){
 			var enrichment = {
 				label : e.title.join(' '),
-				url : e.link,
+				url : e.guid,
 				//description : e.text,
 				//date : e.date
 			}
