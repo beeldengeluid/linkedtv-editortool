@@ -166,6 +166,7 @@ def dimension(request):
     if data:
         api = Api()
         resp = api.dimension(data['query'].split(','), data['entities'], data['dimension'])
+        print resp
         if resp:
             return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
         else:

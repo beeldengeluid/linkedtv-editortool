@@ -187,9 +187,9 @@ var tkkConfig = {
 			label : 'Related Art Work',
 			linkedtvDimension : 'RelatedArtWork',
 			service : {
-				id : 'TvEnricher',
+				id : 'EuropeanaAPI',
 				params : {
-					dimension : 'Europeana'
+					queryParts : ['COUNTRY:netherlands']
 				}
 			}
 		},

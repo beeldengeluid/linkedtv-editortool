@@ -37,6 +37,8 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 			return formatTvEnricherResponse(data, dimension);
 		} else if(dimension.service.id == 'TvNewsEnricher') {
 			return formatTvNewsEnricherResponse(data, dimension);
+		} else if(dimension.service.id == 'EuropeanaAPI') {
+			return formatEuropeanaAPIResponse(data, dimension);
 		}
 		return null;
 	}
@@ -126,6 +128,43 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 				//TODO add  more data to the enrichment
 			});
 		}
+		console.debug(temp);
+		if(temp.length == 0) {
+			return null;
+		}
+		return {enrichmentSources : sources, enrichmentEntitySources : eSources, allEnrichments : temp};
+	}
+
+	function formatEuropeanaAPIResponse(data, dimension) {
+		var temp = [];//will contain enrichments
+		var sources = [];//sometimes available in the data
+		var eSources = [];//always empty in this case
+		console.debug(data.items);
+		_.each(data.items, function(e){
+			var enrichment = {
+				label : e.title.join(' '),
+				url : e.link,
+				//description : e.text,
+				//date : e.date
+			}
+			//add the source to the list of possible sources and attach it to the retrieved enrichment
+			if(e.provider) {
+				_.each(e.provider, function(p){
+					if(sources.indexOf(p) == -1) {
+						sources.push(p);
+					}
+					enrichment.source = p;//let's hope it's only one
+				});
+			}
+			if(e.edmPreview && e.edmPreview[0]) {
+				enrichment.poster = e.edmPreview[0];
+			}
+			//enrichment.mediaType = e.media.type;
+			//enrichment.mediaUrl = e.media.url;
+
+			temp.push(enrichment);
+			//TODO add  more data to the enrichment
+		});
 		console.debug(temp);
 		if(temp.length == 0) {
 			return null;
