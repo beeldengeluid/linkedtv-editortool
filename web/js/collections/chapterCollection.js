@@ -52,19 +52,27 @@ angular.module('linkedtv').factory('chapterCollection',
 	function setBasicProperties(chapter, updateGuid) {
 		if(updateGuid) {
 			chapter.guid = _.uniqueId('chapter_');
-			if(!chapter.dimensions) {
-				var dimensions = {};
-				_.each(conf.programmeConfig.dimensions, function(d) {
-					var temp = {};
+			var dimensions = {};
+			_.each(conf.programmeConfig.dimensions, function(d) {
+				//copy the properties from the saved dimension
+				var temp = {};
+				if(chapter.dimensions && chapter.dimensions[d.id]) {
+					_.each(chapter.dimensions[d.id], function(value, key) {
+						if(key != '$$hashKey') {//FIXME ugly!
+							temp[key] = value;
+						}
+					});
+				} else {//if the dimension does not exist in the storage add it from the config
 					_.each(d, function(value, key) {
 						if(key != '$$hashKey') {//FIXME ugly!
 							temp[key] = value;
 						}
 					});
-					dimensions[d.id] = temp;
-				});
-				chapter.dimensions = dimensions;
-			}
+				}
+				dimensions[d.id] = temp;
+			});
+			chapter.dimensions = dimensions;
+
 		}
 		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
 		chapter.prettyStart = timeUtils.toPrettyTime(chapter.start);
@@ -166,14 +174,39 @@ angular.module('linkedtv').factory('chapterCollection',
 
 	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
 	// you also need to update this (when you want to add a property to a dimension)!!! (below also)
-	function saveChapterLinks(dimension, links) {
+	function saveEnrichments(dimension, links) {
 		_activeChapter.dimensions[dimension.id].annotations = links;
 		//update the chapter collection
 		saveChapter(_activeChapter);
 	}
 
 	//works for both information cards and enrichments
-	function saveChapterLink(dimension, link) {
+	function saveEnrichment(dimension, link) {
+		if(link.remove) {
+			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++) {
+				if(_activeChapter.dimensions[dimension.id].annotations[i].url == link.url) {
+					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
+				}
+			}
+		} else if(_activeChapter.dimensions[dimension.id].annotations) {
+			var exists = false;
+			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++){
+				if(_activeChapter.dimensions[dimension.id].annotations[i].url == link.url) {
+					_activeChapter.dimensions[dimension.id].annotations[i] = link;
+					exists = true;
+				}
+			}
+			if (!exists) {
+				_activeChapter.dimensions[dimension.id].annotations.push(link);
+			}
+		} else {
+			//add a new dimension (add the config properties + a list to hold the annotations)
+			_activeChapter.dimensions[dimension.id].annotations = [link];
+		}
+		saveChapter(_activeChapter);
+	}
+
+	function saveInformationCard(dimension, link) {
 		if(link.remove) {
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++) {
 				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
@@ -214,8 +247,9 @@ angular.module('linkedtv').factory('chapterCollection',
 		getSavedEnrichmentsOfDimension : getSavedEnrichmentsOfDimension,
 		removeChapter : removeChapter,
 		saveChapter : saveChapter,
-		saveChapterLink : saveChapterLink,
-		saveChapterLinks : saveChapterLinks,
+		saveEnrichment : saveEnrichment,
+		saveEnrichments : saveEnrichments,
+		saveInformationCard : saveInformationCard,
 		addObserver : addObserver
 	}
 

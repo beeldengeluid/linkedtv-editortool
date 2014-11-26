@@ -22,6 +22,10 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 		});
 	}
 
+	function fillInDynamicProperties() {
+
+	}
+
 	function formatServiceResponse(data, dimension) {
 		if(dimension.service.id == 'TvEnricher') {
 			return formatTvEnricherResponse(data, dimension);
@@ -96,7 +100,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 			_.each(data, function(e){
 				var enrichment = {
 					label : e.title,
-					uri : e.url,
+					url : e.url,
 					description : e.text
 				}
 				//add the source to the list of possible sources and attach it to the retrieved enrichment
@@ -113,6 +117,7 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 				//TODO add  more data to the enrichment
 			});
 		}
+		console.debug(temp);
 		if(temp.length == 0) {
 			return null;
 		}
