@@ -1,4 +1,5 @@
-angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', function($modal, chapterCollection) {
+angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', 'timeUtils',
+	function($modal, chapterCollection, timeUtils) {
 
 	function openMultipleLinkDialog(dimension) {
 		var modalInstance = $modal.open({
@@ -21,6 +22,10 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 	};
 
 	function openLinkDialog(dimension, link) {
+		if(link) {
+			link.prettyStart = timeUtils.toPrettyTime(link.start);
+			link.prettyEnd = timeUtils.toPrettyTime(link.end);
+		}
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/linkModal.html',
 			controller: 'linkModalController',

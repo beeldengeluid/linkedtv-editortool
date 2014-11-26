@@ -12,7 +12,7 @@ angular.module('linkedtv').factory('timeUtils', [function(){
 				return parseInt(ms.substring(0, ms.indexOf('.')));
 			}
 		} else if (t.indexOf(':') != -1) {
-			//converts a hh:mm:ss.ms timestring into millis 
+			//converts a hh:mm:ss.ms timestring into millis
 			var t_arr = t.split(':');
 			if(t_arr.length == 3) {
 				//add the hours
@@ -33,7 +33,7 @@ angular.module('linkedtv').factory('timeUtils', [function(){
 		}
 		return -1;
 	}
-		
+
 	function toPrettyTime(millis) {
 		var h = 0;
 		var m = 0;
@@ -57,7 +57,7 @@ angular.module('linkedtv').factory('timeUtils', [function(){
 		for(var i=millis.length;i<3;i++) {
 			millis += '0';
 		}
-		return h + ':' + m + ':' + s; //+ '.' + millis;
+		return h + ':' + m + ':' + s + '.' + millis;
 	}
 
 	return {

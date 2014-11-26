@@ -1,5 +1,6 @@
 angular.module('linkedtv').controller('linkModalController',
-	['$scope', '$modalInstance', 'dimension', 'link', function ($scope, $modalInstance, dimension, link) {
+	['$scope', '$modalInstance', 'timeUtils', 'dimension', 'link',
+	function ($scope, $modalInstance, timeUtils, dimension, link) {
 
 
 	$scope.link = link || {};
@@ -9,9 +10,11 @@ angular.module('linkedtv').controller('linkModalController',
 
 	$scope.ok = function () {
 		if($scope.link.url && $scope.link.label) {
+			$scope.link.start = timeUtils.toMillis($scope.link.prettyStart);
+			$scope.link.end = timeUtils.toMillis($scope.link.prettyEnd);
 			$modalInstance.close({dimension: $scope.dimension, link : $scope.link});
 		} else {
-			alert('Please enter a URI and a label');
+			alert('Please enter a URL and a label');
 		}
 	};
 

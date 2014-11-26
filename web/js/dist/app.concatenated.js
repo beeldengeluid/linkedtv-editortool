@@ -262,7 +262,8 @@ linkedtv.run(function($rootScope, conf) {
 	} else if (trialId) {
 		$rootScope.resourceUri = trialId;
 	}
-});;angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', function($modal, chapterCollection) {
+});;angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', 'timeUtils',
+	function($modal, chapterCollection, timeUtils) {
 
 	function openMultipleLinkDialog(dimension) {
 		var modalInstance = $modal.open({
@@ -285,6 +286,10 @@ linkedtv.run(function($rootScope, conf) {
 	};
 
 	function openLinkDialog(dimension, link) {
+		if(link) {
+			link.prettyStart = timeUtils.toPrettyTime(link.start);
+			link.prettyEnd = timeUtils.toPrettyTime(link.end);
+		}
 		var modalInstance = $modal.open({
 			templateUrl: '/site_media/js/templates/linkModal.html',
 			controller: 'linkModalController',
@@ -404,7 +409,7 @@ linkedtv.run(function($rootScope, conf) {
 				return parseInt(ms.substring(0, ms.indexOf('.')));
 			}
 		} else if (t.indexOf(':') != -1) {
-			//converts a hh:mm:ss.ms timestring into millis 
+			//converts a hh:mm:ss.ms timestring into millis
 			var t_arr = t.split(':');
 			if(t_arr.length == 3) {
 				//add the hours
@@ -425,7 +430,7 @@ linkedtv.run(function($rootScope, conf) {
 		}
 		return -1;
 	}
-		
+
 	function toPrettyTime(millis) {
 		var h = 0;
 		var m = 0;
@@ -449,7 +454,7 @@ linkedtv.run(function($rootScope, conf) {
 		for(var i=millis.length;i<3;i++) {
 			millis += '0';
 		}
-		return h + ':' + m + ':' + s; //+ '.' + millis;
+		return h + ':' + m + ':' + s + '.' + millis;
 	}
 
 	return {
@@ -638,6 +643,7 @@ linkedtv.run(function($rootScope, conf) {
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++) {
 				if(_activeChapter.dimensions[dimension.id].annotations[i].url == link.url) {
 					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
+					break;
 				}
 			}
 		} else if(_activeChapter.dimensions[dimension.id].annotations) {
@@ -646,6 +652,7 @@ linkedtv.run(function($rootScope, conf) {
 				if(_activeChapter.dimensions[dimension.id].annotations[i].url == link.url) {
 					_activeChapter.dimensions[dimension.id].annotations[i] = link;
 					exists = true;
+					break;
 				}
 			}
 			if (!exists) {
@@ -663,6 +670,7 @@ linkedtv.run(function($rootScope, conf) {
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++) {
 				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
 					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
+					break;
 				}
 			}
 		} else if(_activeChapter.dimensions[dimension.id].annotations) {
@@ -671,6 +679,7 @@ linkedtv.run(function($rootScope, conf) {
 				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
 					_activeChapter.dimensions[dimension.id].annotations[i] = link;
 					exists = true;
+					break;
 				}
 			}
 			if (!exists) {
@@ -1504,7 +1513,7 @@ linkedtv.run(function($rootScope, conf) {
 	$scope.saveChapter = function () {
 		if($scope.chapter.label && $scope.chapter.prettyStart && $scope.chapter.prettyEnd) {
 			$scope.chapter.start = timeUtils.toMillis($scope.chapter.prettyStart);
-			$scope.chapter.end = timeUtils.toMillis($scope.chapter.prettyEnd)
+			$scope.chapter.end = timeUtils.toMillis($scope.chapter.prettyEnd);
 			$modalInstance.close($scope.chapter);
 		} else {
 			alert('Please fill out the entire form');
@@ -1860,7 +1869,8 @@ angular.module('linkedtv').controller('informationCardModalController',
 	};
 	
 }]);;angular.module('linkedtv').controller('linkModalController',
-	['$scope', '$modalInstance', 'dimension', 'link', function ($scope, $modalInstance, dimension, link) {
+	['$scope', '$modalInstance', 'timeUtils', 'dimension', 'link',
+	function ($scope, $modalInstance, timeUtils, dimension, link) {
 
 
 	$scope.link = link || {};
@@ -1870,9 +1880,11 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.ok = function () {
 		if($scope.link.url && $scope.link.label) {
+			$scope.link.start = timeUtils.toMillis($scope.link.prettyStart);
+			$scope.link.end = timeUtils.toMillis($scope.link.prettyEnd);
 			$modalInstance.close({dimension: $scope.dimension, link : $scope.link});
 		} else {
-			alert('Please enter a URI and a label');
+			alert('Please enter a URL and a label');
 		}
 	};
 
@@ -2244,16 +2256,19 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
 		templateUrl : '/site_media/js/templates/navigationBar.html'
 	};
 
-});;angular.module('linkedtv').directive('shotSelector', ['shotCollection', function(shotCollection){
-	
+});;angular.module('linkedtv').directive('shotSelector',
+    ['shotCollection', 'timeUtils', function(shotCollection, timeUtils) {
+
 	return {
     	restrict : 'E',
 
     	replace : true,
-    	
+
         scope : {
             start : '=',
             end : '=',
+            prettyStart : '=prettystart',
+            prettyEnd : '=prettyend',
             poster : '=',
             chapter : '@', //true or false
             collapsed : '@', //doesn't work properly yet
@@ -2268,7 +2283,7 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
             }
             $scope.settingStart = true;
 
-            $scope.withinRange = function(shot) {       
+            $scope.withinRange = function(shot) {
                 //first check if the shot is in the selected shots
                 if($scope.start === shot.start) {
                     return 'starting-point';
@@ -2284,8 +2299,8 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
             }
 
             $scope.setSelection = function(shot) {
-                if($attributes.poster) {                    
-                    $scope.poster = shot.poster;                    
+                if($attributes.poster) {
+                    $scope.poster = shot.poster;
                 }
                 if($attributes.start && $attributes.end) {
                     if($scope.settingStart) {
@@ -2294,19 +2309,26 @@ angular.module('linkedtv').directive('dbpediaAutocomplete', function(){
                         $scope.setSelectionEnd(shot);
                     }
                 }
-                
+
+            }
+
+            $scope.updatePrettyTimes = function() {
+                $scope.prettyStart = timeUtils.toPrettyTime($scope.start);
+                $scope.prettyEnd = timeUtils.toPrettyTime($scope.end);
             }
 
             $scope.setSelectionStart = function(shot) {
                 $scope.start = shot.start;
                 $scope.end = -1;
                 $scope.settingStart = !$scope.settingStart;
+                $scope.updatePrettyTimes();
             }
 
             $scope.setSelectionEnd = function(shot) {
                 if(shot.start > $scope.start) {
                     $scope.end = shot.start;
                     $scope.settingStart = !$scope.settingStart;
+                    $scope.updatePrettyTimes();
                 }
             }
         },

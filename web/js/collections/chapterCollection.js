@@ -186,6 +186,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++) {
 				if(_activeChapter.dimensions[dimension.id].annotations[i].url == link.url) {
 					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
+					break;
 				}
 			}
 		} else if(_activeChapter.dimensions[dimension.id].annotations) {
@@ -194,6 +195,7 @@ angular.module('linkedtv').factory('chapterCollection',
 				if(_activeChapter.dimensions[dimension.id].annotations[i].url == link.url) {
 					_activeChapter.dimensions[dimension.id].annotations[i] = link;
 					exists = true;
+					break;
 				}
 			}
 			if (!exists) {
@@ -211,6 +213,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++) {
 				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
 					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
+					break;
 				}
 			}
 		} else if(_activeChapter.dimensions[dimension.id].annotations) {
@@ -219,6 +222,7 @@ angular.module('linkedtv').factory('chapterCollection',
 				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
 					_activeChapter.dimensions[dimension.id].annotations[i] = link;
 					exists = true;
+					break;
 				}
 			}
 			if (!exists) {
