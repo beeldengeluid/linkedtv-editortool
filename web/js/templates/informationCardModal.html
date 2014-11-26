@@ -60,7 +60,10 @@
                     <form class="form-inline" role="form" ng-repeat="p in activeTemplate.properties track by $index">
 
                         <div class="form-group">
+                            <!--
                             <label>{{p.key}}</label>
+                        -->
+                            <input class="form-control disabled" ng-model="activeTemplate.properties[$index].key">
                         </div>
                         <div ng-if="p.type == 'literal'" class="form-group">
                             <input class="form-control" ng-model="activeTemplate.properties[$index].value">

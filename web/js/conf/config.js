@@ -73,7 +73,7 @@ var informationCardTemplates = {
 			properties : [
 				{key : 'label', type: 'literal', optional : false},
 				{key : 'description', type : 'literal', optional : true},
-				{key : 'type', type: 'literal', optional : true},
+				{key : 'type', type: 'entity', optional : true},
 				{key : 'creator', type : 'entity', optional : true},
 				{key : 'creation location', type : 'entity', optional : true},
 				{key : 'period', type : 'entity', optional : true},
