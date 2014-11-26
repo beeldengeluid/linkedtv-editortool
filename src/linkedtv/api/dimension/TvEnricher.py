@@ -63,9 +63,7 @@ class TvEnricher(DimensionService):
 
     #Example mediafragment URI: http://data.linkedtv.eu/media/154307a8-0058-4946-839d-cd802fe0aad5#t\u003d262.4,457.64
     def __getMediaFragmentData(self, mediaFragmentUri):
-        print 'Getting mf data'
         mfData = self.__getMediaFragmentUriData(mediaFragmentUri)
-        print mfData
         pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
         http = httplib2.Http()
         url = 'http://api.linkedtv.eu/mediaresource/%s' % mfData[0]#resourceUri
@@ -95,7 +93,6 @@ class TvEnricher(DimensionService):
         t_arr = mediaFragmentUri.split('#')
         resourceUri = t_arr[0]
         try:
-            print mediaFragmentUri
             secs = t_arr[1].rsplit('t=')[1].split(',')[0]
             time = TimeUtils.toTimeTuple(secs)
         except IndexError, e:

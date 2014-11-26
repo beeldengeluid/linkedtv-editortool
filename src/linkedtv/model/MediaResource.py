@@ -1,15 +1,17 @@
 
 
 class MediaResource(object):
-	
-	def __init__(self, mediaResourceID=None, concepts = [], nes = [], shots = [], chapters = [], enrichments = [], 
-		videoMetadata = None, playoutUrl = None, thumbBaseUrl = None, srtUrl = None, curatedMediaResource = None):
+
+	def __init__(self, mediaResourceID = None, title = None, date = None, concepts = [], nes = [], shots = [], chapters = [],
+		enrichments = [], videoMetadata = None, playoutUrl = None, thumbBaseUrl = None, srtUrl = None, curatedMediaResource = None):
 		self.id = mediaResourceID #URI (main identifier in the LinkedTV API)
+		self.title = title
+		self.date = date
 		self.concepts = concepts #Concept
 		self.nes = nes #NamedEntity
 		self.shots = shots #Shot
 		self.chapters = chapters #Chapter
-		self.enrichments = enrichments #Enrichment		
+		self.enrichments = enrichments #Enrichment
 		self.videoMetadata = videoMetadata
 		self.playoutUrl = playoutUrl
 		self.thumbBaseUrl = thumbBaseUrl
@@ -21,6 +23,18 @@ class MediaResource(object):
 
 	def getId(self):
 		return self.id
+
+	def setTitle(self, title):
+		self.title = title
+
+	def getTitle(self):
+		return self.title
+
+	def setDate(self, date): #yyyymmdd
+		self.date = date
+
+	def getDate(self):
+		return self.date
 
 	def setConcepts(self, concepts):
 		self.concepts = concepts

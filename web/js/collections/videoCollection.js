@@ -1,17 +1,19 @@
 angular.module('linkedtv').factory('videoCollection', ['imageService', function(imageService) {
-	
+
 	var _videos = [];
 	var _observers = [];
 	var THUMBNAIL_SECOND = 60;
 
 	function initCollectionData(videos) {
 		console.debug('Initializing video collection');
-		_.each(videos, function(v){
-			v.poster = imageService.getThumbnail(v.thumbBaseUrl, THUMBNAIL_SECOND * 1000);
-		});
-		videos.sort(function(a, b) {
-			return parseInt(a.dateInserted) - parseInt(b.dateInserted);
-		});
+		if(videos) {
+			_.each(videos, function(v){
+				v.poster = imageService.getThumbnail(v.thumbBaseUrl, THUMBNAIL_SECOND * 1000);
+			});
+			videos.sort(function(a, b) {
+				return parseInt(a.dateInserted) - parseInt(b.dateInserted);
+			});
+		}
 		setVideos(videos);
 	}
 
@@ -32,7 +34,7 @@ angular.module('linkedtv').factory('videoCollection', ['imageService', function(
 
 	function getVideos() {
 		return _videos;
-	}	
+	}
 
 	return {
 		initCollectionData : initCollectionData,

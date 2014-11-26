@@ -35,6 +35,9 @@ angular.module('linkedtv').factory('timeUtils', [function(){
 	}
 
 	function toPrettyTime(millis) {
+		if(!millis) {
+			return '00:00:00';
+		}
 		var h = 0;
 		var m = 0;
 		var s = 0;

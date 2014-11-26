@@ -1,6 +1,7 @@
-angular.module('linkedtv').factory('enrichmentService', [function(){
+angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(videoModel) {
 
 	function search(query, entities, dimension, callback) {
+		fillInDynamicProperties(dimension);
 		var data = {
 			'query' : query.split('+').join(','),
 			'dimension' : dimension,
@@ -22,8 +23,13 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 		});
 	}
 
-	function fillInDynamicProperties() {
-
+	/*Should be moved to another place, this is not nice*/
+	function fillInDynamicProperties(dimension) {
+		_.each(dimension.service.params, function(value, key){
+			if (value == '$VIDEO_DATE') {
+				dimension.service.params[key] = videoModel.getVideo().date;
+			}
+		});
 	}
 
 	function formatServiceResponse(data, dimension) {
@@ -101,11 +107,14 @@ angular.module('linkedtv').factory('enrichmentService', [function(){
 				var enrichment = {
 					label : e.title,
 					url : e.url,
-					description : e.text
+					description : e.text,
+					date : e.date
 				}
 				//add the source to the list of possible sources and attach it to the retrieved enrichment
-				if(e.source && e.source.name && sources.indexOf(e.source.name) == -1) {
-					sources.push(e.source.name);
+				if(e.source && e.source.name) {
+					if(sources.indexOf(e.source.name) == -1) {
+						sources.push(e.source.name);
+					}
 					enrichment.source = e.source.name;
 				}
 				if (e.media) {

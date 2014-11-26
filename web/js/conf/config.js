@@ -90,9 +90,17 @@ var informationCardTemplates = {
 var rbbConfig = {
 	dimensions : [
 		{
+			id : 'maintopic',//check this
+			label : 'Mehr Zu',
+			linkedtvDimension : 'InDepth',
+			service : {
+				id :'informationCards'
+			}
+		},
+		{
 			id : 'tve_1',
-			label : 'Similar Media',
-			linkedtvDimension : 'SimilarMedia',
+			label : 'Related RBB News',
+			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id :'TvEnricher',
 				params : {
@@ -102,36 +110,51 @@ var rbbConfig = {
 				}
 			}
 		},
-		{
+		{//AKTUELL
 			id : 'tve_2',
-			label : 'Recent Media',
-			linkedtvDimension : 'RecentMedia',
+			label : 'Aktuell (1)',
+			linkedtvDimension : 'CurrentEvents',
 			service : {
 				id : 'TvEnricher',
 				params : {
-					dimension : 'RBB'
+					dimension : 'RBB'//+ current date
 				}
 			}
 		},
 		{
 			id : 'tvne_1',
-			label : 'Other Media',
-			linkedtvDimension : 'OtherMedia',
+			label : 'Aktuell (2)',
+			linkedtvDimension : 'CurrentEvents',
 			service : {
-				id :'TvNewsEnricher',
+				id : 'TvNewsEnricher',
 				params : {
-					dimension : 'othermedia'
+					dimension : 'othermedia',//+ current date
+					periodInDays : 7,
+					endDate : '$VIDEO_DATE'
+				}
+			}
+		},
+		{//HISTORY
+			id : 'tve_3',
+			label : 'Hintergrund (1)',
+			linkedtvDimension : 'History',
+			service : {
+				id :'TvEnricher',
+				params : {
+					dimension : 'RBB' //+ current date
 				}
 			}
 		},
 		{
 			id : 'tvne_2',
-			label : 'History',
+			label : 'Hintergrund (2)',
 			linkedtvDimension : 'History',
 			service : {
-				id :'TvNewsEnricher',
+				id : 'TvNewsEnricher',
 				params : {
-					dimension : 'othermedia'
+					dimension : 'othermedia',//+ current date
+					periodInDays : 365 * 10,//search for events in the last 10 years
+					endDate : '$VIDEO_DATE'
 				}
 			}
 		}
@@ -172,7 +195,7 @@ var tkkConfig = {
 		},
 		{
 			id : 'tve_3',
-			label : 'Related Chapter',
+			label : 'Related Chapters',
 			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id : 'TvEnricher',

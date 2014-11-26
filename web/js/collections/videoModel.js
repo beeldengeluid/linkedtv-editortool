@@ -5,7 +5,8 @@ angular.module('linkedtv').factory('videoModel', function() {
 	function initModelData(resourceData) {
 		if(resourceData.videoMetadata) {
 			_video = {
-				title : resourceData.videoMetadata.mediaResource.titleName,//update this object on the server, sheesh it's ugly
+				title : resourceData.title,
+				date : resourceData.date,
 				playoutUrl : resourceData.playoutUrl
 			}
 			console.debug('Loaded the video data');

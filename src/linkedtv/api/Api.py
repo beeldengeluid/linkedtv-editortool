@@ -38,24 +38,38 @@ class Api():
         mediaResource = MediaResource()
         if loadData:
             mediaResource = self.__getAllAnnotationsOfResource(resourceUri, False)
-        """Get the mediaresource metadata and the playout URL"""
-        print 'getting video metadata'
+
         videoMetadata = self.__getVideoData(resourceUri)
+        vd = None
         if videoMetadata:
-            videoMetadata = simplejson.loads(videoMetadata)
-        vph = VideoPlayoutHandler()
-        mediaResource.setVideoMetadata(videoMetadata)
-        if videoMetadata:
-            print 'Getting playout URL'
-            playoutURL = vph.getPlayoutURL(videoMetadata['mediaResource']['locator'], clientIP)
-            mediaResource.setPlayoutUrl(playoutURL)
-        if videoMetadata:
-            if videoMetadata['mediaResource']['mediaResourceRelationSet']:
-                for mrr in videoMetadata['mediaResource']['mediaResourceRelationSet']:
-                    if mrr['relationType'] == 'thumbnail-locator':
-                        mediaResource.setThumbBaseUrl(mrr['relationTarget'])
-                    elif mrr['relationType'] == 'srt':
-                        mediaResource.setSrtUrl(mrr['relationTarget'])
+            vd = simplejson.loads(videoMetadata)
+
+        mr = None
+        if vd:
+            #set the all the video metadata to be sure
+            mediaResource.setVideoMetadata(vd)
+
+            #make sure there is a mediaresource
+            if vd.has_key('mediaResource'):
+                mr = vd['mediaResource']
+
+                #get the playout URL
+                if mr.has_key('locator'):
+                    vph = VideoPlayoutHandler()
+                    playoutURL = 'none'#vph.getPlayoutURL(mr['locator'], clientIP)
+                    mediaResource.setPlayoutUrl(playoutURL)
+
+                #set the video metadata in the mediaresource
+                mediaResource.setTitle(mr['titleName'])
+                mediaResource.setDate(self.__getDateFromVideoTitle(mr['titleName']))
+
+                if mr.has_key('mediaResourceRelationSet'):
+                    for mrr in mr['mediaResourceRelationSet']:
+                        if mrr['relationType'] == 'thumbnail-locator':
+                            mediaResource.setThumbBaseUrl(mrr['relationTarget'])
+                        elif mrr['relationType'] == 'srt':
+                            mediaResource.setSrtUrl(mrr['relationTarget'])
+
         resp = simplejson.dumps(mediaResource, default=lambda obj: obj.__dict__)
         return resp
 
@@ -138,12 +152,12 @@ class Api():
                     video = {
                         'id' : vd['mediaResource']['id'],
                         'title' : vd['mediaResource']['titleName'],
+                        'date' : self.__getDateFromVideoTitle(vd['mediaResource']['titleName']),
                         'locator' : vd['mediaResource']['locator'],
                         'thumbBaseUrl' : thumbBaseUrl,
                         'dateInserted' : vd['mediaResource']['dateInserted']#TODO convert to pretty date
                     }
                     videos.append(video)
-        #self.getVideosOfProviderNew(provider, None, None)
         return {'videos' : videos}
 
     def image(self, millis, baseUrl):
@@ -163,3 +177,16 @@ class Api():
         if resp and resp['status'] == '200':
             return content
         return None
+
+    def __getDateFromVideoTitle(self, title):
+        #e.g. TITLE= rbb AKTUELL vom 26.01.2013 Teil 2 - Kein Zug fur Meyenburg
+        date = None
+        if title:
+            t_arr = title.split(' ')
+            for t in t_arr:
+                if t.find('.') != -1:
+                    d_arr = t.split('.')
+                    if len(d_arr) == 3:
+                        date = '%s%s%s' % (d_arr[2], d_arr[1], d_arr[0])
+                        break
+        return date

@@ -33,7 +33,7 @@ query=snowden+asylum&startdate=20140421&enddate=20140429&lat=51.5085300&lon=-0.1
 import simplejson
 import urllib
 import httplib2
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 
 from linkedtv.api.dimension.DimensionService import DimensionService
 
@@ -48,12 +48,12 @@ class TvNewsEnricher(DimensionService):
 			'indepth' : '014567755836058125714:0opyehd0oiu',
 			'timeline' : '014567755836058125714:aeiq3vyfdw8'
 		}
-		self.searchPeriod = 7 # days
+		self.periodInDays = 7
 		self.searchLimit = 50
 
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
-			return self.__formatResponse(self.__search(query, entities, params))
+			return self.__formatResponse(self.__search(query, entities, dimension), dimension)
 		return None
 
 	def __isValidDimension(self, dimension):
@@ -63,36 +63,53 @@ class TvNewsEnricher(DimensionService):
 		return False
 
 	def __search(self, query, entities, dimension):
-		DimensionService.__search(self, query, params)
 		http = httplib2.Http()
 		url = self.__getServiceUrl(query, dimension)
-		headers = {'Content-type': 'application/json'}
-		resp, content = http.request(url, 'GET', headers=headers)
-		if content:
-			return self.__formatResponse(content, dimension['service']['params']['dimension'])
-		else:
-			return None
+		if url:
+			headers = {'Content-type': 'application/json'}
+			resp, content = http.request(url, 'GET', headers=headers)
+			if content:
+				print content
+				return content
+		return None
 
 	def __getServiceUrl(self, query, dimension):
-		endDate = date.today()
-		startDate = endDate-timedelta(days=self.searchPeriod)
-		d = dimension['service']['params']['dimension']
-		#TODO define the date somewhere
-		query = '+'.join(query)
+		print 'Building the TvNewsEnricher URL'
+		if dimension['service'].has_key('params'):
+			params = dimension['service']['params']
 
-		url = '%s/%s?query=%s&startdate=%s&enddate=%s&limit=%s' % (
-			self.BASE_URL,
-			d,
-			query,
-			endDate.strftime('%Y%m%d'),
-			endDate.strftime('%Y%m%d'),
-			self.searchLimit
-		)
-		if d != 'tweets':
-			url = '%s&cse=%s' % (url, self.googleCustomSearchEngines[d])
-		print url
-		return url
+			#set the correct start & end date for the search period
+			print params
+			if params.has_key('endDate') and params['endDate']:
+				try:
+					print 'Found a date: %s' % params['endDate']
+					endDate = datetime.strptime(params['endDate'], '%Y%m%d')
+				except ValueError, e:
+					endDate = date.today()
+			else:
+				endDate = date.today()
+			if params.has_key('periodInDays'):
+				startDate = endDate-timedelta(days=params['periodInDays'])
+			else:
+				startDate = endDate-timedelta(days=self.periodInDays)
+
+			d = params['dimension']
+			#TODO define the date somewhere
+			query = '+'.join(query)
+
+			url = '%s/%s?query=%s&startdate=%s&enddate=%s&limit=%s' % (
+				self.BASE_URL,
+				d,
+				query,
+				startDate.strftime('%Y%m%d'),
+				endDate.strftime('%Y%m%d'),
+				self.searchLimit
+			)
+			if d != 'tweets':
+				url = '%s&cse=%s' % (url, self.googleCustomSearchEngines[d])
+			print url
+			return url
+		return None
 
 	def __formatResponse(self, data, dimension):
-		resp = { 'enrichments' : simplejson.loads(data) }
-		return resp
+		return { 'enrichments' : simplejson.loads(data)}
