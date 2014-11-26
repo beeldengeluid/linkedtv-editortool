@@ -43,8 +43,8 @@ class TvNewsEnricher(DimensionService):
 		DimensionService.__init__(self, 'TvNewsEnricher')
 		self.BASE_URL = 'http://linkedtv.eurecom.fr/newsenricher/api'
 		self.googleCustomSearchEngines = {#https://www.google.com/cse/publicurl?cx=
-			'opinion' : '008879027825390475756:xnwxm5pcj8w',#'014567755836058125714:2yq5yptluxs',
-			'othermedia' : '008879027825390475756:korkyyeroum', #'014567755836058125714:c1kdam3wyey',
+			'opinion' : '008879027825390475756:jttjpihzlns',#'014567755836058125714:2yq5yptluxs',
+			'othermedia' : '008879027825390475756:jttjpihzlns', #'014567755836058125714:c1kdam3wyey',
 			'indepth' : '008879027825390475756:jttjpihzlns',#'014567755836058125714:0opyehd0oiu',
 			'timeline' : '008879027825390475756:jttjpihzlns' #'014567755836058125714:aeiq3vyfdw8'
 		}
