@@ -170,6 +170,8 @@ angular.module('linkedtv').factory('chapterCollection',
 		});
 		//update the entire resource on the server
 		saveOnServer();
+		//notify observers
+		notifyObservers();
 	}
 
 	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js

@@ -1,5 +1,6 @@
 <div class="modal-header">
-    <h4 class="modal-title">Edit {{dimension.label}}</h4>
+    <h4 ng-if="!link.label" class="modal-title">Add new annotation to: {{dimension.label}}</h4>
+    <h4 ng-if="link.label" class="modal-title">Edit: {{link.label}}</h4>
 </div>
 
 <div class="modal-body">

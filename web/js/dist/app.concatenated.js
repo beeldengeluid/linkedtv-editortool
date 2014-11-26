@@ -192,7 +192,7 @@ var tkkConfig = {
 		},
 		{
 			id : 'tve_3',
-			label : 'Related Chapter',
+			label : 'Related Chapters',
 			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id : 'TvEnricher',
@@ -627,6 +627,8 @@ linkedtv.run(function($rootScope, conf) {
 		});
 		//update the entire resource on the server
 		saveOnServer();
+		//notify observers
+		notifyObservers();
 	}
 
 	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
@@ -1419,10 +1421,21 @@ linkedtv.run(function($rootScope, conf) {
 
 	//needed since the $watch function on the chapterCollection no longer works
 	$scope.update = function(chapters) {
-		$scope.$apply(function() {
+		$scope.safeApply(function() {
 			$scope.allChapters = chapters;
 			$scope.chapters = chapters;
 		});
+	};
+
+	$scope.safeApply = function(fn) {
+		var phase = this.$root.$$phase;
+		if(phase == '$apply' || phase == '$digest') {
+			if(fn && (typeof(fn) === 'function')) {
+				fn();
+			}
+	  	} else {
+			this.$apply(fn);
+		}
 	};
 
 	$scope.toggleShowCuratedOnly = function() {

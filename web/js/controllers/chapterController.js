@@ -8,10 +8,21 @@ angular.module('linkedtv').controller('chapterController',
 
 	//needed since the $watch function on the chapterCollection no longer works
 	$scope.update = function(chapters) {
-		$scope.$apply(function() {
+		$scope.safeApply(function() {
 			$scope.allChapters = chapters;
 			$scope.chapters = chapters;
 		});
+	};
+
+	$scope.safeApply = function(fn) {
+		var phase = this.$root.$$phase;
+		if(phase == '$apply' || phase == '$digest') {
+			if(fn && (typeof(fn) === 'function')) {
+				fn();
+			}
+	  	} else {
+			this.$apply(fn);
+		}
 	};
 
 	$scope.toggleShowCuratedOnly = function() {
