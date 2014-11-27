@@ -28,6 +28,7 @@ DATABASES = {
 }
 
 LOGIN_URL = '/login'
+LOGIN_REDIRECT_URL = '/login_user'
 
 #Add the custom built libraries to the PATH in order to make them available to the app
 #sys.path.insert(0, LABS_BASE)
