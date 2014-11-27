@@ -88,6 +88,32 @@ var rbbConfig = {
 			}
 		},
 		{
+			id : 'tvne_1',
+			label : 'Aktuell',
+			linkedtvDimension : 'CurrentEvents',
+			service : {
+				id : 'TvNewsEnricher',
+				params : {
+					dimension : 'othermedia',
+					periodInDays : 7,
+					endDate : '$VIDEO_DATE'
+				}
+			}
+		},
+		{
+			id : 'tvne_2',
+			label : 'Hintergrund',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'TvNewsEnricher',
+				params : {
+					dimension : 'othermedia',
+					periodInDays : 365 * 10,//search for events in the last 10 years
+					endDate : '$VIDEO_DATE'
+				}
+			}
+		},
+		{
 			id : 'tve_1',
 			label : 'Related RBB News',
 			linkedtvDimension : 'RelatedChapter',
@@ -100,51 +126,14 @@ var rbbConfig = {
 				}
 			}
 		},
-		{//AKTUELL
+		{
 			id : 'tve_2',
-			label : 'Aktuell (1)',
-			linkedtvDimension : 'CurrentEvents',
+			label : 'Anderes Media',
+			linkedtvDimension : 'OtherMedia',
 			service : {
 				id : 'TvEnricher',
 				params : {
 					dimension : 'RBB'//+ current date
-				}
-			}
-		},
-		{
-			id : 'tvne_1',
-			label : 'Aktuell (2)',
-			linkedtvDimension : 'CurrentEvents',
-			service : {
-				id : 'TvNewsEnricher',
-				params : {
-					dimension : 'othermedia',//+ current date
-					periodInDays : 7,
-					endDate : '$VIDEO_DATE'
-				}
-			}
-		},
-		{//HISTORY
-			id : 'tve_3',
-			label : 'Hintergrund (1)',
-			linkedtvDimension : 'History',
-			service : {
-				id :'TvEnricher',
-				params : {
-					dimension : 'RBB' //+ current date
-				}
-			}
-		},
-		{
-			id : 'tvne_2',
-			label : 'Hintergrund (2)',
-			linkedtvDimension : 'History',
-			service : {
-				id : 'TvNewsEnricher',
-				params : {
-					dimension : 'othermedia',//+ current date
-					periodInDays : 365 * 10,//search for events in the last 10 years
-					endDate : '$VIDEO_DATE'
 				}
 			}
 		}
