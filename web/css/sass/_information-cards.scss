@@ -1,6 +1,32 @@
 @mixin cardProperties ($columns: 2, $alignTop: false) {
 	margin-bottom:$defaultItemMargin;
 
+	header ul {
+		@include horizontalList(true);
+		li {
+
+			font-weight:bold;
+			&:nth-child(1) {
+	 			width:22%;
+	 		}
+
+		 	@if $columns == 2 {
+		 		&:nth-child(2) {
+		 			width:72%;
+		 		}
+		 	}
+
+		 	@if $columns == 3 {
+		 		&:nth-child(2) {
+		 			width:50%;
+		 		}
+		 		&:nth-child(3) {
+		 			width:22%;
+		 		}
+		 	}
+ 		}
+	}
+
 	.dbpedia {
 		.form-group {
 			input {
