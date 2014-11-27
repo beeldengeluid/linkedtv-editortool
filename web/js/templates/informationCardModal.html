@@ -18,8 +18,8 @@
         <div class="col-md-9" ng-show="useTemplate">
             <strong>Select template</strong>
             <div class="btn-group" dropdown>
-                <button ng-if="!activeTemplate" type="button" class="btn btn-primary">Select template</button>
-                <button ng-if="activeTemplate" type="button" class="btn btn-primary">{{activeTemplate.label}}</button>
+                <button ng-if="!activeTemplate.label" type="button" class="btn btn-primary">No template</button>
+                <button ng-if="activeTemplate.label" type="button" class="btn btn-primary">{{activeTemplate.label}}</button>
                 <button type="button" class="btn btn-primary dropdown-toggle">
                     <span class="caret"></span>
                     <span class="sr-only">{{activeTemplate.label}}</span>
@@ -48,21 +48,21 @@
             <h4>Properties of: {{card.template.label}}</h4>
             <div class="row">
                 <div class="col-md-10">
+
                     <!-- SHOW THE URI AT THE TOP -->
+                    <!--
                     <form ng-if="card.uri" class="form-inline" role="form">
                         <div class="form-group">
-                            <label>URI</label>
+                            <label>uri</label>
                         </div>
                         <div class="form-group">
                             <input class="form-control" ng-model="card.uri" title="{{card.uri}}">
                         </div>
-                    </form>
-                    <form class="form-inline" role="form" ng-repeat="p in activeTemplate.properties track by $index">
+                    </form>-->
 
+                    <!--SHOW ALL OTHER PROPERTIES-->
+                    <form class="form-inline" role="form" ng-repeat="p in activeTemplate.properties track by $index">
                         <div class="form-group">
-                            <!--
-                            <label>{{p.key}}</label>
-                        -->
                             <input class="form-control disabled" ng-model="activeTemplate.properties[$index].key">
                         </div>
                         <div ng-if="p.type == 'literal'" class="form-group">
@@ -79,21 +79,20 @@
                         <div class="form-group">
                             <i class="glyphicon glyphicon-remove interactive" ng-click="removeFromCard($index)"></i>
                         </div>
-                        <div class="form-group" ng-if="$last">
-                            <i class="glyphicon glyphicon-plus interactive" ng-click="addToTemplate()"></i>
-                        </div>
                         <div class="form-group">
                             <i ng-if="p.type == 'entity' && activeTemplate.properties[$index].value.uri" class="glyphicon glyphicon-cloud" style="color:red;" title="You have added an entity"></i>
                             <i ng-if="p.type == 'entity' && !activeTemplate.properties[$index].value.uri" class="glyphicon glyphicon-pencil" style="color:red;" title="The filled in value is just a text string"></i>
                         </div>
                     </form>
+
+                    <button class="btn btn-primary" ng-click="addToTemplate()" title="If no suitable properties were found, use this to add custom properties">New property</button>
                 </div>
 
                 <!-- this is the spot where the poster is shown -->
                 <div ng-if="poster" class="col-md-2">
                     <!-- when thumbs are available -->
                     <div ng-show="poster" class="thumbnail card-thumb">
-                        <img ng-src="{{poster}}" >
+                        <img ng-src="{{poster}}" alt="{{card.uri}}" title="{{card.uri}}">
                     </div>
                 </div>
 

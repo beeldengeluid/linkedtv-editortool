@@ -28,7 +28,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.loading = false;
 
-	$scope.useTemplate = $scope.activeTemplate != null;
+	$scope.useTemplate = $scope.activeTemplate.label != undefined;
 
 	$scope.clearTemplate = function() {
 		$scope.useTemplate = !$scope.useTemplate;
