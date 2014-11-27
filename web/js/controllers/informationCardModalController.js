@@ -49,7 +49,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$scope.card.uri = $scope.generateUri();//always assign a custom ID to a card based on a template
 	};
 
-	$scope.addToTemplate = function(triple) {
+	$scope.addToTemplate = function(triple, literal) {
 		var t = null;
 		if(triple) {
 			var val = {};
@@ -66,7 +66,11 @@ angular.module('linkedtv').controller('informationCardModalController',
 				t.value = val;
 			}
 		} else {
-			t = {key : null, type : 'literal', value : null, optional : true};
+			if(literal) {
+				t = {key : null, type : 'literal', value : null, optional : true};
+			} else {
+				t = {key : null, type : 'entity', value : null, optional : true};
+			}
 		}
 
 		//Also add the triple to the list of triples (for convencience)
@@ -154,11 +158,20 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	//----------------------------VALIDATION AND DATA FORMATTING------------------------------
 
-	$scope.isProperlyFilledOut = function() {
-		if(!$scope.card.label || $scope.card.label == '') {
-			return false;
+	$scope.getFormValidationMessage = function() {
+		if(!$scope.card.uri || $scope.card.uri == '') {
+			return 'Please add a URI';
 		}
-		return true;
+		if(!$scope.card.label || $scope.card.label == '') {
+			return 'Please add a label';
+		}
+		var msg = null;
+		_.each($scope.activeTemplate.properties, function(p){
+			if(p.key == null || p.key == '') {
+				msg = 'Please make sure all properties have a name';
+			}
+		});
+		return msg;
 	};
 
 	$scope.updateCardProperties = function() {
@@ -166,6 +179,12 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$scope.card.poster = $scope.poster;
 
 		if(!$scope.card.uri) {
+			/*
+			_.each($scope.activeTemplate.properties, function(p){
+				if(p.key == 'uri') {
+					$scope.card.uri = p.value;
+				}
+			});*/
 			$scope.card.uri = $scope.generateUri();
 		}
 
@@ -196,10 +215,11 @@ angular.module('linkedtv').controller('informationCardModalController',
 		//set the active template as the card's template (so it will be saved)
 		$scope.card.template = entityUtils.copyInformationCardTemplate($scope.activeTemplate);
 		$scope.updateCardProperties();
-		if($scope.isProperlyFilledOut()) {
+		var msg = $scope.getFormValidationMessage();
+		if(msg == null) {
 			$modalInstance.close({dimension : $scope.dimension, link : $scope.card});
 		} else {
-			alert('Please add a label');
+			alert(msg);
 		}
 	};
 
