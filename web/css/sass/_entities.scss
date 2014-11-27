@@ -9,7 +9,7 @@
 	display:inline-block;
 	border: 1px solid white;
 	cursor:pointer;
-	font-size:100%;	
+	font-size:100%;
 
 	&:hover {
 		@include activeLabel;
@@ -47,9 +47,4 @@
 
 .entity {
 	@include entityLabel();
-}
-
-.autocomplete {
-	min-width: 300px !important;
-	max-width: 400px !important;
 }

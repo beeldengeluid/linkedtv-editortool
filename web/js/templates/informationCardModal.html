@@ -65,6 +65,10 @@
                             <input class="form-control" ng-model="activeTemplate.properties[$index].value.label"
                             placeholder="Entity label">
                         </div>
+                        <div ng-if="p.type == 'entity'" class="form-group">
+                            <input class="form-control" ng-model="activeTemplate.properties[$index].value.uri"
+                            placeholder="Entity URI">
+                        </div>
                         <div class="form-group">
                             <i class="glyphicon glyphicon-remove interactive" ng-click="removeFromCard($index)"></i>
                         </div>

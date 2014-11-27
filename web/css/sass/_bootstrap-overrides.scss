@@ -48,12 +48,14 @@ $thumbnail-padding: 1px;
 	padding:$defaultMargin !important;
 }
 
+$modal-lg:90%;
+
 /* Custom additions to Bootstrap classes */
 
 .interactive.glyphicon {
 	cursor:pointer;
 }
-	
+
 .selected.glyphicon {
 	color:$wonderblue;
 }
