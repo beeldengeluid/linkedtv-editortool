@@ -160,7 +160,9 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		query.append('INSERT { ')
 
-		if duration != '0':
+		print '===========? jAAHAHAHAHAHAHHAH'
+		print type(duration)
+		if duration > 0:
 			#First create the media fragment => self.LTV_MEDIA_PF/UUID/#t=1931.24,1934.639
 			query.append('<%s> a <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
 			query.append('a <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
@@ -196,7 +198,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('oa:motivatedBy <%s> ; ' % self.MOTIVATION_LINKING)
 		query.append('oa:motivatedBy <%s%s> ; ' % (self.LTV_ONTO_PF, dimension.getLinkedtvDimension()))
 		#If the enrichment has a start & end time, link to the custom entity
-		if duration != '0':
+		if duration > 0:
 			query.append('oa:hasTarget <%s> ; ' % mfURI)
 		else: #related to the chapter mediafragment
 			query.append('oa:hasTarget <%s> ; ' % chapterMfURI)
