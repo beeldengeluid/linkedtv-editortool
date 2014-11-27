@@ -39,11 +39,12 @@ class EuropeanaAPI(DimensionService):
 
 	def __getServiceUrl(self, query, entities, dimension):
 		#print entities
-		query = 'what:%s' %  ''.join(query)
+		query = urllib.quote('what:%s' %  ''.join(query))
 		url = '%s?wskey=%s&query=%s' % (self.BASE_URL, self.API_KEY, query)
 		if dimension['service']['params'].has_key('queryParts'):
 			for qf in dimension['service']['params']['queryParts']:
 				url += '&qf=%s' % qf
+		url += '&rows=100'
 		print url
 		return url
 

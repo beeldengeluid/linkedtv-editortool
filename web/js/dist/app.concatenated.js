@@ -1146,17 +1146,17 @@ linkedtv.run(function($rootScope, conf) {
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data
 		var eSources = [];//always empty in this case
-		console.debug(data.items);
+		console.debug(data);
 		_.each(data.items, function(e){
 			var enrichment = {
 				label : e.title.join(' '),
-				url : e.guid,
+				url : e.link,
 				//description : e.text,
 				//date : e.date
 			}
 			//add the source to the list of possible sources and attach it to the retrieved enrichment
-			if(e.provider) {
-				_.each(e.provider, function(p){
+			if(e.dataProvider) {
+				_.each(e.dataProvider, function(p){
 					if(sources.indexOf(p) == -1) {
 						sources.push(p);
 					}
