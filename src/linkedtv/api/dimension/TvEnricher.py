@@ -30,7 +30,6 @@ class TvEnricher(DimensionService):
         #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v
         http = httplib2.Http()
         url = self.__getServiceUrl(query, dimension)
-        print url
         headers = {'Content-type': 'application/json'}
         resp, content = http.request(url, 'GET', headers=headers)
         if content and resp and resp['status'] == '200':
@@ -38,10 +37,10 @@ class TvEnricher(DimensionService):
                 enrichments = []
                 mfs = simplejson.loads(content)
                 for obj in mfs:
-                    mf = obj['mf_id']
-                    mf = mf[len('http://data.linkedtv.eu/media/'):]
-                    videoData = self.__getMediaFragmentData(mf)
-                    enrichments.append({'micropostUrl' : mf, 'posterUrl' : videoData['poster'],
+                    linkedtvUrl = obj['linkedtv_id']
+                    mediaFragmentUri = obj['mf_id']
+                    videoData = self.__getMediaFragmentData(mediaFragmentUri)
+                    enrichments.append({'micropostUrl' : mediaFragmentUri, 'posterUrl' : videoData['poster'],
                      'micropost' : {'plainText' : videoData['title']} })
                 return { 'enrichments' : { '%s' % ' '.join(query) : {'LinkedTV' : enrichments } } }
             else:
@@ -63,6 +62,7 @@ class TvEnricher(DimensionService):
 
     #Example mediafragment URI: http://data.linkedtv.eu/media/154307a8-0058-4946-839d-cd802fe0aad5#t\u003d262.4,457.64
     def __getMediaFragmentData(self, mediaFragmentUri):
+        mediaFragmentUri = mediaFragmentUri[len('http://data.linkedtv.eu/media/'):]
         mfData = self.__getMediaFragmentUriData(mediaFragmentUri)
         pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
         http = httplib2.Http()

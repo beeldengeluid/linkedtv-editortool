@@ -121,9 +121,9 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 
 		query.append('} ')
-		logger.debug('\n\nSAVING CHAPTER-------------------------------------')
-		logger.debug(''.join(query))
-		logger.debug('\nEND SAVING CHAPTER-------------------------------------')
+		print '\n\nSAVING CHAPTER-------------------------------------'
+		print ''.join(query)
+		print '\nEND SAVING CHAPTER-------------------------------------'
 
 		if self.__sendVirtuosoRequest(''.join(query)):
 			#If succesfully saved, save the enrichments (and related entities)
@@ -315,11 +315,12 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
 		stdout, stderr = p1.communicate()
 		if stdout:
+			print stdout
 			try:
 				simplejson.loads(stdout)
 				return True
 			except JSONDecodeError, e:
 				print e
 		else:
-			logger.error(stderr)
+			print stderr
 		return False
