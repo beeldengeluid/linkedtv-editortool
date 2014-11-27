@@ -56,9 +56,9 @@ class DataConverter():
 									annotation.setPoster(e['poster'])
 
 								#add the optional properties
-								if e.has_key('start'):
+								if e.has_key('start') and e['start']:
 									annotation.setStart(e['start'])
-								if e.has_key('end'):
+								if e.has_key('end') and e['end']:
 									annotation.setEnd(e['end'])
 								if e.has_key('source'):
 									annotation.setSource(e['source'])
