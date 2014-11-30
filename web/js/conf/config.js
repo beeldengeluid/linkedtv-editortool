@@ -138,7 +138,7 @@ var rbbConfig = {
 		},
 		{
 			id : 'tve_2',
-			label : 'Anderes Media',
+			label : 'Andere Medien',
 			linkedtvDimension : 'OtherMedia',
 			service : {
 				id : 'TvEnricher',
