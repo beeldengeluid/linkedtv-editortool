@@ -64,7 +64,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 					//set what you can right away
 					var enrichment = {
 						label : 'No title',
-						description : 'No description',//TODO if it's there fetch it from the data
+						description : e.description ? e.description : '',//TODO if it's there fetch it from the data
 						url : formatUrl(e, dimension),
 						source : s, //add the source to each enrichment (for filtering)
 						entitySource : es //add the source entities to each enrichment (for filtering)
@@ -143,7 +143,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 		_.each(data.items, function(e){
 			var enrichment = {
 				label : e.title.join(' '),
-				url : e.link,
+				url : e.guid,//e.link (points to the API)
 				//description : e.text,
 				//date : e.date
 			}
@@ -165,7 +165,6 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 			temp.push(enrichment);
 			//TODO add  more data to the enrichment
 		});
-		console.debug(temp);
 		if(temp.length == 0) {
 			return null;
 		}

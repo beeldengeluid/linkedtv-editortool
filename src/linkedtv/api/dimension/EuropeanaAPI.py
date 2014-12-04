@@ -5,6 +5,10 @@ import httplib2
 from linkedtv.LinkedtvSettings import LTV_EUROPEANA
 from linkedtv.api.dimension.DimensionService import DimensionService
 
+"""
+http://www.europeana.eu/portal/api-search-json.html
+"""
+
 class EuropeanaAPI(DimensionService):
 
 	def __init__(self):

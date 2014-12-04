@@ -37,11 +37,14 @@ class TvEnricher(DimensionService):
                 enrichments = []
                 mfs = simplejson.loads(content)
                 for obj in mfs:
+                    snippet = None
+                    if obj.has_key('subtitle'):
+                        snippet = obj['subtitle']
                     linkedtvUrl = obj['linkedtv_id']
                     mediaFragmentUri = obj['mf_id']
                     videoData = self.__getMediaFragmentData(mediaFragmentUri)
                     enrichments.append({'micropostUrl' : mediaFragmentUri, 'posterUrl' : videoData['poster'],
-                     'micropost' : {'plainText' : videoData['title']} })
+                     'micropost' : {'plainText' : videoData['title']} , 'description' : snippet})
                 return { 'enrichments' : { '%s' % ' '.join(query) : {'LinkedTV' : enrichments } } }
             else:
                 return { 'enrichments' : simplejson.loads(content) } # service is already included in the content
