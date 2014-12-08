@@ -43,8 +43,13 @@ class EuropeanaAPI(DimensionService):
 		return None
 
 	def __getServiceUrl(self, query, entities, dimension):
-		#print entities
-		query = urllib.quote('what:%s' %  ''.join(query))
+		if query == '':
+			query = ' '.join(e['label'] for e in entities)
+		query = urllib.quote(query.encode('utf8'))
+		query = urllib.quote('what:%s' %  query)
+
+		print query
+
 		url = '%s?wskey=%s&query=%s' % (self.BASE_URL, self.API_KEY, query)
 		if dimension['service']['params'].has_key('queryParts'):
 			for qf in dimension['service']['params']['queryParts']:
@@ -55,74 +60,74 @@ class EuropeanaAPI(DimensionService):
 
 	"""
 	{
-         'index':0,
-         'guid':'http://www.europeana.eu/portal/record/2021609/objecten_7064.html?utm_source=api&utm_medium=api&utm_campaign=1hfhGH67Jhs',
-         'rights':[
-            'http://creativecommons.org/licenses/by/3.0/',
-            u''
-         ],
-         'completeness':10,
-         'edmTimespanLabelLangAware':{
-            'ru':[
-               u'4-\u044f \u0447\u0435\u0442\u0432\u0435\u0440\u0442\u044c 18-\u0433\u043e \u0432\u0435\u043a\u0430'
-            ],
-            'fr':[
-               u'4e quart 18e si\xe8cle'
-            ],
-            'en':[
-               '4 quarter of the 18th century'
-            ],
-            'def':[
-               '1778'
-            ]
-         },
-         'language':[
-            'nl'
-         ],
-         'title':[
-            'Rechthoekige witte geboorteplaquette met geschulpte rand, met "Elisabeth Muijs geboore den 24 augustus 1778, gedoopt den 27 augustus, in den jaare 1778 te Rotterdam"'
-         ],
-         'europeanaCompleteness':10,
-         'edmDatasetName':[
-            '2021609_Ag_NL_DigitaleCollectie_museum-rotterdam'
-         ],
-         'year':[
-            '1778'
-         ],
-         'edmTimespanLabel':[
-            {
-               'def':'4 quarter of the 18th century'
-            },
-            {
-               'def':u'4-\u044f \u0447\u0435\u0442\u0432\u0435\u0440\u0442\u044c 18-\u0433\u043e \u0432\u0435\u043a\u0430'
-            },
-            {
-               'def':u'4e quart 18e si\xe8cle'
-            },
-            {
-               'def':'1778'
-            }
-         ],
-         'link':'http://europeana.eu/api/v2/record/2021609/objecten_7064.json?wskey=1hfhGH67Jhs',
-         'europeanaCollectionName':[
-            '2021609_Ag_NL_DigitaleCollectie_museum-rotterdam'
-         ],
-         'provider':[
-            'Digitale Collectie'
-         ],
-         'edmIsShownAt':[
-            'http://europeana.eu/api/22681434/redirect?shownAt=http%3A%2F%2Fcollectie.museumrotterdam.nl%2Fobjecten%2F7064%3Fbt%3Deuropeanaapi&provider=Digitale+Collectie&id=http%3A%2F%2Fwww.europeana.eu%2Fresolve%2Frecord%2F2021609%2Fobjecten_7064&profile=standard'
-         ],
-         'score':3.316001,
-         'edmPreview':[
-            'http://europeanastatic.eu/api/image?uri=http%3A%2F%2Fcollectie.museumrotterdam.nl%2Fbeeld%2F7064_1.jpg&size=LARGE&type=IMAGE'
-         ],
-         'dataProvider':[
-            'Museum Rotterdam'
-         ],
-         'type':'IMAGE',
-         'id':'/2021609/objecten_7064'
-      }
+			'index':0,
+			'guid':'http://www.europeana.eu/portal/record/2021609/objecten_7064.html?utm_source=api&utm_medium=api&utm_campaign=1hfhGH67Jhs',
+			'rights':[
+				'http://creativecommons.org/licenses/by/3.0/',
+				u''
+			],
+			'completeness':10,
+			'edmTimespanLabelLangAware':{
+				'ru':[
+					u'4-\u044f \u0447\u0435\u0442\u0432\u0435\u0440\u0442\u044c 18-\u0433\u043e \u0432\u0435\u043a\u0430'
+				],
+				'fr':[
+					u'4e quart 18e si\xe8cle'
+				],
+				'en':[
+					'4 quarter of the 18th century'
+				],
+				'def':[
+					'1778'
+				]
+			},
+			'language':[
+				'nl'
+			],
+			'title':[
+				'Rechthoekige witte geboorteplaquette met geschulpte rand, met "Elisabeth Muijs geboore den 24 augustus 1778, gedoopt den 27 augustus, in den jaare 1778 te Rotterdam"'
+			],
+			'europeanaCompleteness':10,
+			'edmDatasetName':[
+				'2021609_Ag_NL_DigitaleCollectie_museum-rotterdam'
+			],
+			'year':[
+				'1778'
+			],
+			'edmTimespanLabel':[
+				{
+					'def':'4 quarter of the 18th century'
+				},
+				{
+					'def':u'4-\u044f \u0447\u0435\u0442\u0432\u0435\u0440\u0442\u044c 18-\u0433\u043e \u0432\u0435\u043a\u0430'
+				},
+				{
+					'def':u'4e quart 18e si\xe8cle'
+				},
+				{
+					'def':'1778'
+				}
+			],
+			'link':'http://europeana.eu/api/v2/record/2021609/objecten_7064.json?wskey=1hfhGH67Jhs',
+			'europeanaCollectionName':[
+				'2021609_Ag_NL_DigitaleCollectie_museum-rotterdam'
+			],
+			'provider':[
+				'Digitale Collectie'
+			],
+			'edmIsShownAt':[
+				'http://europeana.eu/api/22681434/redirect?shownAt=http%3A%2F%2Fcollectie.museumrotterdam.nl%2Fobjecten%2F7064%3Fbt%3Deuropeanaapi&provider=Digitale+Collectie&id=http%3A%2F%2Fwww.europeana.eu%2Fresolve%2Frecord%2F2021609%2Fobjecten_7064&profile=standard'
+			],
+			'score':3.316001,
+			'edmPreview':[
+				'http://europeanastatic.eu/api/image?uri=http%3A%2F%2Fcollectie.museumrotterdam.nl%2Fbeeld%2F7064_1.jpg&size=LARGE&type=IMAGE'
+			],
+			'dataProvider':[
+				'Museum Rotterdam'
+			],
+			'type':'IMAGE',
+			'id':'/2021609/objecten_7064'
+		}
 	"""
 	def __formatResponse(self, data, dimension):
 		data = simplejson.loads(data)

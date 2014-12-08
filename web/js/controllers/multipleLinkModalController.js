@@ -40,15 +40,16 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 
 	//the actual enrichments will be shown in the enrichment tab
 	$scope.fetchEnrichments = function() {
-		$scope.fetchButtonText = 'Loading...';
 		$scope.enrichmentQuery = $('#e_query').val();//FIXME ugly hack, somehow the ng-model does not work in this form!!!
-		if ($scope.enrichmentQuery) {
-			//enrichmentService.search($scope.enrichmentQuery, $rootScope.provider, $scope.dimension, $scope.onSearchEnrichments);
+		if ($scope.enrichmentQuery != '' || !$scope.isEmpty($scope.activeEntities)) {
+			$scope.fetchButtonText = 'Loading...';
 			var entities = [];
 			_.each($scope.activeEntities, function(value, key) {
 				entities.push(value);
 			});
 			enrichmentService.search($scope.enrichmentQuery, entities, $scope.dimension, $scope.onSearchEnrichments);
+		} else {
+			alert('Please specify a query');
 		}
 	};
 
@@ -135,11 +136,11 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 		_.each($scope.activeEntities, function(e){
 			labels.push(e.label);
 		})
-		$('#e_query').attr('value', labels.join('+'));
+		//$('#e_query').val(labels.join('+'));
 	}
 
-	$scope.isEmpty = function() {
-		return Object.keys($scope.activeEntities).length === 0;
+	$scope.isEmpty = function(obj) {
+		return Object.keys(obj).length === 0;
 	}
 
 	//----------------------------BUTTON PANEL------------------------------

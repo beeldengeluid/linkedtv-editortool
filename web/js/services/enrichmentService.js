@@ -3,7 +3,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 	function search(query, entities, dimension, callback) {
 		fillInDynamicProperties(dimension);
 		var data = {
-			'query' : query.split('+').join(','),
+			'query' : query, //query.split('+').join(','),
 			'dimension' : dimension,
 			'entities' : entities
 		};

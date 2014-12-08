@@ -30,7 +30,7 @@ class TvEnricher(DimensionService):
     def __search(self, query, entities, dimension):
         #curl -X GET "http://linkedtv.eurecom.fr/tvenricher/api/entity/enrichment/RBB?q=Obama" --header "Content-Type:application/x-turtle" -v
         http = httplib2.Http()
-        url = self.__getServiceUrl(query, dimension)
+        url = self.__getServiceUrl(query, entities, dimension)
         headers = {'Content-type': 'application/json'}
         resp, content = http.request(url, 'GET', headers=headers)
         if content and resp and resp['status'] == '200':
@@ -110,8 +110,10 @@ class TvEnricher(DimensionService):
             return 'http://api.linkedtv.eu/mediaresource/' + url;
         return url
 
-    def __getServiceUrl(self, query, dimension):
-        query = urllib.quote(' '.join(query))
+    def __getServiceUrl(self, query, entities, dimension):
+        if query == '':
+            query = ' '.join(e['label'] for e in entities)
+        query = urllib.quote(query.encode('utf8'))
         url = '%s/entity/enrichment/%s?q=%s' % (self.BASE_URL, dimension['service']['params']['dimension'], query)
         if dimension['service']['params'].has_key('index'):
             url = '%s&index=%s' % (url, dimension['service']['params']['index'])

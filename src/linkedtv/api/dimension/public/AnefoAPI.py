@@ -20,7 +20,6 @@ class AnefoAPI(DimensionService):
 		return True
 
 	def __search(self, query, entities, dimension):
-		print 'searching Anefo'
 		http = httplib2.Http()
 		url = self.__getServiceUrl(query, entities, dimension)
 		if url:
@@ -32,7 +31,9 @@ class AnefoAPI(DimensionService):
 
 	def __getServiceUrl(self, query, entities, dimension):
 		#Trefwoorden: Geografisch_trefwoord:
-		query = urllib.quote(''.join(query))
+		if query == '':
+			query = ' '.join(e['label'] for e in entities)
+		query = urllib.quote(query.encode('utf8'))
 		params = 'searchTerms='
 		if entities and len(entities) > 0:
 			for e in entities:
@@ -55,8 +56,6 @@ class AnefoAPI(DimensionService):
 		data = feedparser.parse(data)
 		enrichments = []
 		for e in data['entries']:
-			print e
-			print '\n\n'
 			enrichments.append(Enrichment(
 				e['title'],
 				url=e['link'],

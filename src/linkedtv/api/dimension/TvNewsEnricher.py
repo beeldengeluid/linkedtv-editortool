@@ -65,22 +65,19 @@ class TvNewsEnricher(DimensionService):
 
 	def __search(self, query, entities, dimension):
 		http = httplib2.Http()
-		url = self.__getServiceUrl(query, dimension)
+		url = self.__getServiceUrl(query, entities, dimension)
 		if url:
 			headers = {'Content-type': 'application/json'}
 			resp, content = http.request(url, 'GET', headers=headers)
 			if content:
-				print content
 				return content
 		return None
 
-	def __getServiceUrl(self, query, dimension):
-		print 'Building the TvNewsEnricher URL'
+	def __getServiceUrl(self, query, entities, dimension):
 		if dimension['service'].has_key('params'):
 			params = dimension['service']['params']
 
 			#set the correct start & end date for the search period
-			print params
 			if params.has_key('endDate') and params['endDate']:
 				try:
 					print 'Found a date: %s' % params['endDate']
@@ -95,8 +92,11 @@ class TvNewsEnricher(DimensionService):
 				startDate = endDate-timedelta(days=self.periodInDays)
 
 			d = params['dimension']
-			#TODO define the date somewhere
-			query = '+'.join(query)
+
+			#create the query from the entity labels
+			if query == '':
+				query = ''.join(e['label'] for e in entities)
+			query = urllib.quote(query.encode('utf8'))
 
 			url = '%s/%s?query=%s&startdate=%s&enddate=%s&limit=%s' % (
 				self.BASE_URL,
