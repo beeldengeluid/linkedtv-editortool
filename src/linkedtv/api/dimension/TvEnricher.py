@@ -4,6 +4,7 @@ import urllib
 import httplib2
 import base64
 
+from linkedtv.model import Enrichment
 from linkedtv.api.dimension.DimensionService import DimensionService
 from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN
 from linkedtv.utils.TimeUtils import TimeUtils
@@ -17,7 +18,7 @@ class TvEnricher(DimensionService):
 
     def fetch(self, query, entities, dimension):
         if self.__isValidDimension(dimension):
-            return self.__formatResponse(self.__search(query, entities, dimension))
+            return self.__formatResponse(self.__search(query, entities, dimension), dimension)
         return None
 
     def __isValidDimension(self, dimension):
@@ -43,7 +44,7 @@ class TvEnricher(DimensionService):
                     linkedtvUrl = obj['linkedtv_id']
                     mediaFragmentUri = obj['mf_id']
                     videoData = self.__getMediaFragmentData(mediaFragmentUri)
-                    enrichments.append({'micropostUrl' : mediaFragmentUri, 'posterUrl' : videoData['poster'],
+                    enrichments.append({'micropostUrl' : mediaFragmentUri, 'mediaUrl' : videoData['poster'],
                      'micropost' : {'plainText' : videoData['title']} , 'description' : snippet})
                 return { 'enrichments' : { '%s' % ' '.join(query) : {'LinkedTV' : enrichments } } }
             else:
@@ -51,8 +52,63 @@ class TvEnricher(DimensionService):
         else:
             return None
 
-    def __formatResponse(self, data):
-        return data
+    """
+    {enrichments: { 'Duitsland' : {'avro.nl' {
+    {
+       'micropostUrl':'http://web.avrotros.nl/cultuur/musical/overview/artikelen',
+       'mediaUrl':'http://staticextern.avrotros.nl/platform/tcm17_329901_medium.jpg',
+       'timestamp':'1417185705830',
+       'micropost':{
+          'plainText':'Chantal Janzen gaat presenteren in Duitsland '
+       },
+       'publicationDate':'Fri Nov 28 15:41:45 CET 2014',
+       'thd':"http://de.dbpedia.org/resource/Ga'at=http://dbpedia.org/ontology/Place,http://dbpedia.org/resource/Court;http://yago-knowledge.org/resource/Ga'at=http://yago-knowledge.org/resource/wikicategory_Porridges http://de.dbpedia.org/resource/Duitsland_Instituut_Amsterdam=http://dbpedia.org/ontology/Organisation,http://dbpedia.org/ontology/Agent,http://dbpedia.org/resource/Institute",
+       'type':'image',
+       'annotation':[
+          {
+             'entityURI':"http://de.dbpedia.org/resource/Ga'at",
+             'entityLabel':"Ga'at",
+             'types':[
+                {
+                   'typeURI':'http://dbpedia.org/ontology/Place',
+                   'typeLabel':'Place'
+                },
+                {
+                   'typeURI':'http://dbpedia.org/resource/Court',
+                   'typeLabel':'Court'
+                }
+             ]
+          }
+
+       ]
+    }
+    """
+    def __formatResponse(self, data, dimension):
+        enrichments = []
+        if data.has_key('enrichments'):
+            for entity in data['enrichments'].keys(): #all the enrichments are grouped by entity
+                for source in data['enrichments'][entity].keys(): #all the available sources
+                    for e in data['enrichments'][entity][source]: #each source contains a list of enrichments
+                        title = None
+                        if e.has_key('micropost') and e['micropost'].has_key('plainText'):
+                            title = e['micropost']['plainText']
+                        enrichment = Enrichment(
+                            title,
+                            url=self.__formatUrl(e['micropostUrl'], dimension),
+                            source=source,
+                            entities=[entity]
+                        )
+                        if e.has_key('type'):
+                            enrichment.setEnrichmentType(e['type'])
+                        if e.has_key('mediaUrl'):
+                            enrichment.setPoster(e['mediaUrl'])
+                        enrichments.append(enrichment)
+        return { 'enrichments' : enrichments}
+
+    def __formatUrl(self, url, dimension):
+        if dimension['service']['params']['dimension'] == 'Solr':
+            return 'http://api.linkedtv.eu/mediaresource/' + url;
+        return url
 
     def __getServiceUrl(self, query, dimension):
         query = urllib.quote(' '.join(query))

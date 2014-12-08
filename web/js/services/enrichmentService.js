@@ -13,6 +13,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 			dataType : 'json',
 			url : '/dimension',
 			success : function(json) {
+				console.debug(json);
 				var enrichments = json.error ? null : json.enrichments;
 				callback(formatServiceResponse(enrichments, dimension));
 			},
@@ -32,138 +33,50 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 		});
 	}
 
+	//TODO in the future possibly service specific things could be done by reading the 'additionalProperties' field,
+	//which is service specific
 	function formatServiceResponse(data, dimension) {
 		if(dimension.service.id == 'TvEnricher') {
-			return formatTvEnricherResponse(data, dimension);
+			return formatGenericResponse(data, dimension);
 		} else if(dimension.service.id == 'TvNewsEnricher') {
-			return formatTvNewsEnricherResponse(data, dimension);
+			return formatGenericResponse(data, dimension);
 		} else if(dimension.service.id == 'EuropeanaAPI') {
-			return formatEuropeanaAPIResponse(data, dimension);
+			return formatGenericResponse(data, dimension);
+		} else if(dimension.service.id == 'AnefoAPI') {
+			return formatGenericResponse(data, dimension);
 		}
 		return null;
 	}
 
-	function formatTvEnricherResponse(data, dimension) {
-		var temp = [];//will contain enrichments
-		var sources = [];
-		var eSources = [];
-		for (var es in data) {
-			//if not added already, add the entity source to the list of possible sources
-			if(eSources.indexOf(es) == -1) {
-				eSources.push(es);
-			}
-			var entitySources = data[es];
-			for (var s in entitySources) {
-				var enrichmentsOfSource = entitySources[s];
-				//if not added already, add the source to the list of possible sources
-				if(sources.indexOf(s) == -1 && enrichmentsOfSource.length > 0) {
-					sources.push(s);
-				}
-				//loop through the eventual enrichments and add them to temp
-				_.each(enrichmentsOfSource, function(e) {
-					//set what you can right away
-					var enrichment = {
-						label : 'No title',
-						description : e.description ? e.description : '',//TODO if it's there fetch it from the data
-						url : formatUrl(e, dimension),
-						source : s, //add the source to each enrichment (for filtering)
-						entitySource : es //add the source entities to each enrichment (for filtering)
-					};
-					//find the right poster
-					if(e.posterUrl && isValidPosterFormat(e.posterUrl)) {
-						enrichment.poster = e.posterUrl;
-					} else if(e.mediaUrl && isValidPosterFormat(e.mediaUrl)) {
-						enrichment.poster = e.mediaUrl;
-					}
-					//set the correct label
-					if(e.micropost && e.micropost.plainText) {
-						enrichment.label = e.micropost.plainText;
-					}
-					temp.push(enrichment);
-				});
-			}
-		}
-		if(temp.length == 0) {
-			return null;
-		}
-		return {enrichmentSources : sources, enrichmentEntitySources : eSources, allEnrichments : temp}
-	}
-
-	//really crappy bad function, later this needs to be modelled & mapped in a nice way
-	function formatUrl(enrichment, dimension) {
-		var url = enrichment.micropostUrl;
-		if(dimension.service.id == 'RelatedChapter' && dimension.service.params && dimension.service.params.dimension == 'Solr') {
-			return 'http://api.linkedtv.eu/mediaresource/' + url;
-		}
-		return url;
-	}
-
-	function formatTvNewsEnricherResponse(data, dimension) {
-		console.debug('Formatting data from the TvNewsEnricher');
-		console.debug(data);
-		var temp = [];//will contain enrichments
-		var sources = [];//sometimes available in the data
-		var eSources = [];//always empty in this case
-		if(dimension.service.params.dimension != 'tweets') { //TODO make sure that Tweets can also be shown (build another formatXXX function)
-			_.each(data, function(e){
-				var enrichment = {
-					label : e.title,
-					url : e.url,
-					description : e.text,
-					date : e.date
-				}
-				//add the source to the list of possible sources and attach it to the retrieved enrichment
-				if(e.source && e.source.name) {
-					if(sources.indexOf(e.source.name) == -1) {
-						sources.push(e.source.name);
-					}
-					enrichment.source = e.source.name;
-				}
-				if (e.media) {
-					enrichment.poster = e.media.thumbnail;
-					enrichment.mediaType = e.media.type;
-					enrichment.mediaUrl = e.media.url;
-				}
-				temp.push(enrichment);
-				//TODO add  more data to the enrichment
-			});
-		}
-		console.debug(temp);
-		if(temp.length == 0) {
-			return null;
-		}
-		return {enrichmentSources : sources, enrichmentEntitySources : eSources, allEnrichments : temp};
-	}
-
-	function formatEuropeanaAPIResponse(data, dimension) {
+	function formatGenericResponse(data, dimension) {
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data
 		var eSources = [];//always empty in this case
 		console.debug(data);
-		_.each(data.items, function(e){
+		_.each(data, function(e) {
 			var enrichment = {
-				label : e.title.join(' '),
-				url : e.guid,//e.link (points to the API)
-				//description : e.text,
-				//date : e.date
+				label : e.label,
+				url : e.url,
+				description : e.description,
+				poster : e.poster,
+				entities : e.entities
 			}
 			//add the source to the list of possible sources and attach it to the retrieved enrichment
-			if(e.dataProvider) {
-				_.each(e.dataProvider, function(p){
-					if(sources.indexOf(p) == -1) {
-						sources.push(p);
+			if(sources.indexOf(e.source) == -1) {
+				sources.push(e.source);
+			}
+			enrichment.source = e.source;
+
+			//TODO there is no derived entity yet
+			if(e.entities) {
+				_.each(e.entities, function(entity){
+					if(eSources.indexOf(entity) == -1) {
+						eSources.push(entity);
 					}
-					enrichment.source = p;//let's hope it's only one
 				});
 			}
-			if(e.edmPreview && e.edmPreview[0]) {
-				enrichment.poster = e.edmPreview[0];
-			}
-			//enrichment.mediaType = e.media.type;
-			//enrichment.mediaUrl = e.media.url;
 
 			temp.push(enrichment);
-			//TODO add  more data to the enrichment
 		});
 		if(temp.length == 0) {
 			return null;

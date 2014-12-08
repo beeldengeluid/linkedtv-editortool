@@ -2,7 +2,6 @@
 Useful developer documentation:
 ----------------------------------------------------------------------------------------------------
 
-
 ---------------
 For styling / CSS
 ---------------
@@ -19,8 +18,8 @@ For styling / CSS
 
 	[Overriding Bootstrap SASS]
 
-	
-	
+
+
 
 
 

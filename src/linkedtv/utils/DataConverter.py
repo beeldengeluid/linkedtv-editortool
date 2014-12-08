@@ -17,12 +17,8 @@ class DataConverter():
 				chapter.setEnd(c['end'])
 				if c.has_key('type'):
 					chapter.setType(c['type']);
-				if c.has_key('mfURI'):
-					chapter.setMfURI(c['mfURI']),
 				if c.has_key('annotationURI'):
 					chapter.setAnnotationURI(c['annotationURI']),
-				if c.has_key('bodyURI'):
-					chapter.setBodyURI(c['bodyURI']),
 				if c.has_key('relevance'):
 					chapter.setRelevance(c['relevance']),
 				if c.has_key('confidence'):
@@ -82,16 +78,10 @@ class DataConverter():
 											entity.setEtURI(ne['etURI'])
 										entities.append(entity)
 									annotation.setEntities(entities)
-								if e.has_key('socialInteraction'):
-									annotation.setSocialInteraction(e['socialInteraction'])
-								if e.has_key('mfURI'):
-									annotation.setMfURI(e['mfURI'])
 								if e.has_key('annotationURI'):
 									annotation.setAnnotationURI(e['annotationURI'])
-								if e.has_key('bodyURI'):
-									annotation.setBodyURI(e['bodyURI'])
-								if e.has_key('DCType'):
-									annotation.setDCType(e['DCType'])
+								if e.has_key('enrichmentType'):
+									annotation.setEnrichmentType(e['enrichmentType'])
 
 								#add the annotation to the list
 								annotations.append(annotation)

@@ -77,7 +77,6 @@ class LinkedTVPublishingPoint(PublishingPoint):
 				self.__saveChapterTriples(mediaResource.getId(), chapter)
 		return mediaResource
 
-
 	def __saveChapterTriples(self, mediaResourceUri, chapter):
 		#prepare some variables
 		start = TimeUtils.toStringSeconds(chapter.getStart())
@@ -140,7 +139,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 			return {'mfURI' : mfURI, 'bodyURI' : bodyURI, 'annotationURI' : aURI}
 		return None
 
-	#TOOD fix dit: enrichments hebben geen mfURI en geen annotationURI!!!
+	#TODO ICs with templates could be stored as a specialized entity/concept/resource (e.g. the art object)
 	def __saveAnnotationTriples(self, mediaResourceUri, dimension, annotation, chapterMfURI):
 		isInformationCard = self.__isInformationCard(dimension)
 		start = TimeUtils.toStringSeconds(annotation.getStart())
@@ -160,8 +159,6 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		query.append('INSERT { ')
 
-		print '===========? jAAHAHAHAHAHAHHAH'
-		print type(duration)
 		if duration > 0:
 			#First create the media fragment => self.LTV_MEDIA_PF/UUID/#t=1931.24,1934.639
 			query.append('<%s> a <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))

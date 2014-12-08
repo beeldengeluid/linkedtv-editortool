@@ -170,7 +170,7 @@ def dimension(request):
 		api = Api()
 		resp = api.dimension(data['query'].split(','), data['entities'], data['dimension'])
 		if resp:
-			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+			return HttpResponse(simplejson.dumps(resp, default=lambda obj: obj.__dict__), mimetype='application/json')
 		else:
 			return HttpResponse(__getErrorMessage('No enrichments found'), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')

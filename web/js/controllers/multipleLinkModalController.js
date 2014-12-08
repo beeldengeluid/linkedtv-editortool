@@ -110,7 +110,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 	$scope.filterEnrichmentsByEntitySource = function(entitySource) {
 		$scope.activeEnrichmentEntitySource = entitySource;
 		$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
-			if(e.entitySource === entitySource) {
+			if(e.entities.indexOf(entitySource) != -1) {
 				return e;
 			}
 		});

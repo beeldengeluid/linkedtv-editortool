@@ -194,6 +194,14 @@ var tkkConfig = {
 					granularity : 'Chapter'
 				}
 			}
+		},
+		{
+			id : 'anefo_1',
+			label : 'Related photos',
+			linkedtvDimension : 'RelatedArtWork',
+			service : {
+				id : 'AnefoAPI'
+			}
 		}
 	]
 };

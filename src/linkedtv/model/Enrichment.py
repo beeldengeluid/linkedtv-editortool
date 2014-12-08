@@ -2,25 +2,31 @@ from linkedtv.model.Annotation import Annotation
 
 class Enrichment(Annotation):
 
-	def __init__(self, label,  description = None, start = 0, end = 0, mfURI = None, annotationURI = None, bodyURI = None,
-		relevance = 1, confidence = 1, uri = None, poster = None, source=None, creator=None, date=None, entities=None,
-		socialInteraction=None, DCType=None, url=None):
-		Annotation.__init__(self, label, description, start, end, mfURI, annotationURI, bodyURI, relevance, confidence)
-		self.uri = uri #actually it should be url, but it's too much hassle too update for now
+	def __init__(self, label,  description = None, start = 0, end = 0, annotationURI = None, relevance = 1,
+		confidence = 1, uri = None, poster = None, source=None, creator=None, date=None,
+		entities=None,	enrichmentType=None, url=None, additionalProperties=None):
+		Annotation.__init__(self, label, description, start, end, annotationURI, relevance, confidence)
+		self.uri = uri #only used for information cards
+		self.url = url #used for regular enrichments
 		self.poster = poster
-		self.source = source
+		self.source = source #also used for filtering in the UI
 		self.creator = creator
 		self.date = date
-		self.entities = entities #Entity
-		self.socialInteraction = socialInteraction
-		self.DCType = DCType
-		self.url = url
+		self.enrichmentType = enrichmentType #video/audio/image, but possibly other things...
+		self.entities = entities #Entity + also used in the UI for filtering
+		self.additionalProperties = additionalProperties #stores all properties that do not fit this class
 
 	def setUri(self, uri):
 		self.uri = uri
 
 	def getUri(self):
 		return self.uri
+
+	def setUrl(self, url):
+		self.url = url
+
+	def getUrl(self):
+		return self.url
 
 	def setPoster(self, poster):
 		self.poster = poster
@@ -46,26 +52,20 @@ class Enrichment(Annotation):
 	def getDate(self):
 		return self.date
 
+	def setEnrichmentType(self, enrichmentType):
+		self.enrichmentType = enrichmentType
+
+	def getEnrichmentType(self):
+		return self.enrichmentType
+
 	def setEntities(self, entities):
 		self.entities = entities
 
 	def getEntities(self):
 		return self.entities
 
-	def setSocialInteraction(self, socialInteraction):
-		self.socialInteraction = socialInteraction
+	def setAdditionalProperties(self, additionalProperties):
+		self.additionalProperties = additionalProperties
 
-	def getSocialInteraction(self):
-		return self.socialInteraction
-
-	def setDCType(self, DCType):
-		self.DCType = DCType
-
-	def getDCType(self):
-		return self.DCType
-
-	def setUrl(self, url):
-		self.url = url
-
-	def getUrl(self):
-		return self.url
+	def getAdditionalProperties(self):
+		return additionalProperties

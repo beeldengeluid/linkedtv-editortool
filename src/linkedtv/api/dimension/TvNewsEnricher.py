@@ -35,6 +35,7 @@ import urllib
 import httplib2
 from datetime import datetime, date, timedelta
 
+from linkedtv.model import Enrichment
 from linkedtv.api.dimension.DimensionService import DimensionService
 
 class TvNewsEnricher(DimensionService):
@@ -111,5 +112,35 @@ class TvNewsEnricher(DimensionService):
 			return url
 		return None
 
+	"""
+	"source":{
+            "name":"DW.DE"
+         },
+         "title":"Suicide attack in Afghanistan kills security officials | News | DW.DE ...",
+         "url":"http://www.dw.de/suicide-attack-in-afghanistan-kills-security-officials/a-16552650",
+         "media":{
+            "thumbnail":"https://encrypted-tbn0.gstatic.com/images?q\u003dtbn:ANd9GcT8oIVSFtXnJgqBFAHAJMAjNMdATPibhSiGT7uxjXiHfaWSUdWDv26jZ6M",
+            "url":"http://www.dw.de/image/0,,16123185_302,00.jpg",
+            "type":"image"
+         },
+         "textURL":"",
+         "text":"Jan 25, 2013 ... Kunduz is one of the sites of a major German military, or Bundeswehr, base in \nnortheastern Afghanistan. The German government plans, ..."
+      },
+	"""
 	def __formatResponse(self, data, dimension):
-		return { 'enrichments' : simplejson.loads(data)}
+		data = simplejson.loads(data)
+		enrichments = []
+		for e in data:
+			enrichment = Enrichment(
+				e['title'],
+				url=e['url']
+			)
+			if e.has_key('source'):
+				enrichment.setSource(e['source']['name'])
+			if e.has_key('media'):
+				if e['media'].has_key('thumbnail'):
+					enrichment.setPoster(e['media']['thumbnail'])
+				if e['media'].has_key('type'):
+					enrichment.setEnrichmentType(e['media']['type'])
+			enrichments.append(enrichment)
+		return { 'enrichments' : enrichments}
