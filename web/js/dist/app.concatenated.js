@@ -1067,14 +1067,15 @@ linkedtv.run(function($rootScope, conf) {
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data
 		var eSources = [];//always empty in this case
-		console.debug(data);
 		_.each(data, function(e) {
 			var enrichment = {
-				label : e.label,
+				label : e.label ? e.label : 'No label',
 				url : e.url,
 				description : e.description,
 				poster : e.poster,
-				entities : e.entities
+				entities : e.entities,
+				date : e.date ? e.date : 'No date',
+				creator : e.creator ? e.creator : 'Creator unknown'
 			}
 			//add the source to the list of possible sources and attach it to the retrieved enrichment
 			if(sources.indexOf(e.source) == -1) {
@@ -1976,8 +1977,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.addEnrichment = function(enrichment) {
 		//add the active entities so it's clear on what basis the enrichment was found
 		var entities = []
-		_.each($scope.activeEntities, function(e, i){
-			console.debug(e)
+		_.each($scope.activeEntities, function(e, i) {
 			entities.push(e);
 		});
 		enrichment.entities = entities;

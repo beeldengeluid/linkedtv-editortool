@@ -52,14 +52,15 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data
 		var eSources = [];//always empty in this case
-		console.debug(data);
 		_.each(data, function(e) {
 			var enrichment = {
-				label : e.label,
+				label : e.label ? e.label : 'No label',
 				url : e.url,
 				description : e.description,
 				poster : e.poster,
-				entities : e.entities
+				entities : e.entities,
+				date : e.date ? e.date : 'No date',
+				creator : e.creator ? e.creator : 'unknown'
 			}
 			//add the source to the list of possible sources and attach it to the retrieved enrichment
 			if(sources.indexOf(e.source) == -1) {

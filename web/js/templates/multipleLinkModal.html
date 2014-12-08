@@ -7,7 +7,7 @@
 	<!-- The selected enrichments for this dimension selectedEnrichments-->
 	<div class="row">
 		<div class="col-md-12">
-			<foldable title="Saved enrichments" collapsed="savedEnrichmentsCollapsed"></foldable>
+			<foldable title="Saved enrichments (double click item to remove)" collapsed="savedEnrichmentsCollapsed"></foldable>
 			<div collapse="savedEnrichmentsCollapsed">
 
 				<div ng-show="savedEnrichments.length == 0" class="row" ng-show="nothingFound">
@@ -137,7 +137,7 @@
 <div class="row" ng-show="enrichments">
 
 	<div class="col-md-12">
-		<foldable title="Found enrichments" collapsed="enrichmentsCollapsed"></foldable>
+		<foldable title="Found enrichments (double click item to add)" collapsed="enrichmentsCollapsed"></foldable>
 		<div collapse="enrichmentsCollapsed">
 
 			<!-- The dropdown for filtering the found enrichments -->
@@ -178,7 +178,9 @@
 				<div class="col-md-12">
 					<ul class="enrichments">
 						<li ng-repeat="e in enrichments">
-							<div class="thumbnail" ng-if="e.url" ng-click="addEnrichment(e)" title="{{e.description}}">
+							<div class="thumbnail" ng-if="e.url" ng-dblclick="addEnrichment(e)"
+								title="{{e.description}} - creator: {{e.creator}}">
+								{{e.date}}
 								<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 
 								<img ng-if="!e.poster" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzEiIGhlaWdodD0iMTgwIj48cmVjdCB3aWR0aD0iMTcxIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9Ijg1LjUiIHk9IjkwIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+MTcxeDE4MDwvdGV4dD48L3N2Zz4=" alt="{{e.label}}">

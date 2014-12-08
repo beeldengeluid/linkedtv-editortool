@@ -142,6 +142,8 @@ class EuropeanaAPI(DimensionService):
 					)
 					if e.has_key('dataProvider'):
 						enrichment.setSource(e['dataProvider'][0])
+					if e.has_key('year'):
+						enrichment.setDate(e['year'][0])
 					if e.has_key('edmPreview'):
 						enrichment.setPoster(e['edmPreview'][0])
 					enrichments.append(enrichment)
