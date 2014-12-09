@@ -1075,7 +1075,7 @@ linkedtv.run(function($rootScope, conf) {
 				poster : e.poster,
 				entities : e.entities,
 				date : e.date ? e.date : 'No date',
-				creator : e.creator ? e.creator : 'Creator unknown'
+				creator : e.creator ? e.creator : 'unknown'
 			}
 			//add the source to the list of possible sources and attach it to the retrieved enrichment
 			if(sources.indexOf(e.source) == -1) {
@@ -1970,6 +1970,12 @@ angular.module('linkedtv').controller('informationCardModalController',
 			$scope.$apply(function() {
 				$scope.enrichmentsCollapsed = true;
 				$scope.nothingFound = true;
+				$scope.enrichments = [];
+				$scope.allEnrichments = [];
+				$scope.enrichmentSources = [];
+				$scope.enrichmentEntitySources = [];
+				$scope.activeEnrichmentSource = null;
+				$scope.activeEnrichmentEntitySource = null;
 			});
 		}
 	}

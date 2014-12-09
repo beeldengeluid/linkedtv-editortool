@@ -69,3 +69,19 @@ class Enrichment(Annotation):
 
 	def getAdditionalProperties(self):
 		return additionalProperties
+
+	def __eq__(self, other):
+		if self.uri:
+			return self.uri == other.uri
+		elif self.url:
+			return self.url == other.url
+		else:
+			return self.label == other.label
+
+	def __hash__(self):
+		if self.uri:
+			return hash(self.uri)
+		elif self.url:
+			return hash(self.url)
+		else:
+			return hash(self.label)

@@ -78,6 +78,12 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 			$scope.$apply(function() {
 				$scope.enrichmentsCollapsed = true;
 				$scope.nothingFound = true;
+				$scope.enrichments = [];
+				$scope.allEnrichments = [];
+				$scope.enrichmentSources = [];
+				$scope.enrichmentEntitySources = [];
+				$scope.activeEnrichmentSource = null;
+				$scope.activeEnrichmentEntitySource = null;
 			});
 		}
 	}

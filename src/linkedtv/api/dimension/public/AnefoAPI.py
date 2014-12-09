@@ -16,18 +16,30 @@ class AnefoAPI(DimensionService):
 		self.BASE_URL = 'http://www.gahetna.nl'
 		self.NAMESPACE_DC = 'http://purl.org/dc/elements/1.1/'
 		self.NAMESPACE_ESE = 'http://www.europeana.eu/schemas/ese/'
+		self.DESIRED_AMOUNT_OF_RESULTS = 20
 
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
-			return self.__formatResponse(self.__search(query, entities, dimension), dimension)
+			enrichments = self.__formatResponse(
+				self.__search(query, entities, dimension, True, self.DESIRED_AMOUNT_OF_RESULTS),
+				dimension
+			)
+			if len(enrichments) < self.DESIRED_AMOUNT_OF_RESULTS:
+				numResults = self.DESIRED_AMOUNT_OF_RESULTS - len(enrichments)
+				moreEnrichments = self.__formatResponse(
+					self.__search(query, entities, dimension, False, numResults),
+					dimension
+				)
+				enrichments = list(set(enrichments) | set(moreEnrichments))
+			return { 'enrichments' : enrichments}
 		return None
 
 	def __isValidDimension(self, dimension):
 		return True
 
-	def __search(self, query, entities, dimension):
+	def __search(self, query, entities, dimension, fieldQuery, numResults):
 		http = httplib2.Http()
-		url = self.__getServiceUrl(query, entities, dimension)
+		url = self.__constructServiceQueryUrl(query, entities, dimension, fieldQuery, numResults)
 		if url:
 			headers = {'Accept':'text/html,application/xhtml+xml,application/xml'}
 			resp, content = http.request(url, 'GET', headers=headers)
@@ -35,21 +47,40 @@ class AnefoAPI(DimensionService):
 				return content
 		return None
 
-	def __getServiceUrl(self, query, entities, dimension):
+	def __constructServiceQueryUrl(self, query, entities, dimension, fieldQuery, numResults):
 		#Trefwoorden: Geografisch_trefwoord:
-		if query == '':
-			query = ' '.join(e['label'] for e in entities)
-		query = urllib.quote(query.encode('utf8'))
-		params = 'searchTerms='
-		if entities and len(entities) > 0:
-			for e in entities:
-				params += urllib.quote(e['label'])
+		if query == '' and len(entities) > 0:
+			if fieldQuery:
+				query = self.__constructFieldQuery(entities)
+			else:
+				query = self.__constructQuery(entities)
 		else:
-			params += query
-		params += '&count=10&startIndex=1';
+			query = urllib.quote(query.encode('utf8'))
+		params = 'searchTerms=%s' % query
+		params += '&count=%d&startIndex=1' % numResults;
 		url = '%s/beeldbank-api/opensearch/?%s' % (self.BASE_URL, params)
 		print url
 		return url
+
+	def __constructFieldQuery(self, entities):
+		queryParts = []
+		for e in entities:
+			queryField = None
+			if e.has_key('type'):
+				if e['type'] == 'Location':
+					queryField = 'Geografisch_trefwoord'
+			if queryField:
+				queryParts.append('%s:"%s"' % (queryField, e['label']))
+			else:
+				queryParts.append('"%s"' % e['label'])
+		return urllib.quote(' '.join(queryParts).encode('utf8'))
+
+	def __constructQuery(self, entities):
+		queryParts = []
+		for e in entities:
+			queryParts.append('"%s"' % urllib.quote(e['label'].encode('utf8')))
+		return ' '.join(queryParts)
+
 
 	""" SOURCE DATA:
 	 <item>
@@ -104,7 +135,6 @@ class AnefoAPI(DimensionService):
 	"""
 	#the data returnde from Anefo is in some RSS format
 	def __formatResponse(self, data, dimension):
-		print data
 		enrichments = []
 		root = etree.fromstring(data)
 		items = root.xpath('//item')
@@ -157,12 +187,11 @@ class AnefoAPI(DimensionService):
 			enrichments.append(enrichment)
 			count += 1
 
-		return { 'enrichments' : enrichments}
+		return enrichments
 
 	def __getPoster(self, posters):
 		poster = None
 		for p in posters:
-			print p.text
 			if p.text.find('150x150') != -1:
 				poster = p.text
 				break
