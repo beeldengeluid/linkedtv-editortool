@@ -10,8 +10,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.context_processors import csrf
 from django.template import RequestContext
 
-from linkedtv.api.external.dbpedia.AutoComplete import AutoComplete
-from linkedtv.api.external.dbpedia.EntityProxy import EntityProxy
+from linkedtv.api.vocabulary.dbpedia.AutoComplete import AutoComplete
+from linkedtv.api.vocabulary.dbpedia.EntityProxy import EntityProxy
+from linkedtv.api.vocabulary.gtaa.OpenSKOSHandler import OpenSKOSHandler
 from linkedtv.api.external.EntityExpansionService import EntityExpansionService
 
 from linkedtv.api.Api import *
@@ -191,12 +192,24 @@ External APIs from LinkedTV WP2
 
 """This is called when using a DBPedia autocomplete field in the UI"""
 def autocomplete(request):
-	prefix = request.GET.get('term', None)
-	ac = AutoComplete()
-	options = ac.autoComplete(prefix)
-	print options;
-	resp = simplejson.dumps(options)
-	return HttpResponse(resp, mimetype='application/json')
+	term = request.GET.get('term', None)
+	vocab = request.GET.get('vocab', 'DBpedia')
+	conceptScheme = request.GET.get('cs', None) #only for GTAA
+	options = None
+	if term:
+		if vocab == 'DBpedia':
+			ac = AutoComplete()
+			options = ac.autoComplete(term)
+			if options:
+				resp = simplejson.dumps(options)
+				return HttpResponse(resp, mimetype='application/json')
+			else:
+				return HttpResponse(self.__getErrorMessage('Nothing found'), mimetype='application/json')
+		elif vocab == 'GTAA':
+			handler = OpenSKOSHandler()
+			resp = handler.autoCompleteTable(term.lower(), conceptScheme)
+			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+	return HttpResponse(self.__getErrorMessage('Please specify a search term'), mimetype='application/json')
 
 def entityproxy(request):
 	uri = request.GET.get('uri', None)

@@ -58,8 +58,10 @@
                             <input class="form-control" ng-model="activeTemplate.properties[$index].value">
                         </div>
                         <div ng-if="p.type == 'entity'" class="form-group">
-                            <dbpedia-autocomplete target="auto_{{$index}}" entity="activeTemplate.properties[$index].value">
-                            </dbpedia-autocomplete>
+                            <vocabulary-autocomplete
+                            target="auto_{{$index}}"
+                            entity="activeTemplate.properties[$index].value"
+                            vocabulary="{{dimension.service.params.vocabulary}}"></vocabulary-autocomplete>
                         </div>
                         <div ng-if="p.type == 'entity'" class="form-group">
                             <input class="form-control" ng-model="activeTemplate.properties[$index].value.label"
@@ -122,11 +124,15 @@
                 <!-- search for entities on DBpedia -->
                 <div class="row">
                     <div class="col-md-12">
-                        <h4>Search DBpedia</h4>
+                        <h4>Search Entities</h4>
                         <form class="form-inline" role="form">
                             <div class="form-group">
                                 <label>Search</label>
-                                <dbpedia-autocomplete target="auto_main" entity="foundEntity"></dbpedia-autocomplete>
+                                <vocabulary-autocomplete
+                                target="auto_main"
+                                entity="foundEntity"
+                                vocabulary="{{dimension.service.params.vocabulary}}"
+                                ></vocabulary-autocomplete>
                                 <div ng-if="foundEntity" ng-click="fetchExtraInfo(foundEntity)"
                                     class="label label-default entity" title="{{foundEntity.label}}">
                                     {{foundEntity.label}}

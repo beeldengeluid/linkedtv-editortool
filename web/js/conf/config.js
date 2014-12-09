@@ -94,7 +94,10 @@ var rbbConfig = {
 			label : 'Mehr Zu',
 			linkedtvDimension : 'InDepth',
 			service : {
-				id :'informationCards'
+				id :'informationCards',
+				params : {
+					vocabulary : 'DBpedia'
+				}
 			}
 		},
 		{
@@ -157,7 +160,10 @@ var tkkConfig = {
 			label : 'About',
 			linkedtvDimension : 'ArtObject',
 			service : {
-				id :'informationCards'
+				id :'informationCards',
+				params : {
+					vocabulary : 'DBpedia'
+				}
 			}
 		},
 		{
@@ -213,7 +219,10 @@ var trialConfig = {
 			label : 'Main Topics',
 			linkedtvDimension : 'Background',
 			service : {
-				id : 'informationCards'
+				id : 'informationCards',
+				params : {
+					vocabulary : 'DBpedia'
+				}
 			}
 		},
 		{
@@ -222,6 +231,14 @@ var trialConfig = {
 			linkedtvDimension : 'Background',
 			service : {
 				id : 'TvEnricher'
+			}
+		},
+		{
+			id : 'anefo_1',
+			label : 'Related photos',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'AnefoAPI'
 			}
 		}
 	]
