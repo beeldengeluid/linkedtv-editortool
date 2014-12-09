@@ -20,14 +20,15 @@ angular.module('linkedtv').directive('vocabularyAutocomplete', function(){
 		templateUrl : '/site_media/js/templates/vocabularyAutocomplete.html',
 
 		controller : function($scope, $element) {
-			$scope.DBPEDIA_BUTTON_MAPPINGS = {'who' : 'orange', 'unknown' : 'red', 'where' : 'blue',
-				'what' : 'yellow', 'Freebase' : 'pink', 'DBpedia' : 'green', 'NERD' : 'yellow'
+			$scope.DBPEDIA_BUTTON_MAPPINGS = {'who' : 'orange', 'unknown' : 'crimson', 'where' : 'dodgerblue',
+				'what' : 'yellow', 'Freebase' : 'pink', 'DBpedia' : 'yellowgreen', 'NERD' : 'yellow'
 			};
 
-			$scope.GTAA_BUTTON_MAPPINGS = {'Geografisch' : 'brown', 'Naam' : 'green',
+			$scope.GTAA_BUTTON_MAPPINGS = {'Geografisch' : 'dodgerblue', 'Naam' : 'yellowgreen',
                 'Persoon' : 'wheat', 'B&G Onderwerp' : 'grey', 'Onderwerp' : 'orange', 'Maker' : 'wheat',
-                'Genre' : 'yellow', '' : 'white'};
+                'Genre' : 'yellow', '' : 'whitesmoke'};
 
+            //TODO properly style the pull down menu!!
 			$scope.RENDER_OPTIONS = {
 				ORIGINAL :  $.ui.autocomplete.prototype._renderItem,
 
@@ -82,11 +83,11 @@ angular.module('linkedtv').directive('vocabularyAutocomplete', function(){
 						var l = v_arr[0];
 						var t = v_arr[1];
 						var c = v_arr[2];
-						var dbpediaURL = ui.item.value;
+						var vocabURI = ui.item.value;
 
 						//stores the selected DBpedia entry
 						$scope.$apply(function() {
-							$scope.entity = {label : l, type : t, category : c, uri : dbpediaURL};
+							$scope.entity = {label : l, type : t, category : c, uri : vocabURI};
 						});
 						this.value = '';
 						return false;
