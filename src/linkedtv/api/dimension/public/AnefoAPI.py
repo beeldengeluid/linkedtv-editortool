@@ -2,7 +2,6 @@
 import simplejson
 import urllib
 import httplib2
-import feedparser
 from lxml import etree
 from datetime import datetime
 

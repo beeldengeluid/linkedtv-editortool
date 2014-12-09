@@ -194,21 +194,19 @@ External APIs from LinkedTV WP2
 def autocomplete(request):
 	term = request.GET.get('term', None)
 	vocab = request.GET.get('vocab', 'DBpedia')
-	conceptScheme = request.GET.get('cs', None) #only for GTAA
-	options = None
+	conceptScheme = request.GET.get('cs', None) #only for GTAA (not used yet!!)
 	if term:
+		options = None
 		if vocab == 'DBpedia':
 			ac = AutoComplete()
 			options = ac.autoComplete(term)
-			if options:
-				resp = simplejson.dumps(options)
-				return HttpResponse(resp, mimetype='application/json')
-			else:
-				return HttpResponse(self.__getErrorMessage('Nothing found'), mimetype='application/json')
 		elif vocab == 'GTAA':
 			handler = OpenSKOSHandler()
-			resp = handler.autoCompleteTable(term.lower(), conceptScheme)
-			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+			options = handler.autoCompleteTable(term.lower(), conceptScheme)
+		if options:
+			return HttpResponse(simplejson.dumps(options), mimetype='application/json')
+		else:
+			return HttpResponse(self.__getErrorMessage('Nothing found'), mimetype='application/json')
 	return HttpResponse(self.__getErrorMessage('Please specify a search term'), mimetype='application/json')
 
 def entityproxy(request):
