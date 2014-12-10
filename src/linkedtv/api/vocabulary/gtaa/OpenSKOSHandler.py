@@ -2,6 +2,7 @@ import json
 import urllib2
 import httplib2
 import urllib
+import simplejson
 from subprocess import *
 from django.conf import settings
 
@@ -20,7 +21,6 @@ class OpenSKOSHandler():
     def __init__(self):
         print ' -- Initializing OpenSKOSHandler -- '
         self.name = 'openskos'
-        #self.OPENSKOS_API = 'http://openskos.org/api'
         self.OPENSKOS_API = 'http://openskos.beeldengeluid.nl/api'
         self.GTAA_TYPE_MAPPINGS = {'http://data.beeldengeluid.nl/gtaa/GeografischeNamen' : 'Geografisch', 'http://data.beeldengeluid.nl/gtaa/Namen' : 'Naam',
                 'http://data.beeldengeluid.nl/gtaa/Persoonsnamen' : 'Persoon', 'http://data.beeldengeluid.nl/gtaa/OnderwerpenBenG' : 'B&G Onderwerp',
@@ -37,10 +37,10 @@ class OpenSKOSHandler():
 
     def autoCompleteTable(self, text, conceptScheme = None, scopeNoteSearch = None, rows = 250):
         if(text and len(text) > 0):
-            text = self.toLuceneFriendlyString(text)
+            text = self.__toLuceneFriendlyString(text)
             q = None
             queryScope = None
-            s = self.toSearchString(text)
+            s = self.__toSearchString(text)
             if conceptScheme:
                 if conceptScheme == 'http://data.beeldengeluid.nl/gtaa/Persoonsnamen':
                     queryScope = 'inScheme:"%s" OR inScheme:"%s"' % (conceptScheme, 'http://data.beeldengeluid.nl/gtaa/Maker')
@@ -74,7 +74,7 @@ class OpenSKOSHandler():
                 try:
                     numFound = cd['response']['numFound']
                     cd = cd['response']['docs']
-                    resp = self.toAutoCompleteResponseList(cd)
+                    resp = self.__toAutoCompleteResponseList(cd)
                     #return json.dumps(resp)
                     return resp
                 except KeyError, ke:
@@ -85,88 +85,40 @@ class OpenSKOSHandler():
                     print 'autocomplete ValueError'
         return json.dumps({'error' : 'Could not find anything'})
 
-    def toLuceneFriendlyString(self, s):
-        specialChars = ['+', '-', '&&', '||', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', '\\']
-        t = s
-        if t:
-            for c in specialChars:
-                if s.find(c) != -1:
-                    t = t.replace(c, '\%s' % c)
-        return t
-
-    """
-    def sendSearchRequest(self, params):
-        url = '%s/find-concepts' % self.OPENSKOS_API
-        url_values = urllib.urlencode(params)
-        full_url = url + '?' + url_values
-        print full_url
-        respData = urllib2.urlopen(full_url)
-        resp = respData.read()
-        return resp
-    """
-
-    def __sendSearchRequest(self, params):
+    def getConceptDetails(self, uri, delveDeeper = True, format='json'):
+        #http://openskos.beeldengeluid.nl/api/find-concepts/?id=http://data.beeldengeluid.nl/gtaa/215866&format=json
+        if not uri:
+            return None
         http = httplib2.Http()
-        url = '%s/find-concepts' % self.OPENSKOS_API
-        url_values = urllib.urlencode(params)
-        url = url + '?' + url_values
+        url = '%s/find-concepts?id=%s&format=%s' % (self.OPENSKOS_API, uri, format)
         if url:
             headers = {'Accept':'application/json'}
             resp, content = http.request(url, 'GET', headers=headers)
+            print resp
+            print content
             if content:
-                return content
+                if delveDeeper:
+                    return simplejson.dumps({ "%s" % uri : self.__getRelatedConceptInfo(content) })
+                else:
+                    return content
         return None
 
-    def toSearchString(self, s):
-        if s:
-            s = s.replace('+', ' ')
-            if s[len(s) -1:len(s)] == ' ':
-                s = s[0:len(s) -1]
-        return s
+    #TODO test this
+    def __getRelatedConceptInfo(self, data):
+        data = simplejson.loads(data)
+        for key, value in data.iteritems():
+            if key in ['broader', 'SemanticRelations', 'broadMatch', 'related']:
+                concepts = []
+                for concept in value:
+                    relatedConcept = simplejson.loads(self.getConceptDetails(concept, False))
+                    if relatedConcept.has_key('prefLabel@nl'):
+                        concepts.append({
+                            'value' : relatedConcept['prefLabel@nl'][0],
+                            'uri' : concept
+                        })
+                data[key] = concepts
+        return data
 
-    def toAutoCompleteResponseList(self, resultList):
-        results = []
-        for item in resultList:
-            correctScheme = True
-            uri = prefLabel = inSchemes = ''
-            notes = []
-            if item.has_key('uri'):
-                uri = item['uri']
-                if item.has_key('prefLabel'):
-                    prefLabel = ' '.join(item['prefLabel'])
-                if item.has_key('inScheme'):
-                    schemes = []
-                    for s in item['inScheme']:
-                        if self.GTAA_TYPE_MAPPINGS.has_key(s):
-                            if s == 'http://data.beeldengeluid.nl/gtaa/OnderwerpenBenG':
-                                correctScheme = False
-                                break
-                            schemes.append(self.GTAA_TYPE_MAPPINGS[s])
-                        else:
-                            correctScheme = False
-                            schemes.append(self.NON_GTAA)
-                            break
-                    inSchemes = ' '.join(schemes)
-                if item.has_key('note'):
-                    notes.append(','.join(item['note']))
-                if item.has_key('example'):
-                    notes.append(','.join(item['example']))
-                if item.has_key('scopeNote'):
-                    notes.append(','.join(item['scopeNote']))
-
-                """Don't add results if it's a person without a scope note. The rest will be added"""
-                if not (inSchemes.find('Persoon') != -1 and not item.has_key('scopeNote')) :
-                    if(correctScheme):
-                        results.append({'value': uri, 'label' : '%s|%s|%s' % (prefLabel, inSchemes, ' '.join(notes))})
-        return results
-
-    def getConceptDetails(self, prefLabel, format='json'):
-        if prefLabel == None:
-            return None
-        params = {'q' : '"%s"' % prefLabel, 'format' : format}#, 'fl' : 'uri'
-        print 'Getting concept details for: %s' % prefLabel
-        resp = self.http.__sendRequest('%s/find-concepts' % self.OPENSKOS_API, params, 'GET')
-        return resp
 
     def findConcepts(self, q, format = 'json'):
         if q == None:
@@ -247,7 +199,7 @@ class OpenSKOSHandler():
                                         inScheme = res[u'inScheme']
                                     if u'score' in res:
                                         score = res[u'score']
-                                    if self.disambiguate(s, label):
+                                    if self.__disambiguate(s, label):
                                         entity = {
                                             'text' : label,
                                             'originalText' : s,
@@ -273,7 +225,73 @@ class OpenSKOSHandler():
                 print '%' * 100
         return nes
 
-    def disambiguate(self, originalText, resultingText):
+    def __toLuceneFriendlyString(self, s):
+        specialChars = ['+', '-', '&&', '||', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', '\\']
+        t = s
+        if t:
+            for c in specialChars:
+                if s.find(c) != -1:
+                    t = t.replace(c, '\%s' % c)
+        return t
+
+    def __sendSearchRequest(self, params):
+        http = httplib2.Http()
+        url = '%s/find-concepts' % self.OPENSKOS_API
+        url_values = urllib.urlencode(params)
+        url = url + '?' + url_values
+        if url:
+            headers = {'Accept':'application/json'}
+            resp, content = http.request(url, 'GET', headers=headers)
+            if content:
+                return content
+        return None
+
+    def __toSearchString(self, s):
+        if s:
+            s = s.replace('+', ' ')
+            if s[len(s) -1:len(s)] == ' ':
+                s = s[0:len(s) -1]
+        return s
+
+    def __toAutoCompleteResponseList(self, resultList):
+        results = []
+        for item in resultList:
+            correctScheme = True
+            uri = prefLabel = inSchemes = ''
+            notes = []
+            if item.has_key('uri'):
+                uri = item['uri']
+                if item.has_key('prefLabel'):
+                    prefLabel = ' '.join(item['prefLabel'])
+                if item.has_key('inScheme'):
+                    schemes = []
+                    for s in item['inScheme']:
+                        if self.GTAA_TYPE_MAPPINGS.has_key(s):
+                            if s == 'http://data.beeldengeluid.nl/gtaa/OnderwerpenBenG':
+                                correctScheme = False
+                                break
+                            schemes.append(self.GTAA_TYPE_MAPPINGS[s])
+                        else:
+                            correctScheme = False
+                            schemes.append(self.NON_GTAA)
+                            break
+                    inSchemes = ' '.join(schemes)
+                if item.has_key('note'):
+                    notes.append(','.join(item['note']))
+                if item.has_key('example'):
+                    notes.append(','.join(item['example']))
+                if item.has_key('scopeNote'):
+                    notes.append(','.join(item['scopeNote']))
+
+                """Don't add results if it's a person without a scope note. The rest will be added"""
+                if not (inSchemes.find('Persoon') != -1 and not item.has_key('scopeNote')) :
+                    if(correctScheme):
+                        results.append({'value': uri, 'label' : '%s|%s|%s' % (prefLabel, inSchemes, ' '.join(notes))})
+        return results
+
+
+
+    def __disambiguate(self, originalText, resultingText):
         """o_arr = originalText.split(' ')
         r_arr = resultingText.split(' ')
         return len(o_arr) == len(r_arr)

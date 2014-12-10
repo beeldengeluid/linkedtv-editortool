@@ -162,7 +162,7 @@ var tkkConfig = {
 			service : {
 				id :'informationCards',
 				params : {
-					vocabulary : 'DBpedia'
+					vocabulary : 'GTAA'
 				}
 			}
 		},

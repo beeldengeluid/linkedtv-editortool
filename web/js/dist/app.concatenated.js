@@ -152,7 +152,7 @@ var tkkConfig = {
 			service : {
 				id :'informationCards',
 				params : {
-					vocabulary : 'DBpedia'
+					vocabulary : 'GTAA'
 				}
 			}
 		},
@@ -1135,14 +1135,14 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 }]);;angular.module('linkedtv').factory('entityProxyService', ['$rootScope', 'conf', function($rootScope, conf){
-	
 
-	function fetch(dbpediaUri, callback) {		
+
+	function fetch(uri, callback) {
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/entityproxy?uri=' + dbpediaUri + '&lang=' + conf.languageMap[$rootScope.provider],
-			success : function(json) {				
+			url : '/entityproxy?uri=' + uri + '&lang=' + conf.languageMap[$rootScope.provider],
+			success : function(json) {
 				callback(json.error ? null : formatResponse(json));
 			},
 			error : function(err) {
@@ -1152,7 +1152,8 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	function formatResponse(data) {		
+	function formatResponse(data) {
+		console.debug(data);
 		var info = [];
 		var thumbs = [];
 		for (key in data) {
@@ -1161,13 +1162,18 @@ linkedtv.run(function($rootScope, conf) {
 				prop = data[key][k];
 				var values = [];
 				var uris = [];
-				if(prop.length > 0) {
-					for(p in prop) {
-						values.push(prop[p].value || prop[p]);
-						uris.push(prop[p].uri);
-					}
-					if(key !== 'thumb') {
-						info.push({index : 0, key : k, values : values, uris : uris});
+				if(typeof(prop) == 'string') {
+					values.push(prop);
+					info.push({index : 0, key : k, values : values , uris : uris});
+				} else if(typeof(prop) == "object") {
+					if(prop.length > 0) {
+						for(p in prop) {
+							values.push(prop[p].value || prop[p]);
+							uris.push(prop[p].uri);
+						}
+						if(key !== 'thumb') {
+							info.push({index : 0, key : k, values : values, uris : uris});
+						}
 					}
 				}
 			}
@@ -1183,7 +1189,7 @@ linkedtv.run(function($rootScope, conf) {
 				return info[i].values;
 			}
 		}
-		return null;
+		return [];
 	}
 
 
@@ -2327,6 +2333,7 @@ angular.module('linkedtv').directive('vocabularyAutocomplete', function(){
                 'Persoon' : 'wheat', 'B&G Onderwerp' : 'grey', 'Onderwerp' : 'orange', 'Maker' : 'wheat',
                 'Genre' : 'yellow', '' : 'whitesmoke'};
 
+            //TODO properly style the pull down menu!!
 			$scope.RENDER_OPTIONS = {
 				ORIGINAL :  $.ui.autocomplete.prototype._renderItem,
 
@@ -2345,7 +2352,6 @@ angular.module('linkedtv').directive('vocabularyAutocomplete', function(){
 
 				GTAA : function(ul, item) {
 					$(ul).css('z-index', '999999'); // needed when displayed within an Angular modal
-					$(ul).css('background-color', '#FFEE88');
 					var v_arr = item.label.split('\|');
 					var l = v_arr[0]; //prefLabel
 					var t = v_arr[1]; //inScheme

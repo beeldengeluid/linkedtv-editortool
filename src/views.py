@@ -190,7 +190,7 @@ External APIs from LinkedTV WP2
 *********************************************************************************************************
 """
 
-"""This is called when using a DBPedia autocomplete field in the UI"""
+#TODO move the logic in this function to a dedicated handler class
 def autocomplete(request):
 	term = request.GET.get('term', None)
 	vocab = request.GET.get('vocab', 'DBpedia')
@@ -209,12 +209,17 @@ def autocomplete(request):
 			return HttpResponse(self.__getErrorMessage('Nothing found'), mimetype='application/json')
 	return HttpResponse(self.__getErrorMessage('Please specify a search term'), mimetype='application/json')
 
+#TODO move the logic in this function to a dedicated handler class
 def entityproxy(request):
 	uri = request.GET.get('uri', None)
 	lang = request.GET.get('lang', None)
 	if uri:
-		ep = EntityProxy()
-		resp = ep.fetch(uri, lang)
+		if uri.find('http://data.beeldengeluid.nl/gtaa') == -1:
+			ep = EntityProxy()
+			resp = ep.fetch(uri, lang)
+		else:
+			skos = OpenSKOSHandler()
+			resp = skos.getConceptDetails(uri)
 		return HttpResponse(resp, mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide a DBPedia URI'), mimetype='application/json')
 

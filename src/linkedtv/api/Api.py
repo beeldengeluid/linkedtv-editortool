@@ -56,7 +56,7 @@ class Api():
                 #get the playout URL
                 if mr.has_key('locator'):
                     vph = VideoPlayoutHandler()
-                    playoutURL = vph.getPlayoutURL(mr['locator'], clientIP)
+                    playoutURL = 'none'#vph.getPlayoutURL(mr['locator'], clientIP)
                     mediaResource.setPlayoutUrl(playoutURL)
 
                 #set the video metadata in the mediaresource
