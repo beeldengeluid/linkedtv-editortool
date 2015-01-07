@@ -234,19 +234,18 @@ var trialConfig = {
 	]
 }
 
-//make sure to map this to the provider part in the ET URL
 var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
 	trial : trialConfig
 }
 
-
 var config = angular.module('configuration', []).constant('conf', {
 	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
-	chapterSlotsMap : {'rbb' : 8, 'sv' : 6},
-	loadingImage : '/site_media/images/loading.gif'
-});;var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
+	loadingImage : '/site_media/images/loading.gif',
+	platform : 'linkedtv'
+});
+;var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
 
 linkedtv.run(function($rootScope, conf) {
 
@@ -940,14 +939,18 @@ linkedtv.run(function($rootScope, conf) {
 		getChaptersOfResource : getChaptersOfResource
 	}
 
-}]);;angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootScope) {
+}]);;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
 
 	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
 	function getResourceData(loadData, callback) {
+		var url = '/load?id=';
+		url += $rootScope.resourceUri;
+		url += '&ld=' + (loadData ? 'true' : 'false');
+		url += '&p=' + conf.platform;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/load_ltv?id=' + $rootScope.resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
+			url : url,
 			success : function(json) {
 				callback(json);
 			},
@@ -963,7 +966,7 @@ linkedtv.run(function($rootScope, conf) {
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/load_curated_et?id=' + $rootScope.resourceUri,
+			url : '/load_curated?id=' + $rootScope.resourceUri,
 			success : function(json) {
 				callback(json.error ? null : json);
 			},
@@ -980,7 +983,7 @@ linkedtv.run(function($rootScope, conf) {
 		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
 		$.ajax({
 			type: 'POST',
-			url: '/save_et?action=' + action,
+			url: '/save?action=' + action,
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {
@@ -1307,14 +1310,16 @@ linkedtv.run(function($rootScope, conf) {
 		seek : seek
 	}
 
-}]);;angular.module('linkedtv').factory('videoSelectionService', [function(){
-	
+}]);;angular.module('linkedtv').factory('videoSelectionService', ['conf', function(conf){
+
 	function getVideosOfProvider(provider, callback) {
 		console.debug('Getting videos of provider: ' + provider);
+		var url = '/videos?cp=' + provider;
+		url += '&p=' + conf.platform;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/videos?p=' + provider,
+			url : url,
 			success : function(json) {
 				callback(json.videos);
 			},

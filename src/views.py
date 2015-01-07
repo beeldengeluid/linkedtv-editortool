@@ -70,32 +70,23 @@ REST API CALLS (loading & saving data, fetching images and video etc)
 """
 
 """This is called to fetch the data of a single media resource (including the curated data from SPARQL!!!)"""
-def load_ltv(request):
+def load(request):
+	platform = request.GET.get('p', None)
 	resourceUri = request.GET.get('id', None)
 	loadData = request.GET.get('ld', 'false') == 'true'
 	clientIP = __getClientIP(request)
-	if resourceUri:
+	if platform and resourceUri:
 		api = Api()
-		resp = api.load_ltv(resourceUri, clientIP, loadData)
+		resp = api.load(platform, resourceUri, clientIP, loadData)
 		return HttpResponse(resp, mimetype='application/json')
 	return HttpResponse(__getErrorMessage('The resource does not exist'), mimetype='application/json')
 
-"""This is called to fetch the curated data from the LinkedTV platform"""
-def load_curated_ltv(request):
-	resourceUri = request.GET.get('id', None)
-	if resourceUri:
-		api = Api()
-		resp = api.load_curated_ltv(resourceUri)
-		if resp:
-			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-	return HttpResponse(__getErrorMessage('Could not load curated data'), mimetype='application/json')
-
 """This is called to fetched the curated data from the Redis store"""
-def load_curated_et(request):
+def load_curated(request):
 	resourceUri = request.GET.get('id', None)
 	if resourceUri:
 		api = Api()
-		resp = api.load_curated_et(resourceUri)
+		resp = api.load_curated(resourceUri)
 		if resp:
 			httpResp = HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 			#to enable CORS
@@ -105,11 +96,11 @@ def load_curated_et(request):
 
 """New Saving function"""
 @csrf_exempt
-def save_et(request):
+def save(request):
 	action = request.GET.get('action', None)
 	saveData = request.body
 	api = Api()
-	resp = api.save_et(saveData)
+	resp = api.save(saveData)
 	if resp:
 		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Malformed POST data'), mimetype='application/json')
@@ -149,10 +140,11 @@ def image(request):
 	return HttpResponse("{'error' : 'Please provide the moment in time by milliseconds'}", mimetype='application/json')
 
 def videos(request):
-	p = request.GET.get('p', None)
-	if p:
+	platform = request.GET.get('p', None)
+	contentProvider = request.GET.get('cp', None)
+	if platform and contentProvider:
 		api = Api()
-		resp = api.videos(p)
+		resp = api.videos(platform, contentProvider)
 		if resp:
 			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')

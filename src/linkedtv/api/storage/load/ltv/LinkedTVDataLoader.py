@@ -1,18 +1,29 @@
 import simplejson
 from simplejson import JSONDecodeError
 import logging
+import redis
+import base64
+import urllib
+import httplib2
+from subprocess import Popen, PIPE
 
-from linkedtv.LinkedtvSettings import LTV_SAVE_GRAPH
+
+from linkedtv.api.storage.load.ltv.video.VideoPlayoutHandler import VideoPlayoutHandler
 from linkedtv.utils.TimeUtils import *
+from linkedtv.text.TextAnalyzer import *
+from linkedtv.LinkedtvSettings import LTV_SAVE_GRAPH, LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN, LTV_SPARQL_ENDPOINT, LTV_STOP_FILE
 from linkedtv.model import *
-from linkedtv.api.storage.sparql.DataLoader import DataLoader
+from linkedtv.api.storage.load.DataLoader import DataLoader
 
 logger = logging.getLogger(__name__)
 
-class AutogenDataLoader(DataLoader):
+class LinkedTVDataLoader(DataLoader):
 
 	def __init__(self):
-		super(AutogenDataLoader, self).__init__()
+		super(DataLoader, self).__init__()
+		#due to possible slow loading times, this dataloader also offers caching possibilities
+		self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
+
 		self.LINKEDTV_MEDIA_RESOURCE_PF = 'http://data.linkedtv.eu/media/'
 
 		"""Prefixes/ontologies used for the annotation body type, i.e. rdf:type"""
@@ -31,8 +42,117 @@ class AutogenDataLoader(DataLoader):
 		self.DE_WIKIPEDIA_PF = 'http://de.wikipedia.org/wiki/'
 		self.EN_WIKIPEDIA_PF = 'http://en.wikipedia.org/wiki/'
 
-	"""maps to videos API call"""
-	def getMediaResources(self, publisher, format='json'):
+	#implementation of DataLoader function
+	def loadMediaResourceData(self, resourceUri, clientIP, loadAnnotations):
+		mediaResource = MediaResource()
+		if loadAnnotations:
+			mediaResource = self.__getAllAnnotationsOfResource(resourceUri, False)
+
+		videoMetadata = self.__getVideoData(resourceUri)
+		vd = None
+		if videoMetadata:
+			vd = simplejson.loads(videoMetadata)
+		mr = None
+		if vd and mediaResource:
+			#set the all the video metadata to be sure
+			mediaResource.setVideoMetadata(vd)
+
+			#make sure there is a mediaresource
+			if vd.has_key('mediaResource'):
+				mr = vd['mediaResource']
+
+				#get the playout URL
+				if mr.has_key('locator'):
+					vph = VideoPlayoutHandler()
+					playoutURL = vph.getPlayoutURL(mr['locator'], clientIP)
+					mediaResource.setPlayoutUrl(playoutURL)
+
+				#set the video metadata in the mediaresource
+				mediaResource.setTitle(mr['titleName'])
+				mediaResource.setDate(self.__getDateFromVideoTitle(mr['titleName']))
+
+				if mr.has_key('mediaResourceRelationSet'):
+					for mrr in mr['mediaResourceRelationSet']:
+						if mrr['relationType'] == 'thumbnail-locator':
+							mediaResource.setThumbBaseUrl(mrr['relationTarget'])
+						elif mrr['relationType'] == 'srt':
+							mediaResource.setSrtUrl(mrr['relationTarget'])
+
+		resp = simplejson.dumps(mediaResource, default=lambda obj: obj.__dict__)
+		return resp
+
+	#implementation of DataLoader function
+	def loadMediaResources(self, provider):
+		videos = []
+		videoUris = self.__loadMediaResources(provider)
+		vd = None
+		video = None
+		thumbBaseUrl = None
+		for uri in videoUris['videos']:
+			vd = self.__getVideoData(uri)
+			if vd:
+				vd = simplejson.loads(vd)
+				if vd['mediaResource']:
+					if vd['mediaResource'].has_key('mediaResourceRelationSet') and vd['mediaResource']['mediaResourceRelationSet']:
+						for mrr in vd['mediaResource']['mediaResourceRelationSet']:
+							if mrr['relationType'] == 'thumbnail-locator':
+								thumbBaseUrl = mrr['relationTarget']
+					video = {
+						'id' : vd['mediaResource']['id'],
+						'title' : vd['mediaResource']['titleName'],
+						'date' : self.__getDateFromVideoTitle(vd['mediaResource']['titleName']),
+						'locator' : vd['mediaResource']['locator'],
+						'thumbBaseUrl' : thumbBaseUrl,
+						'dateInserted' : vd['mediaResource']['dateInserted']#TODO convert to pretty date
+					}
+					videos.append(video)
+		return {'videos' : videos}
+
+	#directly uses the linkedTV platform
+	def __getVideoData(self, resourceUri):
+		pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))
+		http = httplib2.Http()
+		url = 'http://api.linkedtv.eu/mediaresource/%s' % resourceUri
+		headers = {
+		'Accept' : 'application/json',
+		'Authorization' : 'Basic %s' % pw,
+		}
+		resp, content = http.request(url, 'GET', headers=headers)
+		if resp and resp['status'] == '200':
+			return content
+			return None
+
+	def __getDateFromVideoTitle(self, title):
+		#e.g. TITLE= rbb AKTUELL vom 26.01.2013 Teil 2 - Kein Zug fur Meyenburg
+		date = None
+		if title:
+			t_arr = title.split(' ')
+			for t in t_arr:
+				if t.find('.') != -1:
+					d_arr = t.split('.')
+					if len(d_arr) == 3:
+						date = '%s%s%s' % (d_arr[2], d_arr[1], d_arr[0])
+						break
+						return date
+
+	def __getAllAnnotationsOfResource(self, resourceUri, fetchFromCache=False):
+		print 'Getting %s from the API or cache' % resourceUri
+		data = None
+		if fetchFromCache:
+			if self.cache.exists(resourceUri):
+				print 'Exists in cache!'
+				data = simplejson.loads(self.cache.get(resourceUri))
+			else:
+				print 'No cache for you, one year!'
+				data = self.__loadMediaResourceData(MediaResource(resourceUri))
+				self.cache.set(resourceUri, simplejson.dumps(data))
+		else:
+			print 'fetching from API'
+			data = self.__loadMediaResourceData(MediaResource(resourceUri))
+			self.cache.set(resourceUri, simplejson.dumps(data, default=lambda obj: obj.__dict__))
+			return data
+
+	def __loadMediaResources(self, publisher, format='json'):
 		query = []
 		query.append('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ')
 		query.append('PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ')
@@ -51,7 +171,7 @@ class AutogenDataLoader(DataLoader):
 		query.append('?annotation oa:hasTarget ?mf . ')
 		query.append('}')
 		#print ''.join(query)
-		resp = super(AutogenDataLoader, self).sendSearchRequest(''.join(query))
+		resp = self.sendSearchRequest(''.join(query))
 		jsonData = None
 		try:
 			jsonData = simplejson.loads(resp)
@@ -72,14 +192,7 @@ class AutogenDataLoader(DataLoader):
 						locs.append(loc)
 		return {'videos' : locs}
 
-
-	"""maps to load_ltv API call"""
-	def loadMediaResource(self, mediaResourceID, locator = None):
-		mr = MediaResource(mediaResourceID)
-		mr = self.__loadAutogenMediaResourceData(mr)
-		return mr
-
-	def __loadAutogenMediaResourceData (self, mediaResource):
+	def __loadMediaResourceData (self, mediaResource):
 		"""Otherwise get query it from the SPARQL end-point"""
 		query = []
 		query.append('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ')
@@ -114,7 +227,7 @@ class AutogenDataLoader(DataLoader):
 		query.append('}')
 		print ''.join(query)
 		#logger.debug(''.join(query))
-		resp = super(AutogenDataLoader, self).sendSearchRequest(''.join(query))
+		resp = self.sendSearchRequest(''.join(query))
 		jsonData = None
 		try:
 			jsonData = simplejson.loads(resp)
@@ -146,7 +259,7 @@ class AutogenDataLoader(DataLoader):
 						annotationURI=annotationURI,
 						relevance=r,
 						confidence=c
-					))
+						))
 				elif RDFType == '%sShot' % self.LINKEDTV_ONTOLOGY_PF:
 					shots.append(Shot(
 						label,
@@ -155,7 +268,7 @@ class AutogenDataLoader(DataLoader):
 						annotationURI=annotationURI,
 						relevance=r,
 						confidence=c
-					))
+						))
 				elif RDFType == '%sChapter' % self.LINKEDTV_ONTOLOGY_PF:
 					chapters.append(Chapter(
 						label,
@@ -164,19 +277,19 @@ class AutogenDataLoader(DataLoader):
 						annotationURI=annotationURI,
 						relevance=r,
 						confidence=c
-					))
+						))
 				elif RDFType.find(self.NERD_ONTOLOGY_PF) != -1:
 					nes.append(NamedEntity(
 						label,
-						entityType=super(AutogenDataLoader, self).getNEType(DCType, RDFType, OWLSameAs),
-						subTypes=super(AutogenDataLoader, self).getDCTypes(DCType),
+						entityType=self.getNEType(DCType, RDFType, OWLSameAs),
+						subTypes=self.getDCTypes(DCType),
 						disambiguationURL=OWLSameAs,
 						start=start,
 						end=end,
 						annotationURI=annotationURI,
 						relevance=r,
 						confidence=c
-					))
+						))
 
 			#load the autogenerated enrichments
 			enrichments = self.__loadAutogenEnrichmentsOfMediaResource(mediaResource.getId())
@@ -184,7 +297,7 @@ class AutogenDataLoader(DataLoader):
 
 			#add all of the loaded data to the media resource
 			mediaResource.setConcepts(concepts)
-			mediaResource.setNamedEntities(super(AutogenDataLoader, self).filterStopWords(nes))
+			mediaResource.setNamedEntities(self.filterStopWords(nes))
 			mediaResource.setShots(shots)
 			mediaResource.setChapters(chapters)
 			mediaResource.setEnrichments(enrichments)
@@ -236,7 +349,7 @@ class AutogenDataLoader(DataLoader):
 		#query.append('OPTIONAL {?body dc:description ?desc . ?desc <http://nlp2rdf.lod2.eu/schema/string/label> ?label}')
 		query.append('}')
 		print ''.join(query)
-		resp = super(AutogenDataLoader, self).sendSearchRequest(''.join(query))
+		resp = self.sendSearchRequest(''.join(query))
 		jsonData = None
 		try:
 			jsonData = simplejson.loads(resp)
@@ -278,7 +391,68 @@ class AutogenDataLoader(DataLoader):
 					date=date,
 					entities=entities,
 					enrichmentType=enrichmentType
-				))
+					))
 
 		return enrichments
 
+	"""COPIED FROM SPARQLDATALOADER"""
+
+	def sendSearchRequest(self, query):
+		cmd_arr = []
+		cmd_arr.append('curl')
+		cmd_arr.append('-X')
+		cmd_arr.append('POST')
+		cmd_arr.append(LTV_SPARQL_ENDPOINT)
+		cmd_arr.append('-H')
+		cmd_arr.append('Accept: application/sparql-results+json')
+		cmd_arr.append('-d')
+		cmd_arr.append('query=%s' % urllib.quote(query, ''))
+		p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
+		stdout, stderr = p1.communicate()
+		if stdout:
+			return stdout
+		else:
+			logger.error(stderr)
+			return None
+
+	def filterStopWords(self, nes):
+		ta = TextAnalyzer()
+		stop = ta.readStopWordsFile(LTV_STOP_FILE)
+		nonStopNEs = []
+		for ne in nes:
+			if ne.getLabel().lower() in stop:
+				continue
+			else:
+				nonStopNEs.append(ne)
+				return nonStopNEs
+
+	def getNEType(self, DCType, RDFType, OWLSameAs):
+		"""The RDF should be the correct one, however in some cases the OWLSameAs or DCType makes more sense"""
+		#TODO maybe later add some intelligence to this! Now handling on the client side...
+		if(RDFType.find(self.DBPEDIA_ONTOLOGY_PF) == -1):
+			return RDFType[len(self.NERD_ONTOLOGY_PF):]
+		else:
+			return RDFType[len(self.DBPEDIA_ONTOLOGY_PF):]
+
+	def getDCTypes(self, DCType):
+		if len(DCType) > 0 and DCType != 'null':
+			types = {}
+			if DCType.find('DBpedia') == -1 and DCType.find('Freebase') == -1:
+				if DCType.find('dbpedia') == -1:
+					return {'NERD' : [DCType]}
+				else:
+					return {'DBpedia' : [DCType[len(self.DBPEDIA_ONTOLOGY_PF):]]}
+					dct_arr = DCType.split(';')
+					for dct in dct_arr:
+						ext_arr = dct.split(',')
+						extractorName = None
+						values = []
+						for index, val in enumerate(ext_arr):
+							if index == 0:
+								extractorName = val[0:val.find(':')]
+								val = val[val.find(':') + 1:]
+								values.append(val)
+								types[extractorName] = values
+								return types
+							else:
+								return {}

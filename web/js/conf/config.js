@@ -1,7 +1,6 @@
 /*
 TODO:
 	- properly import the programme configs from an external file
-	- make sure there is a separate property that directly maps to the RDF dimension
 
 READ:
 	- RBB types => http://www.linkedtv.eu/wiki/index.php/Annotation_types_in_RBB#Proposal_for_common_entity_types
@@ -244,16 +243,14 @@ var trialConfig = {
 	]
 }
 
-//make sure to map this to the provider part in the ET URL
 var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
 	trial : trialConfig
 }
 
-
 var config = angular.module('configuration', []).constant('conf', {
 	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
-	chapterSlotsMap : {'rbb' : 8, 'sv' : 6},
-	loadingImage : '/site_media/images/loading.gif'
+	loadingImage : '/site_media/images/loading.gif',
+	platform : 'linkedtv'
 });

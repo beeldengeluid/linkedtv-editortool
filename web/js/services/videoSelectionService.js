@@ -1,11 +1,13 @@
-angular.module('linkedtv').factory('videoSelectionService', [function(){
-	
+angular.module('linkedtv').factory('videoSelectionService', ['conf', function(conf){
+
 	function getVideosOfProvider(provider, callback) {
 		console.debug('Getting videos of provider: ' + provider);
+		var url = '/videos?cp=' + provider;
+		url += '&p=' + conf.platform;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/videos?p=' + provider,
+			url : url,
 			success : function(json) {
 				callback(json.videos);
 			},

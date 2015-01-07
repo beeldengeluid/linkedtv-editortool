@@ -19,6 +19,7 @@ class AnefoAPI(DimensionService):
 
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
+			#first do a field query to get the most relevant results
 			enrichments = self.__formatResponse(
 				self.__search(query, entities, dimension, True, self.DESIRED_AMOUNT_OF_RESULTS),
 				dimension
@@ -81,7 +82,7 @@ class AnefoAPI(DimensionService):
 		return ' '.join(queryParts)
 
 
-	""" SOURCE DATA:
+	""" ANEFO RESPONSE DATA:
 	 <item>
       <title>Emilio Maspero, secretaris van het CLAT en Carlos Custer, coördinator (l)</title>
       <link>http://hdl.handle.net/10648/ad25ea76-d0b4-102d-bcf8-003048976d84</link>
@@ -139,52 +140,58 @@ class AnefoAPI(DimensionService):
 		items = root.xpath('//item')
 		count = 1 #xpath starts counting from 1
 		for i in items:
-			enrichment = Enrichment(
-				i.xpath('./title')[0].text,
-				url=i.xpath('./link')[0].text,
-				description=i.xpath('./description')[0].text
-			)
+			xp = i.xpath('./title')
+			if xp and len(xp) > 0:
+				enrichment = Enrichment(
+					xp[0].text
+				)
+				xp = i.xpath('./link')
+				if xp and len(xp) > 0:
+					enrichment.setUrl(xp[0].text)
+				xp = i.xpath('./description')
+				if xp and len(xp) > 0:
+					enrichment.setDescription(xp[0].text)
 
-			#fetch the date from the XML
-			path = etree.ETXPath('/rss/channel/item[%d]/{%s}date' % (count, self.NAMESPACE_DC))
-			date = path(root)
-			if len(date) > 0:
-				d = None
-				try:
-					#d = datetime.strptime(e['published'][0:e['published'].find(' +')], '%a, %d %b %Y %H:%M:%S')
-					#1983-02-18T00:00:00Z
-					d = datetime.strptime(date[0].text, '%Y-%m-%dT%H:%M:%SZ')
-				except ValueError, e:
-					print 'invalid date: %s' % date[0].text
-					pass
-				if d:
+				#fetch the date from the XML
+				path = etree.ETXPath('/rss/channel/item[%d]/{%s}date' % (count, self.NAMESPACE_DC))
+				date = path(root)
+				if len(date) > 0:
+					d = None
 					try:
-						enrichment.setDate(d.strftime('%b %d %Y'))
+						#d = datetime.strptime(e['published'][0:e['published'].find(' +')], '%a, %d %b %Y %H:%M:%S')
+						#1983-02-18T00:00:00Z
+						d = datetime.strptime(date[0].text, '%Y-%m-%dT%H:%M:%SZ')
 					except ValueError, e:
-						print 'Invalid date:'
-						print d
+						print 'invalid date: %s' % date[0].text
 						pass
+					if d:
+						try:
+							enrichment.setDate(d.strftime('%b %d %Y'))
+						except ValueError, e:
+							print 'Invalid date:'
+							print d
+							pass
 
-			#fetch the posters from the XML
-			path = etree.ETXPath('/rss/channel/item[%d]/{%s}isShownBy' % (count, self.NAMESPACE_ESE))
-			posters = path(root)
-			if len(posters) > 0:
-				enrichment.setPoster(self.__getPoster(posters))
+				#fetch the posters from the XML
+				path = etree.ETXPath('/rss/channel/item[%d]/{%s}isShownBy' % (count, self.NAMESPACE_ESE))
+				posters = path(root)
+				if len(posters) > 0:
+					enrichment.setPoster(self.__getPoster(posters))
 
-			#fetch the provider from the XML
-			path = etree.ETXPath('/rss/channel/item[%d]/{%s}provider' % (count, self.NAMESPACE_ESE))
-			provider = path(root)
-			if len(provider) > 0:
-				enrichment.setSource(provider[0].text)
+				#fetch the provider from the XML
+				path = etree.ETXPath('/rss/channel/item[%d]/{%s}provider' % (count, self.NAMESPACE_ESE))
+				provider = path(root)
+				if len(provider) > 0:
+					enrichment.setSource(provider[0].text)
 
-			#fetch the provider from the XML
-			path = etree.ETXPath('/rss/channel/item[%d]/{%s}creator' % (count, self.NAMESPACE_DC))
-			creator = path(root)
-			if len(creator) > 0:
-				enrichment.setCreator(creator[0].text)
+				#fetch the provider from the XML
+				path = etree.ETXPath('/rss/channel/item[%d]/{%s}creator' % (count, self.NAMESPACE_DC))
+				creator = path(root)
+				if len(creator) > 0:
+					enrichment.setCreator(creator[0].text)
 
-			enrichments.append(enrichment)
-			count += 1
+				enrichments.append(enrichment)
+				count += 1
 
 		return enrichments
 

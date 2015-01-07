@@ -1,11 +1,15 @@
-angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootScope) {
+angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
 
 	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
 	function getResourceData(loadData, callback) {
+		var url = '/load?id=';
+		url += $rootScope.resourceUri;
+		url += '&ld=' + (loadData ? 'true' : 'false');
+		url += '&p=' + conf.platform;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/load_ltv?id=' + $rootScope.resourceUri + '&ld=' + (loadData ? 'true' : 'false'),
+			url : url,
 			success : function(json) {
 				callback(json);
 			},
@@ -21,7 +25,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/load_curated_et?id=' + $rootScope.resourceUri,
+			url : '/load_curated?id=' + $rootScope.resourceUri,
 			success : function(json) {
 				callback(json.error ? null : json);
 			},
@@ -38,7 +42,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', function($rootS
 		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
 		$.ajax({
 			type: 'POST',
-			url: '/save_et?action=' + action,
+			url: '/save?action=' + action,
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {

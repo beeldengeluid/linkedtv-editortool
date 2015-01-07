@@ -12,10 +12,9 @@ urlpatterns = patterns('',
     url(r'^logout$', 'views.logout_user'),
 
     #API - load and save mediaresources
-    url(r'^load_ltv$', 'views.load_ltv'),
-    url(r'^load_curated_ltv$', 'views.load_curated_ltv'),
-    url(r'^load_curated_et$', 'views.load_curated_et'),
-    url(r'^save_et$', 'views.save_et'),
+    url(r'^load$', 'views.load'),
+    url(r'^load_curated$', 'views.load_curated'),
+    url(r'^save$', 'views.save'),
     url(r'^publish$', 'views.publish'),
 
     #API - load images and other vidoes

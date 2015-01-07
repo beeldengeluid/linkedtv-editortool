@@ -4,8 +4,10 @@
 #     http://jamesmurty.com/2011/01/29/work-around-osx-lipo-figure-out-architecture-type/
 
 import logging
+import sys
 
 TEMPLATE_BASE = '/Users/jblom/workspace/linkedtv-et-v2/web'
+LABS_BASE = '/Users/jblom/workspace/linkedtv-et-v2/src'
 
 
 """Configurations that matter"""
