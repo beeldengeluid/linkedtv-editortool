@@ -9,6 +9,10 @@ https://pythonhosted.org/virtuoso/installation.html
 TIME FORMAT
 2014-08-28T19:50:08.004Z
 
+When publishing a media resource to LinkedTV:
+- all previously saved triples are deleted
+- new resources are created with new uuids
+
 """
 
 from datetime import datetime
@@ -17,6 +21,7 @@ import uuid
 import urllib
 import simplejson
 import logging
+import re
 from simplejson import JSONDecodeError
 from linkedtv.api.storage.publish.PublishingPoint import PublishingPoint
 from linkedtv.utils.TimeUtils import TimeUtils
@@ -105,7 +110,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		#body -> type=chapter + label
 		query.append('<%s> a <%sChapter> ; ' % (bodyURI, self.LTV_ONTO_PF))
-		query.append('rdfs:label "%s"' % chapter.getLabel())
+		query.append('rdfs:label "%s"' % self.escape(chapter.getLabel()))
 		if chapter.getPoster():
 			query.append(' ; linkedtv:hasPoster <%s>' % chapter.getPoster())
 		query.append(' . ')
@@ -172,11 +177,11 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		#Create the body containing the enrichment info
 		query.append('<%s> a <%s> ; ' % (bodyURI, self.MEDIA_RESOURCE))
 		query.append('a <%s> ; ' % self.RELATED_CONTENT)
-		query.append('rdfs:label "%s"' % annotation.getLabel())
+		query.append('rdfs:label "%s"' % self.escape(annotation.getLabel()))
 		if annotation.getUrl():
 			query.append(' ; ma:locator <%s>' % annotation.getUrl())
 		if annotation.getDescription():
-			query.append(' ; rdfs:comment "%s"' % annotation.getDescription())
+			query.append(' ; rdfs:comment "%s"' % self.escape(annotation.getDescription()))
 		if annotation.getPoster():
 			query.append(' ; linkedtv:hasPoster <%s>' % annotation.getPoster())
 		if annotation.getCreator():
@@ -323,3 +328,16 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		else:
 			print stderr
 		return False
+
+	"""SPARQL ESCAPE
+	'\t'	U+0009 (tab)
+	'\n'	U+000A (line feed)
+	'\r'	U+000D (carriage return)
+	'\b'	U+0008 (backspace)
+	'\f'	U+000C (form feed)
+	'\"'	U+0022 (quotation mark, double quote mark)
+	"\'"	U+0027 (apostrophe-quote, single quote mark)
+	'\\'	U+005C (backslash)
+	"""
+	def escape(self, s):
+		return re.sub('[\"\']', '', s)#for now it's a lazy removal of problematic characters

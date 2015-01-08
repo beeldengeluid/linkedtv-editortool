@@ -312,7 +312,7 @@ linkedtv.run(function($rootScope, conf) {
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			chapterCollection.saveEnrichment(data.dimension, data.link);
+			chapterCollection.saveEnrichment(data.dimension, data.link, false);
 		}, function () {
 			//
 		});
@@ -335,7 +335,7 @@ linkedtv.run(function($rootScope, conf) {
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			chapterCollection.saveInformationCard(data.dimension, data.link);
+			chapterCollection.saveEnrichment(data.dimension, data.link, true);
 		}, function () {
 			//
 		});
@@ -466,9 +466,19 @@ linkedtv.run(function($rootScope, conf) {
 		return h + ':' + m + ':' + s + '.' + millis;
 	}
 
+	var guid = (function() {
+		function s4() {
+			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+		}
+		return function() {
+			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+	  	};
+	})();
+
 	return {
 		toMillis : toMillis,
-		toPrettyTime : toPrettyTime
+		toPrettyTime : toPrettyTime,
+		guid : guid
 	}
 }]);;angular.module('linkedtv').factory('chapterCollection',
 	['conf', 'imageService', 'entityCollection', 'shotCollection', 'dataService', 'timeUtils',
@@ -486,9 +496,9 @@ linkedtv.run(function($rootScope, conf) {
 		console.debug('Initializing chapter data');
 		_thumbBaseUrl = resourceData.thumbBaseUrl;
 		var chapters = [];
-		//old curations take precedence over v2.0 curations (for now)
+		//load curated data from ET storage
 		if (curatedData) {
-			console.debug('Loading curations stored in the ET Redis...');
+			console.debug('Loading curations stored in the ET storage...');
 			chapters = curatedData.chapters;
 			_.each(chapters, function(c) {
 				c.type = TYPE_CURATED;
@@ -517,7 +527,8 @@ linkedtv.run(function($rootScope, conf) {
 	//also makes sure the correct thumbnail is set and that the start and end times are available in human readable format
 	function setBasicProperties(chapter, updateGuid) {
 		if(updateGuid) {
-			chapter.guid = _.uniqueId('chapter_');
+			//chapter.guid = _.uniqueId('chapter_');
+			chapter.guid = timeUtils.guid();
 			var dimensions = {};
 			_.each(conf.programmeConfig.dimensions, function(d) {
 				//copy the properties from the saved dimension
@@ -649,56 +660,31 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	//works for both information cards and enrichments
-	function saveEnrichment(dimension, link) {
+	function saveEnrichment(dimension, link, isInformationCard) {
+		var dimensionAnnotations = _activeChapter.dimensions[dimension.id].annotations;
 		if(link.remove) {
-			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++) {
-				if(_activeChapter.dimensions[dimension.id].annotations[i].url == link.url) {
-					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
+			for(var i=0;i<dimensionAnnotations.length;i++) {
+				if(dimensionAnnotations[i].url == link.url) {
+					dimensionAnnotations.splice(i, 1);
 					break;
 				}
 			}
-		} else if(_activeChapter.dimensions[dimension.id].annotations) {
+		} else if(dimensionAnnotations) {
 			var exists = false;
-			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++){
-				if(_activeChapter.dimensions[dimension.id].annotations[i].url == link.url) {
-					_activeChapter.dimensions[dimension.id].annotations[i] = link;
+			for(var i=0;i<dimensionAnnotations.length;i++){
+				if((!isInformationCard && dimensionAnnotations[i].url == link.url) ||
+					(isInformationCard && dimensionAnnotations[i].uri == link.uri)) {
+					dimensionAnnotations[i] = link;
 					exists = true;
 					break;
 				}
 			}
 			if (!exists) {
-				_activeChapter.dimensions[dimension.id].annotations.push(link);
+				dimensionAnnotations.push(link);
 			}
 		} else {
 			//add a new dimension (add the config properties + a list to hold the annotations)
-			_activeChapter.dimensions[dimension.id].annotations = [link];
-		}
-		saveChapter(_activeChapter);
-	}
-
-	function saveInformationCard(dimension, link) {
-		if(link.remove) {
-			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++) {
-				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
-					_activeChapter.dimensions[dimension.id].annotations.splice(i, 1);
-					break;
-				}
-			}
-		} else if(_activeChapter.dimensions[dimension.id].annotations) {
-			var exists = false;
-			for(var i=0;i<_activeChapter.dimensions[dimension.id].annotations.length;i++){
-				if(_activeChapter.dimensions[dimension.id].annotations[i].uri == link.uri) {
-					_activeChapter.dimensions[dimension.id].annotations[i] = link;
-					exists = true;
-					break;
-				}
-			}
-			if (!exists) {
-				_activeChapter.dimensions[dimension.id].annotations.push(link);
-			}
-		} else {
-			//add a new dimension (add the config properties + a list to hold the annotations)
-			_activeChapter.dimensions[dimension.id].annotations = [link];
+			dimensionAnnotations = [link];
 		}
 		saveChapter(_activeChapter);
 	}
@@ -721,7 +707,6 @@ linkedtv.run(function($rootScope, conf) {
 		saveChapter : saveChapter,
 		saveEnrichment : saveEnrichment,
 		saveEnrichments : saveEnrichments,
-		saveInformationCard : saveInformationCard,
 		addObserver : addObserver
 	}
 

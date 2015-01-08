@@ -42,7 +42,7 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			chapterCollection.saveEnrichment(data.dimension, data.link);
+			chapterCollection.saveEnrichment(data.dimension, data.link, false);
 		}, function () {
 			//
 		});
@@ -65,7 +65,7 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
-			chapterCollection.saveInformationCard(data.dimension, data.link);
+			chapterCollection.saveEnrichment(data.dimension, data.link, true);
 		}, function () {
 			//
 		});

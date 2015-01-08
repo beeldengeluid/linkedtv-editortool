@@ -15,6 +15,8 @@ class DataConverter():
 				)
 				chapter.setStart(c['start'])
 				chapter.setEnd(c['end'])
+				if c.has_key('guid'):
+					chapter.setGuid(c['guid'])
 				if c.has_key('type'):
 					chapter.setType(c['type']);
 				if c.has_key('annotationURI'):
