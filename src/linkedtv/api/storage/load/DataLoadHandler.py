@@ -9,9 +9,9 @@ class DataLoadHandler(object):
 			'beng' : BengDataLoader()
 		}
 
-	def loadMediaResourceData(self, platform, resourceUri, loadAnnotations, clientIP):
+	def loadMediaResourceData(self, platform, resourceUri, clientIP, loadAnnotations):
 		if self.platforms.has_key(platform):
-			return self.platforms[platform].loadMediaResourceData(resourceUri, loadAnnotations, clientIP)
+			return self.platforms[platform].loadMediaResourceData(resourceUri, clientIP, loadAnnotations)
 		return None
 
 	def loadMediaResources(self, platform, provider):

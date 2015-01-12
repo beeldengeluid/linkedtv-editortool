@@ -7,33 +7,31 @@ from lxml import etree
 import lxml
 import httplib2
 #from profilehooks import timecall
-import logging
+#import logging
 
 """
 This class works with the specs obtained from http://www.linkedtv.eu/wiki/index.php/Abstract_Locator
 """
 
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
 
 class VideoPlayoutHandler():
-    
+
     def __init__(self):
-        logger.debug('-- initializing VideoPlayoutHandler --')
         self.TICKET_USER = 'user'
         self.TICKET_EXPIRY = 10000 # 10 minutes
         self.TICKET_IP = '80.79.39.113'
-    
-    """    
+
+    """
     Returns the play-out URL for the specified mediaResourceID
     TODO make sure that it does not wait forever for the NTK server to reply
     """
     #@timecall(immediate=True)
     def getPlayoutURL(self, locator, clientIP):
-        #logger.debug('getting playoutURL for: %s (%s)' % (mediaResourceID, clientIP))        
-        playoutURL = None        
-        ticket = self.generateUniqueTicket(clientIP)        
+        playoutURL = None
+        ticket = self.generateUniqueTicket(clientIP)
         ms = int(datetime.datetime.now().strftime("%s"))
-                
+
         """build the POST request"""
         headers = {'Content-Type' : 'text/xml', 'Accept' : 'text/xml'}
         body = []
@@ -48,17 +46,17 @@ class VideoPlayoutHandler():
         body.append('</properties>')
         body.append('</fsxml>')
         url = 'http://ticket.noterik.com:8001/acl/ticket'
-        
-        """Send the request"""        
-        try:            
-            req = urllib2.Request(url)            
+
+        """Send the request"""
+        try:
+            req = urllib2.Request(url)
             response = urllib2.urlopen(req, ''.join(body))
             result = response.read()
             try:
                 xml= etree.fromstring(result)
                 status = xml.xpath('//status')
                 if status and len(status) > 0:
-                    st = status[0].text                    
+                    st = status[0].text
                     if st == 'Successfully added':
                         playoutURL = self.getRedirectUrl('%s?ticket=%s' % (locator, ticket))
             except lxml.etree.XMLSyntaxError, e:
@@ -67,10 +65,10 @@ class VideoPlayoutHandler():
         except urllib2.URLError, e:
             print e
         return playoutURL
-    
-        
+
+
     def getRedirectUrl(self, url):
-        #print 'getting redirect URL'
+        print url
         cmd_arr = []
         cmd_arr.append('curl')
         cmd_arr.append('-I')
@@ -81,19 +79,19 @@ class VideoPlayoutHandler():
             p1.stdout.close()
         except IOError, e:
             print "stdout after failure: %s" % p1.stdout
-            
+
         if stdout:
+            print stdout
             r_arr = stdout.split('\n')
             for x in r_arr:
                 if x.find('Location') != -1:
                     return x[len('Location: '):x.find('?')]
             return url
         else:
-            logger.error(stderr)
-            return None    
+            print stderr
+        return None
 
-    
+
     def generateUniqueTicket(self, clientIP):
-        t = datetime.datetime.now().time()        
+        t = datetime.datetime.now().time()
         return ('%s-%s' % (t, clientIP)).replace('.', '_').replace(':', '_')
-    

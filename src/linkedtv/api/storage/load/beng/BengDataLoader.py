@@ -5,7 +5,7 @@ class BengDataLoader(DataLoader):
 	def __init__(self):
 		print 'to be implemented'
 
-	def loadMediaResourceData(self, resourceUri, loadAnnotations, clientIP):
+	def loadMediaResourceData(self, resourceUri, clientIP, loadAnnotations):
 		return None
 
 	def loadMediaResources(self, provider):

@@ -3,15 +3,14 @@ from simplejson import JSONDecodeError
 import logging
 import redis
 import base64
-import urllib
 import httplib2
-from subprocess import Popen, PIPE
 
 
+from linkedtv.api.storage.load.ltv.LinkedTVDataUtils import LinkedTVDataUtils
 from linkedtv.api.storage.load.ltv.video.VideoPlayoutHandler import VideoPlayoutHandler
 from linkedtv.utils.TimeUtils import *
 from linkedtv.text.TextAnalyzer import *
-from linkedtv.LinkedtvSettings import LTV_SAVE_GRAPH, LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN, LTV_SPARQL_ENDPOINT, LTV_STOP_FILE
+from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN, LTV_SPARQL_ENDPOINT, LTV_STOP_FILE
 from linkedtv.model import *
 from linkedtv.api.storage.load.DataLoader import DataLoader
 
@@ -23,24 +22,7 @@ class LinkedTVDataLoader(DataLoader):
 		super(DataLoader, self).__init__()
 		#due to possible slow loading times, this dataloader also offers caching possibilities
 		self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
-
-		self.LINKEDTV_MEDIA_RESOURCE_PF = 'http://data.linkedtv.eu/media/'
-
-		"""Prefixes/ontologies used for the annotation body type, i.e. rdf:type"""
-		self.LINKEDTV_ONTOLOGY_PF = 'http://data.linkedtv.eu/ontologies/core#' #'http://data.linkedtv.eu/ontology/'
-		self.LINKEDTV_DATA_PF = 'http://data.linkedtv.eu/'
-		self.NERD_ONTOLOGY_PF = 'http://nerd.eurecom.fr/ontology#'
-
-		self.PROV_ET = 'http://data.linkedtv.eu/organization/SV/EditorTool'
-		self.ET_GRAPH = LTV_SAVE_GRAPH
-
 		self.GRAPH = 'http://data.linkedtv.eu/graph/linkedtv'
-
-		"""Used for the owl:sameAs"""
-		self.DBPEDIA_ONTOLOGY_PF = 'http://dbpedia.org/ontology/'
-		self.NL_WIKIPEDIA_PF = 'http://nl.wikipedia.org/wiki/'
-		self.DE_WIKIPEDIA_PF = 'http://de.wikipedia.org/wiki/'
-		self.EN_WIKIPEDIA_PF = 'http://en.wikipedia.org/wiki/'
 
 	#implementation of DataLoader function
 	def loadMediaResourceData(self, resourceUri, clientIP, loadAnnotations):
@@ -66,6 +48,7 @@ class LinkedTVDataLoader(DataLoader):
 					vph = VideoPlayoutHandler()
 					print 'LOCATOR-----> %s' % mr['locator']
 					playoutURL = vph.getPlayoutURL(mr['locator'], clientIP)
+					print 'PLAYOUT URL-----> %s' % playoutURL
 					mediaResource.setPlayoutUrl(playoutURL)
 
 				#set the video metadata in the mediaresource
@@ -86,10 +69,10 @@ class LinkedTVDataLoader(DataLoader):
 	def loadMediaResources(self, provider):
 		videos = []
 		videoUris = self.__loadMediaResources(provider)
-		vd = None
-		video = None
-		thumbBaseUrl = None
 		for uri in videoUris['videos']:
+			vd = None
+			thumbBaseUrl = None
+			video = None
 			vd = self.__getVideoData(uri)
 			if vd:
 				vd = simplejson.loads(vd)
@@ -121,7 +104,7 @@ class LinkedTVDataLoader(DataLoader):
 		resp, content = http.request(url, 'GET', headers=headers)
 		if resp and resp['status'] == '200':
 			return content
-			return None
+		return None
 
 	def __getDateFromVideoTitle(self, title):
 		#e.g. TITLE= rbb AKTUELL vom 26.01.2013 Teil 2 - Kein Zug fur Meyenburg
@@ -134,7 +117,7 @@ class LinkedTVDataLoader(DataLoader):
 					if len(d_arr) == 3:
 						date = '%s%s%s' % (d_arr[2], d_arr[1], d_arr[0])
 						break
-						return date
+		return date
 
 	def __getAllAnnotationsOfResource(self, resourceUri, fetchFromCache=False):
 		print 'Getting %s from the API or cache' % resourceUri
@@ -172,7 +155,7 @@ class LinkedTVDataLoader(DataLoader):
 		query.append('?annotation oa:hasTarget ?mf . ')
 		query.append('}')
 		#print ''.join(query)
-		resp = self.sendSearchRequest(''.join(query))
+		resp = LinkedTVDataUtils.sendSearchRequest(''.join(query))
 		jsonData = None
 		try:
 			jsonData = simplejson.loads(resp)
@@ -189,7 +172,7 @@ class LinkedTVDataLoader(DataLoader):
 						found = k['locator']['value'].find(publisher) != -1
 					if found:
 						loc = k['medialocator']['value']
-						loc = loc[len(self.LINKEDTV_MEDIA_RESOURCE_PF):]
+						loc = loc[len(LinkedTVDataUtils.LINKEDTV_MEDIA_RESOURCE_PF):]
 						locs.append(loc)
 		return {'videos' : locs}
 
@@ -208,7 +191,7 @@ class LinkedTVDataLoader(DataLoader):
 		query.append('SELECT DISTINCT ?annotation ?start ?end ?label ?RDFType ?DCType ?OWLSameAs ?c ?r ')
 		query.append('FROM <%s> ' % self.GRAPH)
 		query.append('WHERE { ')
-		query.append('?mf ma:isFragmentOf <%s%s> . ' % (self.LINKEDTV_MEDIA_RESOURCE_PF, mediaResource.getId()))
+		query.append('?mf ma:isFragmentOf <%s%s> . ' % (LinkedTVDataUtils.LINKEDTV_MEDIA_RESOURCE_PF, mediaResource.getId()))
 		query.append('?mf nsa:temporalStart ?start . ')
 		query.append('?mf nsa:temporalEnd ?end . ')
 		query.append('?annotation oa:hasTarget ?mf . ')
@@ -228,7 +211,7 @@ class LinkedTVDataLoader(DataLoader):
 		query.append('}')
 		print ''.join(query)
 		#logger.debug(''.join(query))
-		resp = self.sendSearchRequest(''.join(query))
+		resp = LinkedTVDataUtils.sendSearchRequest(''.join(query))
 		jsonData = None
 		try:
 			jsonData = simplejson.loads(resp)
@@ -251,7 +234,7 @@ class LinkedTVDataLoader(DataLoader):
 				if k.has_key('RDFType'): RDFType = k['RDFType']['value']
 				if k.has_key('DCType'): DCType = k['DCType']['value']
 				if k.has_key('OWLSameAs'): OWLSameAs = k['OWLSameAs']['value']
-				if RDFType == '%sConcept' % self.LINKEDTV_ONTOLOGY_PF:
+				if RDFType == '%sConcept' % LinkedTVDataUtils.LINKEDTV_ONTOLOGY_PF:
 					concepts.append(Concept(
 						label,
 						start=start,
@@ -261,7 +244,7 @@ class LinkedTVDataLoader(DataLoader):
 						relevance=r,
 						confidence=c
 						))
-				elif RDFType == '%sShot' % self.LINKEDTV_ONTOLOGY_PF:
+				elif RDFType == '%sShot' % LinkedTVDataUtils.LINKEDTV_ONTOLOGY_PF:
 					shots.append(Shot(
 						label,
 						start=start,
@@ -270,7 +253,7 @@ class LinkedTVDataLoader(DataLoader):
 						relevance=r,
 						confidence=c
 						))
-				elif RDFType == '%sChapter' % self.LINKEDTV_ONTOLOGY_PF:
+				elif RDFType == '%sChapter' % LinkedTVDataUtils.LINKEDTV_ONTOLOGY_PF:
 					chapters.append(Chapter(
 						label,
 						start=start,
@@ -279,11 +262,11 @@ class LinkedTVDataLoader(DataLoader):
 						relevance=r,
 						confidence=c
 						))
-				elif RDFType.find(self.NERD_ONTOLOGY_PF) != -1:
+				elif RDFType.find(LinkedTVDataUtils.NERD_ONTOLOGY_PF) != -1:
 					nes.append(NamedEntity(
 						label,
-						entityType=self.getNEType(DCType, RDFType, OWLSameAs),
-						subTypes=self.getDCTypes(DCType),
+						entityType=LinkedTVDataUtils.getNEType(DCType, RDFType, OWLSameAs),
+						subTypes=LinkedTVDataUtils.getDCTypes(DCType),
 						disambiguationURL=OWLSameAs,
 						start=start,
 						end=end,
@@ -298,7 +281,7 @@ class LinkedTVDataLoader(DataLoader):
 
 			#add all of the loaded data to the media resource
 			mediaResource.setConcepts(concepts)
-			mediaResource.setNamedEntities(self.filterStopWords(nes))
+			mediaResource.setNamedEntities(LinkedTVDataUtils.filterStopWords(nes))
 			mediaResource.setShots(shots)
 			mediaResource.setChapters(chapters)
 			mediaResource.setEnrichments(enrichments)
@@ -326,7 +309,7 @@ class LinkedTVDataLoader(DataLoader):
 		query.append('?DCType ?start ?end ')
 		query.append('FROM <%s> ' % self.GRAPH)
 		query.append('WHERE { ')
-		query.append('?mf ma:isFragmentOf <%s%s> . ' % (self.LINKEDTV_MEDIA_RESOURCE_PF, mediaResourceID))
+		query.append('?mf ma:isFragmentOf <%s%s> . ' % (LinkedTVDataUtils.LINKEDTV_MEDIA_RESOURCE_PF, mediaResourceID))
 		query.append('?mf nsa:temporalStart ?start . ')
 		query.append('?mf nsa:temporalEnd ?end . ')
 		query.append('?annotation oa:hasTarget ?mf . ')
@@ -350,7 +333,7 @@ class LinkedTVDataLoader(DataLoader):
 		#query.append('OPTIONAL {?body dc:description ?desc . ?desc <http://nlp2rdf.lod2.eu/schema/string/label> ?label}')
 		query.append('}')
 		print ''.join(query)
-		resp = self.sendSearchRequest(''.join(query))
+		resp = LinkedTVDataUtils.sendSearchRequest(''.join(query))
 		jsonData = None
 		try:
 			jsonData = simplejson.loads(resp)
@@ -395,65 +378,3 @@ class LinkedTVDataLoader(DataLoader):
 					))
 
 		return enrichments
-
-	"""COPIED FROM SPARQLDATALOADER"""
-
-	def sendSearchRequest(self, query):
-		cmd_arr = []
-		cmd_arr.append('curl')
-		cmd_arr.append('-X')
-		cmd_arr.append('POST')
-		cmd_arr.append(LTV_SPARQL_ENDPOINT)
-		cmd_arr.append('-H')
-		cmd_arr.append('Accept: application/sparql-results+json')
-		cmd_arr.append('-d')
-		cmd_arr.append('query=%s' % urllib.quote(query, ''))
-		p1 = Popen(cmd_arr, stdout=PIPE, stderr=PIPE)
-		stdout, stderr = p1.communicate()
-		if stdout:
-			return stdout
-		else:
-			logger.error(stderr)
-			return None
-
-	def filterStopWords(self, nes):
-		ta = TextAnalyzer()
-		stop = ta.readStopWordsFile(LTV_STOP_FILE)
-		nonStopNEs = []
-		for ne in nes:
-			if ne.getLabel().lower() in stop:
-				continue
-			else:
-				nonStopNEs.append(ne)
-				return nonStopNEs
-
-	def getNEType(self, DCType, RDFType, OWLSameAs):
-		"""The RDF should be the correct one, however in some cases the OWLSameAs or DCType makes more sense"""
-		#TODO maybe later add some intelligence to this! Now handling on the client side...
-		if(RDFType.find(self.DBPEDIA_ONTOLOGY_PF) == -1):
-			return RDFType[len(self.NERD_ONTOLOGY_PF):]
-		else:
-			return RDFType[len(self.DBPEDIA_ONTOLOGY_PF):]
-
-	def getDCTypes(self, DCType):
-		if len(DCType) > 0 and DCType != 'null':
-			types = {}
-			if DCType.find('DBpedia') == -1 and DCType.find('Freebase') == -1:
-				if DCType.find('dbpedia') == -1:
-					return {'NERD' : [DCType]}
-				else:
-					return {'DBpedia' : [DCType[len(self.DBPEDIA_ONTOLOGY_PF):]]}
-					dct_arr = DCType.split(';')
-					for dct in dct_arr:
-						ext_arr = dct.split(',')
-						extractorName = None
-						values = []
-						for index, val in enumerate(ext_arr):
-							if index == 0:
-								extractorName = val[0:val.find(':')]
-								val = val[val.find(':') + 1:]
-								values.append(val)
-								types[extractorName] = values
-								return types
-							else:
-								return {}
