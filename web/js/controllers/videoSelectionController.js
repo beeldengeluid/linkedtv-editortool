@@ -1,4 +1,4 @@
-angular.module('linkedtv').controller('videoSelectionController', 
+angular.module('linkedtv').controller('videoSelectionController',
 	function($rootScope, $scope, videoSelectionService, videoCollection) {
 
 	$scope.videos = null;

@@ -22,6 +22,9 @@
 		img {
 			height:$imageHeight / 2;
 		}
+		i {
+			font-size:300%;
+		}
 		&:hover {
 			opacity:0.5;
 			border:2px solid red;
@@ -30,14 +33,14 @@
 	.in-range {
 		opacity:0.5;
 		border:2px solid red;
-		&:hover {			
+		&:hover {
 			border:2px solid green;
 		}
 	}
 	.starting-point {
 		opacity:0.5;
 		border:2px solid green;
-		&:hover {			
+		&:hover {
 			border:2px solid green;
 		}
 	}

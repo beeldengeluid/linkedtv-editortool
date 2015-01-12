@@ -4,15 +4,27 @@
 		width:320px;
 		display:inline-block;
 		margin:$defaultItemMargin;
-		.caption {
-			text-align:center;
-		}
-		img {
-			width:320px;
+		.thumbnail {
+			img {
+				height:240px;
+				width:320px;
+			}
+			.no-thumb {
+				text-align:center;
+				margin:auto;
+				height:220px;
+				i {
+					font-size:600%;
+					top:60px;
+				}
+			}
+			.caption {
+				text-align:center;
+			}
 		}
 		&:hover {
 			@include activeSlot;
 		}
 	}
-	
+
 }

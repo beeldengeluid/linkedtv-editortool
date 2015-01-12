@@ -7,7 +7,8 @@
 			<h3>{{title}}</h3>
 			<ul class="shot-selector">
 				<li ng-repeat="s in shots" id="{{s.start}}" class="{{withinRange(s)}}" ng-click="setSelection(s)">
-					<img src="{{s.poster}}" title="{{s.prettyStart}} - {{s.prettyEnd}}">
+					<img ng-if="s.poster" ng-src="{{s.poster}}" alt="{{s.prettyStart}} - {{s.prettyEnd}}" title="{{s.prettyStart}} - {{s.prettyEnd}}">
+					<i ng-if="!s.poster" class="glyphicon glyphicon-picture" title="{{s.prettyStart}} - {{s.prettyEnd}}"></i>
 				</li>
 			</ul>
 		</div>

@@ -1,6 +1,9 @@
 angular.module('linkedtv').factory('imageService', [function(){
-	
+
 	function getThumbnail(thumbBaseUrl, millis, useImageProxy) {
+		if (!thumbBaseUrl) {
+			return null;
+		}
 		if (useImageProxy) {
 			return '/image?ms=' + millis + '&baseUrl=' + thumbBaseUrl;
 		}
@@ -14,7 +17,7 @@ angular.module('linkedtv').factory('imageService', [function(){
             millis -= 60000;
         }
         while (millis >= 1000) {
-            s++;        
+            s++;
             millis -= 1000;
         }
         var url = thumbBaseUrl;

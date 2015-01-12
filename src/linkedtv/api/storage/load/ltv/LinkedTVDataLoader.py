@@ -46,15 +46,12 @@ class LinkedTVDataLoader(DataLoader):
 				#get the playout URL
 				if mr.has_key('locator'):
 					vph = VideoPlayoutHandler()
-					print 'LOCATOR-----> %s' % mr['locator']
 					playoutURL = vph.getPlayoutURL(mr['locator'], clientIP)
-					print 'PLAYOUT URL-----> %s' % playoutURL
 					mediaResource.setPlayoutUrl(playoutURL)
 
 				#set the video metadata in the mediaresource
 				mediaResource.setTitle(mr['titleName'])
 				mediaResource.setDate(self.__getDateFromVideoTitle(mr['titleName']))
-
 				if mr.has_key('mediaResourceRelationSet'):
 					for mrr in mr['mediaResourceRelationSet']:
 						if mrr['relationType'] == 'thumbnail-locator':

@@ -523,6 +523,7 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	//always update the guid?
 	//important function that makes sure that chapters have dimensions assigned to them at all times
 	//also makes sure the correct thumbnail is set and that the start and end times are available in human readable format
 	function setBasicProperties(chapter, updateGuid) {
@@ -1186,8 +1187,11 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 }]);;angular.module('linkedtv').factory('imageService', [function(){
-	
+
 	function getThumbnail(thumbBaseUrl, millis, useImageProxy) {
+		if (!thumbBaseUrl) {
+			return null;
+		}
 		if (useImageProxy) {
 			return '/image?ms=' + millis + '&baseUrl=' + thumbBaseUrl;
 		}
@@ -1201,7 +1205,7 @@ linkedtv.run(function($rootScope, conf) {
             millis -= 60000;
         }
         while (millis >= 1000) {
-            s++;        
+            s++;
             millis -= 1000;
         }
         var url = thumbBaseUrl;
@@ -2080,7 +2084,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 		}
 	});
 
-});;angular.module('linkedtv').controller('videoSelectionController', 
+});;angular.module('linkedtv').controller('videoSelectionController',
 	function($rootScope, $scope, videoSelectionService, videoCollection) {
 
 	$scope.videos = null;
@@ -2090,6 +2094,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 		if(videos) {
 			$scope.$apply(function(){
 				$scope.videos = videos;
+				console.debug($scope.videos);
 			});
 		}
 	};
