@@ -1,5 +1,5 @@
 angular.module('linkedtv').controller('chapterController',
-	function($scope, $modal, chapterCollection, chapterService, playerService) {
+	function($scope, $modal, chapterCollection, playerService) {
 
 	$scope.allChapters = [];
 	$scope.chapters = [];

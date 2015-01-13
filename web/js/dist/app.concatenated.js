@@ -285,9 +285,10 @@ linkedtv.run(function($rootScope, conf) {
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
+			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 			chapterCollection.saveEnrichments(data.dimension, data.enrichments);
 		}, function () {
-			//
+			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 		});
 	};
 
@@ -335,9 +336,10 @@ linkedtv.run(function($rootScope, conf) {
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
+			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 			chapterCollection.saveEnrichment(data.dimension, data.link, true);
 		}, function () {
-			//
+			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 		});
 	};
 
@@ -350,12 +352,17 @@ linkedtv.run(function($rootScope, conf) {
 		openLinkDialog : openLinkDialog,
 		openCardDialog : openCardDialog
 	}
-}]);;angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterCollection', 'conf', 
+}]);;angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterCollection', 'conf',
 	function(entityCollection, chapterCollection, conf) {
 
-
+	//the measurements in this function must be scrutinized
 	function getConfidenceClass(entity) {
-		var c = parseFloat(entity.confidence);
+		var c = 0;
+		if(entity.confidence) {
+			c = parseFloat(entity.confidence);
+		} else {
+			c = parseFloat(entity.relevance);
+		}
 		if(c <= 0) {
 			return 'verylow';
 		} else if (c > 0 && c <= 0.2) {
@@ -380,7 +387,7 @@ linkedtv.run(function($rootScope, conf) {
 			} else {
 				return null;
 			}
-		} 
+		}
 
 		var t = {};
 		t.label = template.label;
@@ -388,7 +395,7 @@ linkedtv.run(function($rootScope, conf) {
 		_.each(template.properties, function(p) {
 			var val = null;
 			if(p.value != null && typeof(p.value) == 'object') {
-				val = {category: p.value.category, label: p.value.label, type :p.value.type, uri: p.value.uri};				
+				val = {category: p.value.category, label: p.value.label, type :p.value.type, uri: p.value.uri};
 			} else {
 				val = p.value;
 			}
@@ -481,20 +488,25 @@ linkedtv.run(function($rootScope, conf) {
 		guid : guid
 	}
 }]);;angular.module('linkedtv').factory('chapterCollection',
-	['conf', 'imageService', 'entityCollection', 'shotCollection', 'dataService', 'timeUtils',
-	 function(conf, imageService, entityCollection, shotCollection, dataService, timeUtils) {
+	['conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
+	 'dataService', 'timeUtils', 'entityExpansionService',
+	 function(conf, imageService, entityCollection, shotCollection,
+	 	subtitleCollection, dataService, timeUtils, entityExpansionService) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
 	var _chapters = [];
 	var _activeChapter = null;
 	var _thumbBaseUrl = null;
+	var _srtUrl = null;
 	var _observers = [];
+	var _expandedEntities = {}
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)
 	function initCollectionData(provider, resourceData, curatedData) {
 		console.debug('Initializing chapter data');
 		_thumbBaseUrl = resourceData.thumbBaseUrl;
+		_srtUrl = resourceData.srtUrl;
 		var chapters = [];
 		//load curated data from ET storage
 		if (curatedData) {
@@ -561,6 +573,10 @@ linkedtv.run(function($rootScope, conf) {
 		_observers.push(observer);
 	}
 
+	function removeObserver() {
+		_observers.pop();
+	}
+
 	function notifyObservers() {
 		for (o in _observers) {
 			_observers[o](_chapters);
@@ -590,6 +606,7 @@ linkedtv.run(function($rootScope, conf) {
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
 		shotCollection.updateChapterShots(_activeChapter);
+		subtitleCollection.updateChapterSubtitles(_activeChapter);
 	}
 
 	//TODO waarom wordt deze zo vaak aangeroepen
@@ -627,6 +644,9 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	function saveChapter(chapter) {
+		//first fetch the expanded entities (very slow)
+		entityExpansionService.fetch(_srtUrl, chapter.start, chapter.end, chapter.guid, onEntityExpand);
+
 		var exists = false;
 		chapter.type = TYPE_CURATED;
 		chapter.start = parseInt(chapter.start);
@@ -636,6 +656,7 @@ linkedtv.run(function($rootScope, conf) {
 				setBasicProperties(chapter, false);
 				_chapters[c] = chapter;
 				exists = true;
+				break;
 			}
 		}
 		if(!exists) { //if it's a new chapter add it
@@ -649,6 +670,22 @@ linkedtv.run(function($rootScope, conf) {
 		//update the entire resource on the server
 		saveOnServer();
 		//notify observers
+		notifyObservers();
+	}
+
+	function onEntityExpand(chapterId, data) {
+		//set the data to the correct chapter in the list of chapters
+		for(c in _chapters) {
+			if(_chapters[c].guid == chapterId) {
+				_chapters[c].expandedEntities = data;
+				break;
+			}
+		}
+		//also set the data to the active chapter
+		if(_activeChapter.guid = chapterId) {
+			_activeChapter.expandedEntities = data;
+		}
+		//just notify te observers, no need to save the data right away (I think)
 		notifyObservers();
 	}
 
@@ -708,7 +745,8 @@ linkedtv.run(function($rootScope, conf) {
 		saveChapter : saveChapter,
 		saveEnrichment : saveEnrichment,
 		saveEnrichments : saveEnrichments,
-		addObserver : addObserver
+		addObserver : addObserver,
+		removeObserver : removeObserver
 	}
 
 }]);;angular.module('linkedtv').factory('entityCollection', ['timeUtils', function(timeUtils) {
@@ -832,6 +870,46 @@ linkedtv.run(function($rootScope, conf) {
 		updateChapterShots : updateChapterShots
 	}
 
+}]);;angular.module('linkedtv').factory('subtitleCollection', ['timeUtils', function(timeUtils) {
+
+	var _subtitles = [];
+	var _chapterSubtitles = [];
+
+	function initCollectionData(resourceData) {
+		console.debug('Initializing entity data');
+		_subtitles = resourceData; //no transformation necessary
+	}
+
+	function getSubtitles() {
+		return _subtitles;
+	}
+
+	function getChapterSubtitles() {
+		return _chapterSubtitles;
+	}
+
+	function updateChapterSubtitles(chapter) {
+		if(chapter) {
+			//first filter all the entities to be only of the selected chapter
+			_chapterSubtitles = _.filter(_subtitles, function(item) {
+				if(item.start >= chapter.start && item.end <=  chapter.end) {
+					return item;
+				}
+			});
+
+			_chapterSubtitles.sort(function(a, b) {
+				return parseFloat(b.start) - parseFloat(a.start);
+			});
+		}
+	}
+
+	return {
+		initCollectionData : initCollectionData,
+		getSubtitles : getSubtitles,
+		getChapterSubtitles : getChapterSubtitles,
+		updateChapterSubtitles : updateChapterSubtitles
+	}
+
 }]);;angular.module('linkedtv').factory('videoCollection', ['imageService', function(imageService) {
 
 	var _videos = [];
@@ -902,30 +980,7 @@ linkedtv.run(function($rootScope, conf) {
 		getVideo : getVideo
 	}
 
-});;angular.module('linkedtv').factory('chapterService', [function(){
-	
-	//TODO later on when using this again make sure to fill the chapterCollection
-	function getChaptersOfResource(resourceUri, callback) {
-		console.debug('Getting chapters of resource: ' + resourceUri);
-		$.ajax({
-			method: 'GET',
-			dataType : 'json',
-			url : '/chapters?r=' + resourceUri,
-			success : function(json) {
-				callback(json.chapters);
-			},
-			error : function(err) {
-				console.debug(err);
-				callback(null);
-			}
-		});
-	}
-
-	return {
-		getChaptersOfResource : getChaptersOfResource
-	}
-
-}]);;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
+});;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
 
 	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
 	function getResourceData(loadData, callback) {
@@ -1121,6 +1176,37 @@ linkedtv.run(function($rootScope, conf) {
 
 	return {
 		search : search
+	}
+
+}]);;angular.module('linkedtv').factory('entityExpansionService', ['$rootScope', 'conf', function($rootScope, conf){
+
+	function fetch(srtUrl, start, end, chapterId, callback) {
+		var url = '/entityexpand';
+		url += '?url=' + srtUrl;
+		url += '&start=' + start;
+		url += '&end=' + end;
+		console.debug(url);
+		$.ajax({
+			method: 'GET',
+			dataType : 'json',
+			url : url,
+			success : function(json) {
+				callback(chapterId, json.error ? null : formatResponse(json));
+			},
+			error : function(err) {
+				callback(chapterId, null);
+			}
+		});
+	}
+
+	function formatResponse(data) {
+		console.debug('Got some data!!');
+		console.debug(data);
+		return data
+	}
+
+	return {
+		fetch : fetch
 	}
 
 }]);;angular.module('linkedtv').factory('entityProxyService', ['$rootScope', 'conf', function($rootScope, conf){
@@ -1329,9 +1415,9 @@ linkedtv.run(function($rootScope, conf) {
 		return timeUtils.toPrettyTime(input);
     };
 });;angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, 
-		shotCollection, videoModel, videoCollection, videoSelectionService) {	
-	
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection,
+		shotCollection, subtitleCollection, videoModel, videoCollection, videoSelectionService) {
+
 	$scope.resourceData = null;
 	$scope.loading = true;
 
@@ -1362,7 +1448,7 @@ linkedtv.run(function($rootScope, conf) {
 		dataService.getCuratedData($scope.curatedDataLoaded);
 	};
 
-	$scope.curatedDataLoaded = function(curatedData) {					
+	$scope.curatedDataLoaded = function(curatedData) {
 		console.debug('Loaded the curated/Redis data from the server');
 		console.debug(curatedData);
 
@@ -1370,7 +1456,7 @@ linkedtv.run(function($rootScope, conf) {
 
 		//load the videoModel with metadata
 		videoModel.initModelData($scope.resourceData);
-					
+
 		//load the chapterCollection with chapter data
 		chapterCollection.initCollectionData($rootScope.provider, $scope.resourceData, curatedData);
 
@@ -1379,14 +1465,17 @@ linkedtv.run(function($rootScope, conf) {
 
 		//load the shotCollection with shot data
 		shotCollection.initCollectionData($scope.resourceData);
-		
+
+		//load the subtitleCollection with shot data
+		subtitleCollection.initCollectionData($scope.resourceData.subtitles);
+
 		$scope.$apply(function() {
 			$scope.loading = false;
 		});
 	}
 
 });;angular.module('linkedtv').controller('chapterController',
-	function($scope, $modal, chapterCollection, chapterService, playerService) {
+	function($scope, $modal, chapterCollection, playerService) {
 
 	$scope.allChapters = [];
 	$scope.chapters = [];
@@ -1667,7 +1756,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.activeTemplate = entityUtils.copyInformationCardTemplate($scope.card.template);
 
 	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection
-	$scope.expandedEntities = chapterCollection.getActiveChapter().expandedEntities || [];//TODO
+	$scope.expandedEntities = chapterCollection.getActiveChapter().expandedEntities || [];
 
 	$scope.thumbs = null;
 	$scope.thumbIndex = 0;
@@ -1786,6 +1875,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	//----------------------------FETCH INFO FROM THE ENTITY PROXY------------------------------
 
 	$scope.fetchExtraInfo = function(entity) {
+		console.debug(entity);
 		var uri = entity.disambiguationURL ? entity.disambiguationURL : entity.uri;
 		if(uri) {
 			if(!$scope.useTemplate) {
@@ -1878,6 +1968,24 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$modalInstance.close({dimension : $scope.dimension, link : $scope.card});
 	};
 
+	//----------------------------LISTEN TO FOUND EXPANDED ENTITIES------------------------------
+
+	//this function will update the expanded entities when they are shown
+	$scope.update = function(chapters) {
+		//fetch the expandedentities from the active chapter
+		for(c in chapters) {
+			console.debug(chapters[c]);
+			if(chapters[c].guid == chapterCollection.getActiveChapter().guid) {
+				$scope.$apply(function() {
+					$scope.expandedEntities = chapters[c].expandedEntities;
+				});
+				break;
+			}
+		}
+	}
+
+	chapterCollection.addObserver($scope.update);
+
 }]);;angular.module('linkedtv').controller('linkModalController',
 	['$scope', '$modalInstance', 'timeUtils', 'dimension', 'link',
 	function ($scope, $modalInstance, timeUtils, dimension, link) {
@@ -1930,6 +2038,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.combinedEnrichments =  chapterCollection.getAllEnrichmentsOfChapter() || []; //get the combined enrichments from all dimensions
 	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection
 	$scope.expandedEntities = chapterCollection.getActiveChapter().expandedEntities || [];
+	console.debug($scope.expandedEntities);
 
 	$scope.savedEnrichments = chapterCollection.getSavedEnrichmentsOfDimension(dimension) || null;
 
@@ -1945,7 +2054,6 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.activeEnrichmentSource = null; //current source filter
 	$scope.activeEnrichmentEntitySource = null; //current entity source filter
-
 
 	//the actual enrichments will be shown in the enrichment tab
 	$scope.fetchEnrichments = function() {
@@ -2071,6 +2179,22 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$modalInstance.dismiss('cancel');
 	};
 
+	//this function will update the expanded entities when they are shown
+	$scope.update = function(chapters) {
+		//fetch the expandedentities from the active chapter
+		for(c in chapters) {
+			console.debug(chapters[c]);
+			if(chapters[c].guid == chapterCollection.getActiveChapter().guid) {
+				$scope.$apply(function() {
+					$scope.expandedEntities = chapters[c].expandedEntities;
+				});
+				break;
+			}
+		}
+	}
+
+	chapterCollection.addObserver($scope.update);
+
 }]);;angular.module('linkedtv').controller('playerController', function($sce, $scope, videoModel, playerService){
 	
 	$scope.canPlayVideo = false;
@@ -2094,7 +2218,6 @@ angular.module('linkedtv').controller('informationCardModalController',
 		if(videos) {
 			$scope.$apply(function(){
 				$scope.videos = videos;
-				console.debug($scope.videos);
 			});
 		}
 	};

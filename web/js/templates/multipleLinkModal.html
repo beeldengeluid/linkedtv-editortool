@@ -90,7 +90,14 @@
 
 					<!-- EXPANDED ENTITIES-->
 					<div id="tab_e_expanded" class="tab-pane fade">
-
+						<ul class="entities">
+							<li ng-repeat="e in expandedEntities" class="{{entityUtils.getConfidenceClass(e)}}">
+								<div ng-click="addQueryEntity(e)"
+								class="label label-default entity" title="{{e.label}}">
+								{{e.label}}<!-- TODO add the amount again-->
+								</div>
+							</li>
+						</ul>
 					</div>
 
 			</div>

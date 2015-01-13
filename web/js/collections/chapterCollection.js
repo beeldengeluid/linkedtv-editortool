@@ -5,20 +5,25 @@ The chapter collection contains all of the curated data:
 */
 
 angular.module('linkedtv').factory('chapterCollection',
-	['conf', 'imageService', 'entityCollection', 'shotCollection', 'dataService', 'timeUtils',
-	 function(conf, imageService, entityCollection, shotCollection, dataService, timeUtils) {
+	['conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
+	 'dataService', 'timeUtils', 'entityExpansionService',
+	 function(conf, imageService, entityCollection, shotCollection,
+	 	subtitleCollection, dataService, timeUtils, entityExpansionService) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
 	var _chapters = [];
 	var _activeChapter = null;
 	var _thumbBaseUrl = null;
+	var _srtUrl = null;
 	var _observers = [];
+	var _expandedEntities = {}
 
 	//load the chapter collection (this will trigger the controllers that are listening to the chapterCollection)
 	function initCollectionData(provider, resourceData, curatedData) {
 		console.debug('Initializing chapter data');
 		_thumbBaseUrl = resourceData.thumbBaseUrl;
+		_srtUrl = resourceData.srtUrl;
 		var chapters = [];
 		//load curated data from ET storage
 		if (curatedData) {
@@ -85,6 +90,10 @@ angular.module('linkedtv').factory('chapterCollection',
 		_observers.push(observer);
 	}
 
+	function removeObserver() {
+		_observers.pop();
+	}
+
 	function notifyObservers() {
 		for (o in _observers) {
 			_observers[o](_chapters);
@@ -114,6 +123,7 @@ angular.module('linkedtv').factory('chapterCollection',
 		_activeChapter = activeChapter;
 		entityCollection.updateChapterEntities(_activeChapter);
 		shotCollection.updateChapterShots(_activeChapter);
+		subtitleCollection.updateChapterSubtitles(_activeChapter);
 	}
 
 	//TODO waarom wordt deze zo vaak aangeroepen
@@ -151,6 +161,9 @@ angular.module('linkedtv').factory('chapterCollection',
 	}
 
 	function saveChapter(chapter) {
+		//first fetch the expanded entities (very slow)
+		entityExpansionService.fetch(_srtUrl, chapter.start, chapter.end, chapter.guid, onEntityExpand);
+
 		var exists = false;
 		chapter.type = TYPE_CURATED;
 		chapter.start = parseInt(chapter.start);
@@ -160,6 +173,7 @@ angular.module('linkedtv').factory('chapterCollection',
 				setBasicProperties(chapter, false);
 				_chapters[c] = chapter;
 				exists = true;
+				break;
 			}
 		}
 		if(!exists) { //if it's a new chapter add it
@@ -173,6 +187,22 @@ angular.module('linkedtv').factory('chapterCollection',
 		//update the entire resource on the server
 		saveOnServer();
 		//notify observers
+		notifyObservers();
+	}
+
+	function onEntityExpand(chapterId, data) {
+		//set the data to the correct chapter in the list of chapters
+		for(c in _chapters) {
+			if(_chapters[c].guid == chapterId) {
+				_chapters[c].expandedEntities = data;
+				break;
+			}
+		}
+		//also set the data to the active chapter
+		if(_activeChapter.guid = chapterId) {
+			_activeChapter.expandedEntities = data;
+		}
+		//just notify te observers, no need to save the data right away (I think)
 		notifyObservers();
 	}
 
@@ -232,7 +262,8 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveChapter : saveChapter,
 		saveEnrichment : saveEnrichment,
 		saveEnrichments : saveEnrichments,
-		addObserver : addObserver
+		addObserver : addObserver,
+		removeObserver : removeObserver
 	}
 
 }]);

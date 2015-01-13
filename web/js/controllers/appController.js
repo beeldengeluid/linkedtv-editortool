@@ -1,7 +1,7 @@
 angular.module('linkedtv').controller('appController',
-	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection, 
-		shotCollection, videoModel, videoCollection, videoSelectionService) {	
-	
+	function($rootScope, $scope, conf, dataService, chapterCollection, entityCollection,
+		shotCollection, subtitleCollection, videoModel, videoCollection, videoSelectionService) {
+
 	$scope.resourceData = null;
 	$scope.loading = true;
 
@@ -32,7 +32,7 @@ angular.module('linkedtv').controller('appController',
 		dataService.getCuratedData($scope.curatedDataLoaded);
 	};
 
-	$scope.curatedDataLoaded = function(curatedData) {					
+	$scope.curatedDataLoaded = function(curatedData) {
 		console.debug('Loaded the curated/Redis data from the server');
 		console.debug(curatedData);
 
@@ -40,7 +40,7 @@ angular.module('linkedtv').controller('appController',
 
 		//load the videoModel with metadata
 		videoModel.initModelData($scope.resourceData);
-					
+
 		//load the chapterCollection with chapter data
 		chapterCollection.initCollectionData($rootScope.provider, $scope.resourceData, curatedData);
 
@@ -49,7 +49,10 @@ angular.module('linkedtv').controller('appController',
 
 		//load the shotCollection with shot data
 		shotCollection.initCollectionData($scope.resourceData);
-		
+
+		//load the subtitleCollection with shot data
+		subtitleCollection.initCollectionData($scope.resourceData.subtitles);
+
 		$scope.$apply(function() {
 			$scope.loading = false;
 		});

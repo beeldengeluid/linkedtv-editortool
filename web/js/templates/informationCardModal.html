@@ -119,6 +119,11 @@
                             {{e.label}}
                         </div>
                     </li>
+                    <li ng-repeat="e in expandedEntities" class="{{entityUtils.getConfidenceClass(e)}} {{isEntitySelected(e)}}">
+                        <div ng-click="fetchExtraInfo(e)" class="label label-default entity" title="{{e.label}}">
+                            {{e.label}}
+                        </div>
+                    </li>
                 </ul>
 
                 <!-- search for entities on DBpedia -->

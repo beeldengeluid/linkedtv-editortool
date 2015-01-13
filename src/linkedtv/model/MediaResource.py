@@ -3,7 +3,8 @@
 class MediaResource(object):
 
 	def __init__(self, mediaResourceID = None, title = None, date = None, concepts = [], nes = [], shots = [], chapters = [],
-		enrichments = [], videoMetadata = None, playoutUrl = None, thumbBaseUrl = None, srtUrl = None, curatedMediaResource = None):
+		enrichments = [], videoMetadata = None, playoutUrl = None, thumbBaseUrl = None, srtUrl = None,
+		curatedMediaResource = None, subtitles = None):
 		self.id = mediaResourceID #URI (main identifier in the LinkedTV API)
 		self.title = title
 		self.date = date
@@ -17,6 +18,7 @@ class MediaResource(object):
 		self.thumbBaseUrl = thumbBaseUrl
 		self.srtUrl = srtUrl
 		self.curatedMediaResource = curatedMediaResource #MediaResource
+		self.subtitles = subtitles #So far only used by RBB entity expansion
 
 	def setId(self, mediaResourceID):
 		self.id = mediaResourceID
@@ -95,3 +97,9 @@ class MediaResource(object):
 
 	def getCuratedMediaResource(self):
 		return self.curatedMediaResource
+
+	def setSubtitles(self, subtitles):
+		self.subtitles = subtitles
+
+	def getSubtitles(self):
+		return self.subtitles

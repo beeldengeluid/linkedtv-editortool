@@ -220,12 +220,13 @@ def entityexpand(request):
 	url = request.GET.get('url', None)
 	start = request.GET.get('start', -1)
 	end = request.GET.get('end', -1)
-	if url and (end > start or (end == -1 and start == -1)):
+	date = request.GET.get('date', None)
+	if url and (int(end) > int(start) or (end == -1 and start == -1)):
 		ees = EntityExpansionService()
-		resp = ees.fetch(url, start, end)
+		resp = ees.fetch(url, date, int(start), int(end))
 		if resp:
-			return HttpResponse(resp, mimetype='text/plain')
-			#return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+			#return HttpResponse(resp, mimetype='text/plain')
+			return HttpResponse(simplejson.dumps(resp, default=lambda obj: obj.__dict__), mimetype='application/json')
 		else:
 			return HttpResponse(__getErrorMessage('Could not find any entities'), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')

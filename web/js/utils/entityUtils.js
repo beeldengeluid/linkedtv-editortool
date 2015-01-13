@@ -1,9 +1,14 @@
-angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterCollection', 'conf', 
+angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterCollection', 'conf',
 	function(entityCollection, chapterCollection, conf) {
 
-
+	//the measurements in this function must be scrutinized
 	function getConfidenceClass(entity) {
-		var c = parseFloat(entity.confidence);
+		var c = 0;
+		if(entity.confidence) {
+			c = parseFloat(entity.confidence);
+		} else {
+			c = parseFloat(entity.relevance);
+		}
 		if(c <= 0) {
 			return 'verylow';
 		} else if (c > 0 && c <= 0.2) {
@@ -28,7 +33,7 @@ angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterC
 			} else {
 				return null;
 			}
-		} 
+		}
 
 		var t = {};
 		t.label = template.label;
@@ -36,7 +41,7 @@ angular.module('linkedtv').factory('entityUtils', ['entityCollection', 'chapterC
 		_.each(template.properties, function(p) {
 			var val = null;
 			if(p.value != null && typeof(p.value) == 'object') {
-				val = {category: p.value.category, label: p.value.label, type :p.value.type, uri: p.value.uri};				
+				val = {category: p.value.category, label: p.value.label, type :p.value.type, uri: p.value.uri};
 			} else {
 				val = p.value;
 			}

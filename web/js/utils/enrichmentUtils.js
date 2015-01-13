@@ -15,9 +15,10 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
+			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 			chapterCollection.saveEnrichments(data.dimension, data.enrichments);
 		}, function () {
-			//
+			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 		});
 	};
 
@@ -65,9 +66,10 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
+			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 			chapterCollection.saveEnrichment(data.dimension, data.link, true);
 		}, function () {
-			//
+			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 		});
 	};
 

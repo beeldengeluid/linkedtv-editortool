@@ -5,7 +5,7 @@ import redis
 import base64
 import httplib2
 
-
+from linkedtv.api.storage.load.ltv.LinkedTVSubtitleLoader import LinkedTVSubtitleLoader
 from linkedtv.api.storage.load.ltv.LinkedTVDataUtils import LinkedTVDataUtils
 from linkedtv.api.storage.load.ltv.video.VideoPlayoutHandler import VideoPlayoutHandler
 from linkedtv.utils.TimeUtils import *
@@ -27,9 +27,11 @@ class LinkedTVDataLoader(DataLoader):
 	#implementation of DataLoader function
 	def loadMediaResourceData(self, resourceUri, clientIP, loadAnnotations):
 		mediaResource = MediaResource()
+		#load the annotations if desired
 		if loadAnnotations:
 			mediaResource = self.__getAllAnnotationsOfResource(resourceUri, False)
 
+		#fetch the video metadata
 		videoMetadata = self.__getVideoData(resourceUri)
 		vd = None
 		if videoMetadata:
@@ -59,6 +61,12 @@ class LinkedTVDataLoader(DataLoader):
 						elif mrr['relationType'] == 'srt':
 							mediaResource.setSrtUrl(mrr['relationTarget'])
 
+		#get the subtitles if desired
+		subLoader = LinkedTVSubtitleLoader()
+		subs = subLoader.loadSubtitles(resourceUri)
+		mediaResource.setSubtitles(subs)
+
+		#transform the mediaresource object to JSON and return it
 		resp = simplejson.dumps(mediaResource, default=lambda obj: obj.__dict__)
 		return resp
 
