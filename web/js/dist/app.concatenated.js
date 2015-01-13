@@ -78,6 +78,7 @@ var informationCardTemplates = {
 }
 
 var rbbConfig = {
+	entityExpansion : true,
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -144,6 +145,7 @@ var rbbConfig = {
 };
 
 var tkkConfig = {
+	entityExpansion : false,
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -203,6 +205,7 @@ var tkkConfig = {
 };
 
 var trialConfig = {
+	entityExpansion : false,
 	dimensions : [
 		{
 			id : 'maintopic',
@@ -488,9 +491,9 @@ linkedtv.run(function($rootScope, conf) {
 		guid : guid
 	}
 }]);;angular.module('linkedtv').factory('chapterCollection',
-	['conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
+	['$rootScope', 'conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
 	 'dataService', 'timeUtils', 'entityExpansionService',
-	 function(conf, imageService, entityCollection, shotCollection,
+	 function($rootScope, conf, imageService, entityCollection, shotCollection,
 	 	subtitleCollection, dataService, timeUtils, entityExpansionService) {
 
 	var TYPE_AUTO = 'auto';
@@ -643,9 +646,13 @@ linkedtv.run(function($rootScope, conf) {
 		saveOnServer();
 	}
 
-	function saveChapter(chapter) {
+	function saveChapter(chapter, entityExpand) {
 		//first fetch the expanded entities (very slow)
-		entityExpansionService.fetch(_srtUrl, chapter.start, chapter.end, chapter.guid, onEntityExpand);
+		if(conf.programmeConfig.entityExpansion && entityExpand){
+			entityExpansionService.fetch(_srtUrl, chapter.start, chapter.end, chapter.guid, onEntityExpand);
+		} else {
+			console.debug('No entity expansion for this provider');
+		}
 
 		var exists = false;
 		chapter.type = TYPE_CURATED;
@@ -686,7 +693,8 @@ linkedtv.run(function($rootScope, conf) {
 			_activeChapter.expandedEntities = data;
 		}
 		//just notify te observers, no need to save the data right away (I think)
-		notifyObservers();
+		//notifyObservers();
+		saveOnServer();
 	}
 
 	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
@@ -699,7 +707,10 @@ linkedtv.run(function($rootScope, conf) {
 
 	//works for both information cards and enrichments
 	function saveEnrichment(dimension, link, isInformationCard) {
+		console.debug('Saving enrichment in: ' + dimension.id)
+		console.debug(link);
 		var dimensionAnnotations = _activeChapter.dimensions[dimension.id].annotations;
+		console.debug(_activeChapter);
 		if(link.remove) {
 			for(var i=0;i<dimensionAnnotations.length;i++) {
 				if(dimensionAnnotations[i].url == link.url) {
@@ -722,7 +733,8 @@ linkedtv.run(function($rootScope, conf) {
 			}
 		} else {
 			//add a new dimension (add the config properties + a list to hold the annotations)
-			dimensionAnnotations = [link];
+			//dimensionAnnotations = [link];
+			_activeChapter.dimensions[dimension.id].annotations = [link];
 		}
 		saveChapter(_activeChapter);
 	}
@@ -1569,7 +1581,7 @@ linkedtv.run(function($rootScope, conf) {
 				chapterCollection.removeChapter(chapter);
 			} else {
 				//update the chapter collection
-				chapterCollection.saveChapter(chapter);
+				chapterCollection.saveChapter(chapter, true);
 			}
 
 		}, function () {

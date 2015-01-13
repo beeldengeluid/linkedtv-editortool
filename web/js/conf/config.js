@@ -87,6 +87,7 @@ var informationCardTemplates = {
 }
 
 var rbbConfig = {
+	entityExpansion : true,
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -153,6 +154,7 @@ var rbbConfig = {
 };
 
 var tkkConfig = {
+	entityExpansion : false,
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -212,6 +214,7 @@ var tkkConfig = {
 };
 
 var trialConfig = {
+	entityExpansion : false,
 	dimensions : [
 		{
 			id : 'maintopic',

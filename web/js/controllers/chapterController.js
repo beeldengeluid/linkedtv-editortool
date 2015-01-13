@@ -93,7 +93,7 @@ angular.module('linkedtv').controller('chapterController',
 				chapterCollection.removeChapter(chapter);
 			} else {
 				//update the chapter collection
-				chapterCollection.saveChapter(chapter);
+				chapterCollection.saveChapter(chapter, true);
 			}
 
 		}, function () {

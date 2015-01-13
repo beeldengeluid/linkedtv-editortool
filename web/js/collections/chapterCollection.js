@@ -5,9 +5,9 @@ The chapter collection contains all of the curated data:
 */
 
 angular.module('linkedtv').factory('chapterCollection',
-	['conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
+	['$rootScope', 'conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
 	 'dataService', 'timeUtils', 'entityExpansionService',
-	 function(conf, imageService, entityCollection, shotCollection,
+	 function($rootScope, conf, imageService, entityCollection, shotCollection,
 	 	subtitleCollection, dataService, timeUtils, entityExpansionService) {
 
 	var TYPE_AUTO = 'auto';
@@ -160,9 +160,13 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveOnServer();
 	}
 
-	function saveChapter(chapter) {
+	function saveChapter(chapter, entityExpand) {
 		//first fetch the expanded entities (very slow)
-		entityExpansionService.fetch(_srtUrl, chapter.start, chapter.end, chapter.guid, onEntityExpand);
+		if(conf.programmeConfig.entityExpansion && entityExpand){
+			entityExpansionService.fetch(_srtUrl, chapter.start, chapter.end, chapter.guid, onEntityExpand);
+		} else {
+			console.debug('No entity expansion for this provider');
+		}
 
 		var exists = false;
 		chapter.type = TYPE_CURATED;
@@ -203,7 +207,8 @@ angular.module('linkedtv').factory('chapterCollection',
 			_activeChapter.expandedEntities = data;
 		}
 		//just notify te observers, no need to save the data right away (I think)
-		notifyObservers();
+		//notifyObservers();
+		saveOnServer();
 	}
 
 	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
@@ -216,7 +221,10 @@ angular.module('linkedtv').factory('chapterCollection',
 
 	//works for both information cards and enrichments
 	function saveEnrichment(dimension, link, isInformationCard) {
+		console.debug('Saving enrichment in: ' + dimension.id)
+		console.debug(link);
 		var dimensionAnnotations = _activeChapter.dimensions[dimension.id].annotations;
+		console.debug(_activeChapter);
 		if(link.remove) {
 			for(var i=0;i<dimensionAnnotations.length;i++) {
 				if(dimensionAnnotations[i].url == link.url) {
@@ -239,7 +247,8 @@ angular.module('linkedtv').factory('chapterCollection',
 			}
 		} else {
 			//add a new dimension (add the config properties + a list to hold the annotations)
-			dimensionAnnotations = [link];
+			//dimensionAnnotations = [link];
+			_activeChapter.dimensions[dimension.id].annotations = [link];
 		}
 		saveChapter(_activeChapter);
 	}
