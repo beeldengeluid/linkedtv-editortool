@@ -1,5 +1,5 @@
 #https://code.google.com/p/solrpy/
-import solr
+#import solr
 
 class LinkedTVChapterIndexHandler(object):
 
@@ -9,6 +9,6 @@ class LinkedTVChapterIndexHandler(object):
 		self.SOLR_HOST = ''#read from the config
 		self.SOLR_PORT = ''#read from the config
 
-	def updateIndex(self, chapter)
-		s = solr.SolrConnection('http://data.LinkedTVChapterIndexHandler__.eu:8983/solr')
+	def updateIndex(self, chapter):
+		#s = solr.SolrConnection('http://data.LinkedTVChapterIndexHandler__.eu:8983/solr')
 		return None
