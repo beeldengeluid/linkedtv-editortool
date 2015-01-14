@@ -163,7 +163,7 @@ var tkkConfig = {
 			service : {
 				id :'informationCards',
 				params : {
-					vocabulary : 'GTAA'
+					vocabulary : 'DBpedia'
 				}
 			}
 		},
@@ -255,5 +255,6 @@ var programmeConfigs = {
 var config = angular.module('configuration', []).constant('conf', {
 	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
 	loadingImage : '/site_media/images/loading.gif',
-	platform : 'linkedtv'
+	platform : 'linkedtv',
+	logUserActions : true
 });

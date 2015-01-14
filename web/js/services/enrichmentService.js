@@ -3,7 +3,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 	function search(query, entities, dimension, callback) {
 		fillInDynamicProperties(dimension);
 		var data = {
-			'query' : query, //query.split('+').join(','),
+			'query' : query,
 			'dimension' : dimension,
 			'entities' : entities
 		};
@@ -33,22 +33,8 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 		});
 	}
 
-	//TODO in the future possibly service specific things could be done by reading the 'additionalProperties' field,
-	//which is service specific
-	/*
-	function formatServiceResponse(data, dimension) {
-		if(dimension.service.id == 'TvEnricher') {
-			return formatGenericResponse(data, dimension);
-		} else if(dimension.service.id == 'TvNewsEnricher') {
-			return formatGenericResponse(data, dimension);
-		} else if(dimension.service.id == 'EuropeanaAPI') {
-			return formatGenericResponse(data, dimension);
-		} else if(dimension.service.id == 'AnefoAPI') {
-			return formatGenericResponse(data, dimension);
-		}
-		return null;
-	}*/
-
+	//This function does not do anything with the additionalProperties of each enrichment.
+	//These could be utitilized in a service specific function
 	function formatGenericResponse(data, dimension) {
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data

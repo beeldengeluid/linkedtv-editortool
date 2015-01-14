@@ -91,6 +91,8 @@ class IRAPI(DimensionService):
 						source=source,
 						entities=[entity['label'] for entity in entities]
 					)
+					if e.has_key('micropost') and e['micropost'].has_key('html'):
+						enrichment.setDescription(e['micropost']['html'])
 					if e.has_key('type'):
 						enrichment.setEnrichmentType(e['type'])
 					if e.has_key('mediaUrl'):

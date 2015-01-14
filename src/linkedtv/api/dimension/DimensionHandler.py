@@ -1,6 +1,6 @@
-from linkedtv.api.dimension.TvEnricher import TvEnricher
-from linkedtv.api.dimension.TvNewsEnricher import TvNewsEnricher
-from linkedtv.api.dimension.IRAPI import IRAPI
+from linkedtv.api.dimension.ltv.TvEnricher import TvEnricher
+from linkedtv.api.dimension.ltv.TvNewsEnricher import TvNewsEnricher
+from linkedtv.api.dimension.ltv.IRAPI import IRAPI
 
 from linkedtv.api.dimension.public.EuropeanaAPI import EuropeanaAPI
 from linkedtv.api.dimension.public.AnefoAPI import AnefoAPI
