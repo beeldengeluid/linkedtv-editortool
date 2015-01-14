@@ -43,18 +43,20 @@ class TvNewsEnricher(DimensionService):
 	def __init__(self):
 		DimensionService.__init__(self, 'TvNewsEnricher')
 		self.BASE_URL = 'http://linkedtv.eurecom.fr/newsenricher/api'
-		self.googleCustomSearchEngines = {#https://www.google.com/cse/publicurl?cx=
-			'opinion' : '008879027825390475756:jttjpihzlns',#'014567755836058125714:2yq5yptluxs',
-			'othermedia' : '008879027825390475756:jttjpihzlns', #'014567755836058125714:c1kdam3wyey',
-			'indepth' : '008879027825390475756:jttjpihzlns',#'014567755836058125714:0opyehd0oiu',
-			'timeline' : '008879027825390475756:jttjpihzlns' #'014567755836058125714:aeiq3vyfdw8'
+		self.googleCustomSearchEngines = {
+			'opinion' : '008879027825390475756:jttjpihzlns',
+			'othermedia' : '008879027825390475756:jttjpihzlns',
+			'indepth' : '008879027825390475756:jttjpihzlns',
+			'timeline' : '008879027825390475756:jttjpihzlns'
 		}
 		self.periodInDays = 7
 		self.searchLimit = 50
 
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
-			return self.__formatResponse(self.__search(query, entities, dimension), dimension)
+			queryUrl, results = self.__search(query, entities, dimension)
+			if queryUrl and results:
+				return {'enrichments' : self.__formatResponse(results, dimension), 'queries' : [queryUrl]}
 		return None
 
 	def __isValidDimension(self, dimension):
@@ -70,8 +72,8 @@ class TvNewsEnricher(DimensionService):
 			headers = {'Content-type': 'application/json'}
 			resp, content = http.request(url, 'GET', headers=headers)
 			if content:
-				return content
-		return None
+				return url, content
+		return None, None
 
 	def __getServiceUrl(self, query, entities, dimension):
 		if dimension['service'].has_key('params'):
@@ -128,19 +130,21 @@ class TvNewsEnricher(DimensionService):
       },
 	"""
 	def __formatResponse(self, data, dimension):
-		data = simplejson.loads(data)
-		enrichments = []
-		for e in data:
-			enrichment = Enrichment(
-				e['title'],
-				url=e['url']
-			)
-			if e.has_key('source'):
-				enrichment.setSource(e['source']['name'])
-			if e.has_key('media'):
-				if e['media'].has_key('thumbnail'):
-					enrichment.setPoster(e['media']['thumbnail'])
-				if e['media'].has_key('type'):
-					enrichment.setEnrichmentType(e['media']['type'])
-			enrichments.append(enrichment)
-		return { 'enrichments' : enrichments}
+		if data:
+			data = simplejson.loads(data)
+			enrichments = []
+			for e in data:
+				enrichment = Enrichment(
+					e['title'],
+					url=e['url']
+				)
+				if e.has_key('source'):
+					enrichment.setSource(e['source']['name'])
+				if e.has_key('media'):
+					if e['media'].has_key('thumbnail'):
+						enrichment.setPoster(e['media']['thumbnail'])
+					if e['media'].has_key('type'):
+						enrichment.setEnrichmentType(e['media']['type'])
+				enrichments.append(enrichment)
+			return enrichments
+		return None

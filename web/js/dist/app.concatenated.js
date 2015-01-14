@@ -154,7 +154,7 @@ var tkkConfig = {
 			service : {
 				id :'informationCards',
 				params : {
-					vocabulary : 'GTAA'
+					vocabulary : 'DBpedia'
 				}
 			}
 		},
@@ -163,9 +163,9 @@ var tkkConfig = {
 			label : 'Background',
 			linkedtvDimension : 'Background',
 			service : {
-				id : 'IRAPI',
+				id : 'TvEnricher',
 				params : {
-					domain : 'SV'
+					dimension : 'SV'
 				}
 			}
 		},
@@ -246,7 +246,8 @@ var programmeConfigs = {
 var config = angular.module('configuration', []).constant('conf', {
 	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
 	loadingImage : '/site_media/images/loading.gif',
-	platform : 'linkedtv'
+	platform : 'linkedtv',
+	logUserActions : true
 });
 ;var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
 
@@ -1091,7 +1092,7 @@ linkedtv.run(function($rootScope, conf) {
 	function search(query, entities, dimension, callback) {
 		fillInDynamicProperties(dimension);
 		var data = {
-			'query' : query, //query.split('+').join(','),
+			'query' : query,
 			'dimension' : dimension,
 			'entities' : entities
 		};
@@ -1121,22 +1122,8 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	//TODO in the future possibly service specific things could be done by reading the 'additionalProperties' field,
-	//which is service specific
-	/*
-	function formatServiceResponse(data, dimension) {
-		if(dimension.service.id == 'TvEnricher') {
-			return formatGenericResponse(data, dimension);
-		} else if(dimension.service.id == 'TvNewsEnricher') {
-			return formatGenericResponse(data, dimension);
-		} else if(dimension.service.id == 'EuropeanaAPI') {
-			return formatGenericResponse(data, dimension);
-		} else if(dimension.service.id == 'AnefoAPI') {
-			return formatGenericResponse(data, dimension);
-		}
-		return null;
-	}*/
-
+	//This function does not do anything with the additionalProperties of each enrichment.
+	//These could be utitilized in a service specific function
 	function formatGenericResponse(data, dimension) {
 		var temp = [];//will contain enrichments
 		var sources = [];//sometimes available in the data

@@ -21,7 +21,9 @@ class EuropeanaAPI(DimensionService):
 
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
-			return self.__formatResponse(self.__search(query, entities, dimension), dimension)
+			queryUrl, results = self.__search(query, entities, dimension)
+			if queryUrl and results:
+				return { 'enrichments' : self.__formatResponse(results, dimension), 'queries' : [queryUrl]}
 		return None
 
 	def __isValidDimension(self, dimension):
@@ -39,8 +41,8 @@ class EuropeanaAPI(DimensionService):
 			headers = {'Content-type': 'application/json'}
 			resp, content = http.request(url, 'GET', headers=headers)
 			if content:
-				return content
-		return None
+				return url, content
+		return None, None
 
 	def __getServiceUrl(self, query, entities, dimension):
 		if query == '':
@@ -55,7 +57,6 @@ class EuropeanaAPI(DimensionService):
 			for qf in dimension['service']['params']['queryParts']:
 				url += '&qf=%s' % qf
 		url += '&rows=100'
-		print url
 		return url
 
 	"""
@@ -147,4 +148,4 @@ class EuropeanaAPI(DimensionService):
 					if e.has_key('edmPreview'):
 						enrichment.setPoster(e['edmPreview'][0])
 					enrichments.append(enrichment)
-		return { 'enrichments' : enrichments}
+		return enrichments

@@ -20,18 +20,24 @@ class AnefoAPI(DimensionService):
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
 			#first do a field query to get the most relevant results
+			queries = []
+			queryUrl, results = self.__search(query, entities, dimension, True, self.DESIRED_AMOUNT_OF_RESULTS)
 			enrichments = self.__formatResponse(
-				self.__search(query, entities, dimension, True, self.DESIRED_AMOUNT_OF_RESULTS),
+				results,
 				dimension
 			)
+			queries.append(queryUrl)
 			if len(enrichments) < self.DESIRED_AMOUNT_OF_RESULTS:
 				numResults = self.DESIRED_AMOUNT_OF_RESULTS - len(enrichments)
-				moreEnrichments = self.__formatResponse(
-					self.__search(query, entities, dimension, False, numResults),
-					dimension
-				)
-				enrichments = list(set(enrichments) | set(moreEnrichments))
-			return { 'enrichments' : enrichments}
+				queryUrl, results = self.__search(query, entities, dimension, False, numResults)
+				if queryUrl:
+					moreEnrichments = self.__formatResponse(
+						results,
+						dimension
+					)
+					queries.append(queryUrl)
+					enrichments = list(set(enrichments) | set(moreEnrichments))
+			return { 'enrichments' : enrichments, 'queries' : queries}
 		return None
 
 	def __isValidDimension(self, dimension):
@@ -44,8 +50,8 @@ class AnefoAPI(DimensionService):
 			headers = {'Accept':'text/html,application/xhtml+xml,application/xml'}
 			resp, content = http.request(url, 'GET', headers=headers)
 			if content:
-				return content
-		return None
+				return url, content
+		return None, None
 
 	def __constructServiceQueryUrl(self, query, entities, dimension, fieldQuery, numResults):
 		#Trefwoorden: Geografisch_trefwoord:

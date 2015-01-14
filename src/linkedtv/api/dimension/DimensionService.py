@@ -1,6 +1,21 @@
 #http://stackoverflow.com/questions/4382945/abstract-methods-in-python
 #http://pymotw.com/2/abc/
 
+"""
+Each implementation of fetch should return an structure as follows:
+
+{
+	'enrichments' : [
+		linkedtv.model.Enrichment(label='', url='', source='', entitities=[linkedtv.model.NamedEntity(), ...]),
+		...
+	],
+	'queries' : ['http://someapi.com/q=somesearch', ...]
+}
+
+Note ('enrichments'): Make sure at least the properties indicated are filled in. See the Enrichment class for more info.
+Note ('queries'): optional. Fill in if in config.js the logUserActions is set to true
+"""
+
 class DimensionService(object):
 
 	def __init__(self, id):

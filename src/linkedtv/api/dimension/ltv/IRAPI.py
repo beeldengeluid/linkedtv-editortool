@@ -18,21 +18,27 @@ class IRAPI(DimensionService):
 	#TODO check if everything makes sense
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
+			queries = []
 			#first do a field query to get the most relevant results
+			queryUrl, results = self.__search(query, entities, dimension, True, self.DESIRED_AMOUNT_OF_RESULTS)
 			enrichments = self.__formatResponse(
-				self.__search(query, entities, dimension, True, self.DESIRED_AMOUNT_OF_RESULTS),
+				results,
 				entities,
 				dimension
 			)
+			queries.append(queryUrl)
 			if len(enrichments) < self.DESIRED_AMOUNT_OF_RESULTS:
 				numResults = self.DESIRED_AMOUNT_OF_RESULTS - len(enrichments)
-				moreEnrichments = self.__formatResponse(
-					self.__search(query, entities, dimension, False, numResults),
-					entities,
-					dimension
-				)
-				enrichments = list(set(enrichments) | set(moreEnrichments))
-			return { 'enrichments' : enrichments}
+				queryUrl, results = self.__search(query, entities, dimension, False, numResults)
+				if queryUrl and results:
+					moreEnrichments = self.__formatResponse(
+						results,
+						entities,
+						dimension
+					)
+					queries.append(queryUrl)
+					enrichments = list(set(enrichments) | set(moreEnrichments))
+			return { 'enrichments' : enrichments, 'queries' : queries}
 		return None
 
 	def __isValidDimension(self, dimension):
@@ -47,8 +53,8 @@ class IRAPI(DimensionService):
 			headers = {'Accept':'application/json'}
 			resp, content = http.request(url, 'GET', headers=headers)
 			if content:
-				return content
-		return None
+				return url, content
+		return None, None
 
 	def __constructServiceQueryUrl(self, query, entities, dimension, strictQuery, numResults):
 		if query == '' and len(entities) > 0:
@@ -58,9 +64,11 @@ class IRAPI(DimensionService):
 				query = self.__constructQuery(entities)
 		else:
 			query = urllib.quote(query.encode('utf8'))
-		url = '%s?q=%s&row=%d&domain_source=%s&media_type=image'% (self.BASE_URL, query, numResults, dimension['service']['params']['domain'])
-		print url
-		return url
+		if query:
+			url = '%s?q=%s&row=%d&domain_source=%s&media_type=image'% (self.BASE_URL, query, numResults, dimension['service']['params']['domain'])
+			print url
+			return url
+		return None
 
 	def __constructStrictQuery(self, entities):
 		queryParts = []
@@ -70,9 +78,11 @@ class IRAPI(DimensionService):
 
 	def __constructQuery(self, entities):
 		queryParts = []
-		for i in range(0, len(entities) -1):
-			queryParts.append('"%s"' % entities[i]['label'])
-		return urllib.quote(' '.join(queryParts).encode('utf8'))
+		if len(entities) > 1:
+			for i in range(0, len(entities) -1):
+				queryParts.append('"%s"' % entities[i]['label'])
+			return urllib.quote(' '.join(queryParts).encode('utf8'))
+		return None
 
 
 	#the data returnde from Anefo is in some RSS format

@@ -6,7 +6,7 @@ from linkedtv.api.dimension.public.EuropeanaAPI import EuropeanaAPI
 from linkedtv.api.dimension.public.AnefoAPI import AnefoAPI
 
 """
-Todo make sure that all services return the same model!! (create an object model for this)
+See the DimensionService class to see what data the fetch() function needs to return
 """
 class DimensionHandler(object):
 

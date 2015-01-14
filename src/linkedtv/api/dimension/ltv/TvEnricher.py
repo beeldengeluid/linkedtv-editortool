@@ -39,16 +39,19 @@ class TvEnricher(DimensionService):
                 mfs = simplejson.loads(content)
                 for obj in mfs:
                     snippet = None
+                    poster = None
                     if obj.has_key('subtitle'):
                         snippet = obj['subtitle']
                     linkedtvUrl = obj['linkedtv_id']
                     mediaFragmentUri = obj['mf_id']
                     videoData = self.__getMediaFragmentData(mediaFragmentUri)
-                    enrichments.append({'micropostUrl' : mediaFragmentUri, 'mediaUrl' : videoData['poster'],
+                    if videoData.has_key('poster'):
+                        poster = videoData['poster']
+                    enrichments.append({'micropostUrl' : mediaFragmentUri, 'mediaUrl' : poster,
                      'micropost' : {'plainText' : videoData['title']} , 'description' : snippet})
-                return { 'enrichments' : { '%s' % ' '.join(query) : {'LinkedTV' : enrichments } } }
+                return { 'enrichments' : { '%s' % ' '.join(query) : {'LinkedTV' : enrichments } }, 'queries' : [url]}
             else:
-                return { 'enrichments' : simplejson.loads(content) } # service is already included in the content
+                return { 'enrichments' : simplejson.loads(content), 'queries' : [url]} # service is already included in the content
         else:
             return None
 
@@ -85,25 +88,29 @@ class TvEnricher(DimensionService):
     """
     def __formatResponse(self, data, dimension):
         enrichments = []
-        if data.has_key('enrichments'):
-            for entity in data['enrichments'].keys(): #all the enrichments are grouped by entity
-                for source in data['enrichments'][entity].keys(): #all the available sources
-                    for e in data['enrichments'][entity][source]: #each source contains a list of enrichments
-                        title = None
-                        if e.has_key('micropost') and e['micropost'].has_key('plainText'):
-                            title = e['micropost']['plainText']
-                        enrichment = Enrichment(
-                            title,
-                            url=self.__formatUrl(e['micropostUrl'], dimension),
-                            source=source,
-                            entities=[entity]
-                        )
-                        if e.has_key('type'):
-                            enrichment.setEnrichmentType(e['type'])
-                        if e.has_key('mediaUrl'):
-                            enrichment.setPoster(e['mediaUrl'])
-                        enrichments.append(enrichment)
-        return { 'enrichments' : enrichments}
+        queries = []
+        if data:
+            if data.has_key('queries'):
+                queries = data['queries']
+            if data.has_key('enrichments'):
+                for entity in data['enrichments'].keys(): #all the enrichments are grouped by entity
+                    for source in data['enrichments'][entity].keys(): #all the available sources
+                        for e in data['enrichments'][entity][source]: #each source contains a list of enrichments
+                            title = None
+                            if e.has_key('micropost') and e['micropost'].has_key('plainText'):
+                                title = e['micropost']['plainText']
+                            enrichment = Enrichment(
+                                title,
+                                url=self.__formatUrl(e['micropostUrl'], dimension),
+                                source=source,
+                                entities=[entity]
+                            )
+                            if e.has_key('type'):
+                                enrichment.setEnrichmentType(e['type'])
+                            if e.has_key('mediaUrl'):
+                                enrichment.setPoster(e['mediaUrl'])
+                            enrichments.append(enrichment)
+        return { 'enrichments' : enrichments, 'queries' : queries}
 
     def __formatUrl(self, url, dimension):
         if dimension['service']['params']['dimension'] == 'Solr':
