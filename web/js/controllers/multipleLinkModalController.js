@@ -10,6 +10,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 	$scope.entitiesCollapsed = false;
 
 	$scope.nothingFound = false;
+	$scope.fetchButtonText = 'Search';
 
 	//main variables
 	$scope.enrichmentUtils = enrichmentUtils;

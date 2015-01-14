@@ -12,7 +12,7 @@ class IRAPI(DimensionService):
 
 	def __init__(self):
 		DimensionService.__init__(self, 'IRAPI')
-		self.BASE_URL = 'https://ir.lmcloud.vse.cz/irapi/media-server'
+		self.BASE_URL = 'http://ir.lmcloud.vse.cz/irapi/media-server'
 		self.DESIRED_AMOUNT_OF_RESULTS = 20
 
 	#TODO check if everything makes sense

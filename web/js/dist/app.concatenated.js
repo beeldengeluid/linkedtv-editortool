@@ -2044,6 +2044,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.entitiesCollapsed = false;
 
 	$scope.nothingFound = false;
+	$scope.fetchButtonText = 'Search';
 
 	//main variables
 	$scope.enrichmentUtils = enrichmentUtils;
