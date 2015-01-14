@@ -7,7 +7,7 @@
 	<!-- The selected enrichments for this dimension selectedEnrichments-->
 	<div class="row">
 		<div class="col-md-12">
-			<foldable title="Saved enrichments (double click item to remove)" collapsed="savedEnrichmentsCollapsed"></foldable>
+			<foldable title="Existing enrichments (double click item to remove)" collapsed="savedEnrichmentsCollapsed"></foldable>
 			<div collapse="savedEnrichmentsCollapsed">
 
 				<div ng-show="savedEnrichments.length == 0" class="row" ng-show="nothingFound">
@@ -37,20 +37,17 @@
 	<div class="row">
 
 		<div class="col-md-12">
-			<foldable title="Choose entities" collapsed="entitiesCollapsed"></foldable>
+			<foldable title="Find new enrichments (select entities or enter text to search for them)" collapsed="entitiesCollapsed"></foldable>
 			<div collapse="entitiesCollapsed">
-
-				<h4>Select one or more entities and fetch useful links</h4>
-
 				<ul class="nav nav-tabs" role="tablist">
 					<li class="active">
-						<a data-target="#tab_e_auto" role="tab" data-toggle="tab">Auto</a>
+						<a data-target="#tab_e_auto" role="tab" data-toggle="tab">Entities mentioned in the program</a>
 					</li>
 					<li>
-						<a data-target="#tab_e_curated" role="tab" data-toggle="tab">Curated</a>
+						<a data-target="#tab_e_curated" role="tab" data-toggle="tab">Curated enrichments</a>
 					</li>
 					<li>
-						<a data-target="#tab_e_expanded" role="tab" data-toggle="tab">Expanded</a>
+						<a data-target="#tab_e_expanded" role="tab" data-toggle="tab">Entities from a broader context</a>
 					</li>
 				</ul>
 
@@ -118,11 +115,10 @@
 					</div>
 					<form class="form-inline enrichment-search" role="form">
 						<div class="form-group">
-							<label>Search</label>
 							<input id="e_query" type="text">
 						</div>
 						<button class="btn btn-primary" ng-click="fetchEnrichments()">
-							{{fetchButtonText}}
+							Search
 						</button>
 					</form>
 				</div>

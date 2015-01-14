@@ -45,7 +45,7 @@
         </div>
 
         <div class="col-md-12 card-edit-form">
-            <h4>Properties of: {{card.template.label}}</h4>
+            <h4>Existing properties of the card (Note: adding a label is mandatory)</h4>
             <div class="row">
                 <div class="col-md-10">
 
@@ -110,7 +110,7 @@
     <!-- display entities -->
     <div class="row">
         <div class="col-md-12">
-            <foldable title="Pick entities" collapsed="entitiesCollapsed"></foldable>
+            <foldable title="Select entities to show additional information (if available)" collapsed="entitiesCollapsed"></foldable>
             <div collapse="entitiesCollapsed">
                 <h4>Detected entities</h4>
                 <ul class="entities">
@@ -155,11 +155,11 @@
     <div class="row">
         <div ng-show="fetchedTriples" class="card-fetch-form">
             <div class="col-md-12">
-                <foldable title="Show fetched data" collapsed="fetchedDataCollapsed"></foldable>
+                <foldable title="Show additional information" collapsed="fetchedDataCollapsed"></foldable>
                 <div collapse="fetchedDataCollapsed">
                     <h4>
-                        Fetched properties
-                        <button type="button" class="btn btn-primary" ng-click="useAsTemplate()">Use as card</button>
+                        Use this information as the basis for the card (replacing what is currently filled in at the top)
+                        <button type="button" class="btn btn-primary" ng-click="useAsTemplate()">Copy to card</button>
                     </h4>
 
                     <div class="row">

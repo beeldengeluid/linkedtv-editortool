@@ -163,9 +163,9 @@ var tkkConfig = {
 			label : 'Background',
 			linkedtvDimension : 'Background',
 			service : {
-				id : 'TvEnricher',
+				id : 'IRAPI',
 				params : {
-					dimension : 'SV'
+					domain : 'SV'
 				}
 			}
 		},
@@ -1103,7 +1103,7 @@ linkedtv.run(function($rootScope, conf) {
 			success : function(json) {
 				console.debug(json);
 				var enrichments = json.error ? null : json.enrichments;
-				callback(formatServiceResponse(enrichments, dimension));
+				callback(formatGenericResponse(enrichments, dimension));
 			},
 			error : function(err) {
 				console.debug(err);
@@ -1123,6 +1123,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	//TODO in the future possibly service specific things could be done by reading the 'additionalProperties' field,
 	//which is service specific
+	/*
 	function formatServiceResponse(data, dimension) {
 		if(dimension.service.id == 'TvEnricher') {
 			return formatGenericResponse(data, dimension);
@@ -1134,7 +1135,7 @@ linkedtv.run(function($rootScope, conf) {
 			return formatGenericResponse(data, dimension);
 		}
 		return null;
-	}
+	}*/
 
 	function formatGenericResponse(data, dimension) {
 		var temp = [];//will contain enrichments
@@ -2043,7 +2044,6 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.entitiesCollapsed = false;
 
 	$scope.nothingFound = false;
-	$scope.fetchButtonText = 'Find links'
 
 	//main variables
 	$scope.enrichmentUtils = enrichmentUtils;

@@ -15,7 +15,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 			success : function(json) {
 				console.debug(json);
 				var enrichments = json.error ? null : json.enrichments;
-				callback(formatServiceResponse(enrichments, dimension));
+				callback(formatGenericResponse(enrichments, dimension));
 			},
 			error : function(err) {
 				console.debug(err);
@@ -35,6 +35,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 
 	//TODO in the future possibly service specific things could be done by reading the 'additionalProperties' field,
 	//which is service specific
+	/*
 	function formatServiceResponse(data, dimension) {
 		if(dimension.service.id == 'TvEnricher') {
 			return formatGenericResponse(data, dimension);
@@ -46,7 +47,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 			return formatGenericResponse(data, dimension);
 		}
 		return null;
-	}
+	}*/
 
 	function formatGenericResponse(data, dimension) {
 		var temp = [];//will contain enrichments
