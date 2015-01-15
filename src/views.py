@@ -242,4 +242,10 @@ def log(request):
 			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('There was an error while processing the log data'), mimetype='application/json')
 
+def showlogs(request):
+	api = Api()
+	resp = api.showlogs()
+	if resp:
+		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('There are currently no log records available'), mimetype='application/json')
 

@@ -206,18 +206,15 @@ angular.module('linkedtv').factory('chapterCollection',
 		if(_activeChapter.guid = chapterId) {
 			_activeChapter.expandedEntities = data;
 		}
-		//just notify te observers, no need to save the data right away (I think)
-		//notifyObservers();
 		saveOnServer();
 	}
 
 	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
 	// you also need to update this (when you want to add a property to a dimension)!!! (below also)
-	function saveEnrichments(dimension, savedEnrichments, allEnrichments, queries) {
+	function saveEnrichments(dimension, savedEnrichments, freshlySavedEnrichments, allEnrichments, queries) {
 		//if user logging is enabled, save which enrichments were chosen by the user for which query
 		if(conf.logUserActions) {
-			//TODO
-			loggingService.logUserAction(allEnrichments, savedEnrichments, queries, _activeChapter.title);
+			loggingService.logUserAction(allEnrichments, freshlySavedEnrichments, queries, _activeChapter.label);
 		}
 
 		//update the active chapter and save it

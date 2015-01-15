@@ -58,6 +58,10 @@ class Api():
             return "{\"success\" : \"OK\"}"
         return None
 
+    def showlogs(self):
+        ual = UserActionLogger()
+        return ual.getLogs()
+
     def dimension(self, query, entities, dimension):
         dh = DimensionHandler()
         return dh.fetch(query, entities, dimension)
