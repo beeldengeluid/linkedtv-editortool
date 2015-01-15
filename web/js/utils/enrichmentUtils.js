@@ -16,8 +16,8 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
 			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
-			chapterCollection.saveEnrichments(data.dimension, data.enrichments);
-		}, function () {
+			chapterCollection.saveEnrichments(data.dimension, data.savedEnrichments, data.allEnrichments, data.queries);
+		}, function () { //when the modal is closed otherwise (e.g. using the escape button)
 			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 		});
 	};

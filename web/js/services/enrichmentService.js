@@ -14,8 +14,11 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 			url : '/dimension',
 			success : function(json) {
 				console.debug(json);
-				var enrichments = json.error ? null : json.enrichments;
-				callback(formatGenericResponse(enrichments, dimension));
+				if(!json.error) {
+					callback(formatGenericResponse(json.enrichments, dimension), json.queries);
+				} else {
+					callback(null);
+				}
 			},
 			error : function(err) {
 				console.debug(err);
@@ -24,7 +27,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 		});
 	}
 
-	/*Should be moved to another place, this is not nice*/
+	/*Should be moved to another place, this is not nice, also _.each is unneccesary*/
 	function fillInDynamicProperties(dimension) {
 		_.each(dimension.service.params, function(value, key){
 			if (value == '$VIDEO_DATE') {

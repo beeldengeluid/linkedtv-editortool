@@ -6,9 +6,9 @@ The chapter collection contains all of the curated data:
 
 angular.module('linkedtv').factory('chapterCollection',
 	['$rootScope', 'conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
-	 'dataService', 'timeUtils', 'entityExpansionService',
+	 'dataService', 'timeUtils', 'entityExpansionService', 'loggingService',
 	 function($rootScope, conf, imageService, entityCollection, shotCollection,
-	 	subtitleCollection, dataService, timeUtils, entityExpansionService) {
+	 	subtitleCollection, dataService, timeUtils, entityExpansionService, loggingService) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
@@ -213,21 +213,25 @@ angular.module('linkedtv').factory('chapterCollection',
 
 	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
 	// you also need to update this (when you want to add a property to a dimension)!!! (below also)
-	function saveEnrichments(dimension, links) {
-		_activeChapter.dimensions[dimension.id].annotations = links;
-		//update the chapter collection
+	function saveEnrichments(dimension, savedEnrichments, allEnrichments, queries) {
+		//if user logging is enabled, save which enrichments were chosen by the user for which query
+		if(conf.logUserActions) {
+			//TODO
+			loggingService.logUserAction(allEnrichments, savedEnrichments, queries, _activeChapter.title);
+		}
+
+		//update the active chapter and save it
+		_activeChapter.dimensions[dimension.id].annotations = savedEnrichments;
 		saveChapter(_activeChapter);
 	}
 
 	//works for both information cards and enrichments
-	function saveEnrichment(dimension, link, isInformationCard) {
-		console.debug('Saving enrichment in: ' + dimension.id)
-		console.debug(link);
+	function saveEnrichment(dimension, enrichment, isInformationCard) {
 		var dimensionAnnotations = _activeChapter.dimensions[dimension.id].annotations;
 		console.debug(_activeChapter);
-		if(link.remove) {
+		if(enrichment.remove) {
 			for(var i=0;i<dimensionAnnotations.length;i++) {
-				if(dimensionAnnotations[i].url == link.url) {
+				if(dimensionAnnotations[i].url == enrichment.url) {
 					dimensionAnnotations.splice(i, 1);
 					break;
 				}
@@ -235,20 +239,20 @@ angular.module('linkedtv').factory('chapterCollection',
 		} else if(dimensionAnnotations) {
 			var exists = false;
 			for(var i=0;i<dimensionAnnotations.length;i++){
-				if((!isInformationCard && dimensionAnnotations[i].url == link.url) ||
-					(isInformationCard && dimensionAnnotations[i].uri == link.uri)) {
-					dimensionAnnotations[i] = link;
+				if((!isInformationCard && dimensionAnnotations[i].url == enrichment.url) ||
+					(isInformationCard && dimensionAnnotations[i].uri == enrichment.uri)) {
+					dimensionAnnotations[i] = enrichment;
 					exists = true;
 					break;
 				}
 			}
 			if (!exists) {
-				dimensionAnnotations.push(link);
+				dimensionAnnotations.push(enrichment);
 			}
 		} else {
 			//add a new dimension (add the config properties + a list to hold the annotations)
-			//dimensionAnnotations = [link];
-			_activeChapter.dimensions[dimension.id].annotations = [link];
+			//dimensionAnnotations = [enrichment];
+			_activeChapter.dimensions[dimension.id].annotations = [enrichment];
 		}
 		saveChapter(_activeChapter);
 	}

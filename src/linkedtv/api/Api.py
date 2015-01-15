@@ -17,6 +17,9 @@ from linkedtv.model.MediaResource import MediaResource
 #dataconverter for transforming ET (client) JSON data into a MediaResource
 from linkedtv.utils.DataConverter import DataConverter
 
+#logs user actions
+from linkedtv.api.logging.UserActionLogger import UserActionLogger
+
 class Api():
 
     def __init__(self):
@@ -48,6 +51,12 @@ class Api():
             mr = ph.publish(publishingPoint, mr)
         resp = simplejson.dumps(mr, default=lambda obj: obj.__dict__)
         return resp
+
+    def log(self, logData):
+        ual = UserActionLogger()
+        if ual.log(logData):
+            return "{\"success\" : \"OK\"}"
+        return None
 
     def dimension(self, query, entities, dimension):
         dh = DimensionHandler()

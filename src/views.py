@@ -232,4 +232,14 @@ def entityexpand(request):
 			return HttpResponse(__getErrorMessage('Could not find any entities'), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
+@csrf_exempt
+def log(request):
+	logData = request.body
+	if logData:
+		api = Api()
+		resp = api.log(simplejson.loads(logData))
+		if resp:
+			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('There was an error while processing the log data'), mimetype='application/json')
+
 

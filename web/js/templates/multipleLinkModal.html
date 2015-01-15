@@ -46,7 +46,7 @@
 					<li>
 						<a data-target="#tab_e_curated" role="tab" data-toggle="tab">Curated enrichments</a>
 					</li>
-					<li>
+					<li ng-if="entityExpansion">
 						<a data-target="#tab_e_expanded" role="tab" data-toggle="tab">Entities from a broader context</a>
 					</li>
 				</ul>
@@ -86,7 +86,7 @@
 					</div>
 
 					<!-- EXPANDED ENTITIES-->
-					<div id="tab_e_expanded" class="tab-pane fade">
+					<div ng-if="entityExpansion" id="tab_e_expanded" class="tab-pane fade">
 						<ul class="entities">
 							<li ng-repeat="e in expandedEntities" class="{{entityUtils.getConfidenceClass(e)}}">
 								<div ng-click="addQueryEntity(e)"

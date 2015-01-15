@@ -17,6 +17,9 @@ urlpatterns = patterns('',
     url(r'^save$', 'views.save'),
     url(r'^publish$', 'views.publish'),
 
+    #API - logging of user actions
+    url(r'^log$', 'views.log'),
+
     #API - load images and other vidoes
     url(r'^image$', 'views.image'),
     url(r'^videos$', 'views.videos'),

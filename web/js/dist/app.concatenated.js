@@ -290,8 +290,8 @@ linkedtv.run(function($rootScope, conf) {
 		//when the modal is closed (using 'ok', or 'cancel')
 		modalInstance.result.then(function (data) {
 			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
-			chapterCollection.saveEnrichments(data.dimension, data.enrichments);
-		}, function () {
+			chapterCollection.saveEnrichments(data.dimension, data.savedEnrichments, data.allEnrichments, data.queries);
+		}, function () { //when the modal is closed otherwise (e.g. using the escape button)
 			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 		});
 	};
@@ -493,9 +493,9 @@ linkedtv.run(function($rootScope, conf) {
 	}
 }]);;angular.module('linkedtv').factory('chapterCollection',
 	['$rootScope', 'conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
-	 'dataService', 'timeUtils', 'entityExpansionService',
+	 'dataService', 'timeUtils', 'entityExpansionService', 'loggingService',
 	 function($rootScope, conf, imageService, entityCollection, shotCollection,
-	 	subtitleCollection, dataService, timeUtils, entityExpansionService) {
+	 	subtitleCollection, dataService, timeUtils, entityExpansionService, loggingService) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
@@ -700,21 +700,25 @@ linkedtv.run(function($rootScope, conf) {
 
 	//TODO fix this! THis is a deadly bit of code, because it can be overseen easily! (so when you update the config.js
 	// you also need to update this (when you want to add a property to a dimension)!!! (below also)
-	function saveEnrichments(dimension, links) {
-		_activeChapter.dimensions[dimension.id].annotations = links;
-		//update the chapter collection
+	function saveEnrichments(dimension, savedEnrichments, allEnrichments, queries) {
+		//if user logging is enabled, save which enrichments were chosen by the user for which query
+		if(conf.logUserActions) {
+			//TODO
+			loggingService.logUserAction(allEnrichments, savedEnrichments, queries, _activeChapter.title);
+		}
+
+		//update the active chapter and save it
+		_activeChapter.dimensions[dimension.id].annotations = savedEnrichments;
 		saveChapter(_activeChapter);
 	}
 
 	//works for both information cards and enrichments
-	function saveEnrichment(dimension, link, isInformationCard) {
-		console.debug('Saving enrichment in: ' + dimension.id)
-		console.debug(link);
+	function saveEnrichment(dimension, enrichment, isInformationCard) {
 		var dimensionAnnotations = _activeChapter.dimensions[dimension.id].annotations;
 		console.debug(_activeChapter);
-		if(link.remove) {
+		if(enrichment.remove) {
 			for(var i=0;i<dimensionAnnotations.length;i++) {
-				if(dimensionAnnotations[i].url == link.url) {
+				if(dimensionAnnotations[i].url == enrichment.url) {
 					dimensionAnnotations.splice(i, 1);
 					break;
 				}
@@ -722,20 +726,20 @@ linkedtv.run(function($rootScope, conf) {
 		} else if(dimensionAnnotations) {
 			var exists = false;
 			for(var i=0;i<dimensionAnnotations.length;i++){
-				if((!isInformationCard && dimensionAnnotations[i].url == link.url) ||
-					(isInformationCard && dimensionAnnotations[i].uri == link.uri)) {
-					dimensionAnnotations[i] = link;
+				if((!isInformationCard && dimensionAnnotations[i].url == enrichment.url) ||
+					(isInformationCard && dimensionAnnotations[i].uri == enrichment.uri)) {
+					dimensionAnnotations[i] = enrichment;
 					exists = true;
 					break;
 				}
 			}
 			if (!exists) {
-				dimensionAnnotations.push(link);
+				dimensionAnnotations.push(enrichment);
 			}
 		} else {
 			//add a new dimension (add the config properties + a list to hold the annotations)
-			//dimensionAnnotations = [link];
-			_activeChapter.dimensions[dimension.id].annotations = [link];
+			//dimensionAnnotations = [enrichment];
+			_activeChapter.dimensions[dimension.id].annotations = [enrichment];
 		}
 		saveChapter(_activeChapter);
 	}
@@ -1103,8 +1107,11 @@ linkedtv.run(function($rootScope, conf) {
 			url : '/dimension',
 			success : function(json) {
 				console.debug(json);
-				var enrichments = json.error ? null : json.enrichments;
-				callback(formatGenericResponse(enrichments, dimension));
+				if(!json.error) {
+					callback(formatGenericResponse(json.enrichments, dimension), json.queries);
+				} else {
+					callback(null);
+				}
 			},
 			error : function(err) {
 				console.debug(err);
@@ -1113,7 +1120,7 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	/*Should be moved to another place, this is not nice*/
+	/*Should be moved to another place, this is not nice, also _.each is unneccesary*/
 	function fillInDynamicProperties(dimension) {
 		_.each(dimension.service.params, function(value, key){
 			if (value == '$VIDEO_DATE') {
@@ -1305,6 +1312,54 @@ linkedtv.run(function($rootScope, conf) {
 
 	return {
 		getThumbnail : getThumbnail
+	}
+
+}]);;angular.module('linkedtv').factory('loggingService', ['$rootScope',
+	function($rootScope) {
+
+	/**
+	* Log the following:
+	* - timestamp the user saved enrichments
+	* - chapter title (+ video id)
+	* - content provider
+	* - URL
+	* - query
+	* - list of all enrichments
+	* - list of saved enrichments
+	*/
+	function logUserAction(allEnrichments, savedEnrichments, urls, chapterTitle) {
+		var logData = {
+			timeCreated : new Date().getTime(),
+			videoId : $rootScope.resourceUri,
+			chapterTitle : chapterTitle,
+			user : $rootScope.provider,
+			urls : urls,
+			queries : [],//TODO
+			allEnrichments : _.pluck(allEnrichments, 'url'),
+			savedEnrichments : _.pluck(savedEnrichments, 'url')
+		};
+		$.ajax({
+			type: 'POST',
+			url: '/log',
+			data: JSON.stringify(logData),
+			dataType : 'json',
+			success: function(json) {
+				console.debug(json);
+				if(json.error) {
+					alert('Could not log data');
+				} else {
+					alert('Logging was a succes!!');
+				}
+			},
+			error: function(err) {
+	    		console.debug(err);
+			},
+			dataType: 'json'
+		});
+	}
+
+	return {
+		logUserAction : logUserAction
 	}
 
 }]);;angular.module('linkedtv').factory('playerService', [function() {
@@ -2020,10 +2075,13 @@ angular.module('linkedtv').controller('informationCardModalController',
 	}
 
 }]);;angular.module('linkedtv').controller('multipleLinkModalController',
-	['$scope', '$modalInstance', '$rootScope', 'entityProxyService', 'enrichmentService', 'chapterCollection',
+	['$scope', '$modalInstance', '$rootScope', 'conf', 'entityProxyService', 'enrichmentService', 'chapterCollection',
 	'entityCollection', 'enrichmentUtils', 'entityUtils', 'dimension',
-	function ($scope, $modalInstance, $rootScope, entityProxyService, enrichmentService, chapterCollection,
+	function ($scope, $modalInstance, $rootScope, conf, entityProxyService, enrichmentService, chapterCollection,
 	 entityCollection, enrichmentUtils, entityUtils, dimension) {
+
+	//show expanded entities
+	$scope.entityExpansion = conf.programmeConfig.entityExpansion;
 
 	//collapse states
 	$scope.enrichmentsCollapsed = false;
@@ -2042,7 +2100,6 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.combinedEnrichments =  chapterCollection.getAllEnrichmentsOfChapter() || []; //get the combined enrichments from all dimensions
 	$scope.autogeneratedEntities = entityCollection.getChapterEntities();//fetch the correct entities from the entityCollection
 	$scope.expandedEntities = chapterCollection.getActiveChapter().expandedEntities || [];
-	console.debug($scope.expandedEntities);
 
 	$scope.savedEnrichments = chapterCollection.getSavedEnrichmentsOfDimension(dimension) || null;
 
@@ -2055,6 +2112,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.enrichments = [];//fetched & filtered enrichment
 	$scope.enrichmentSources = null; //allEnrichments filtered by link source
 	$scope.enrichmentEntitySources = null;//allEnrichments filtered by the entities they are based on
+	$scope.enrichmentQueries = [];//queries issued on the server to call the related enrichment API
 
 	$scope.activeEnrichmentSource = null; //current source filter
 	$scope.activeEnrichmentEntitySource = null; //current entity source filter
@@ -2074,7 +2132,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 		}
 	};
 
-	$scope.onSearchEnrichments = function(enrichments) {
+	$scope.onSearchEnrichments = function(enrichments, queries) {
 		//reset the button and the selected entities
 		$scope.fetchButtonText = 'Find links';
 		$scope.enrichmentsCollapsed = false;
@@ -2086,6 +2144,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 				$scope.enrichmentSources = enrichments.enrichmentSources;
 				$scope.enrichmentEntitySources = enrichments.enrichmentEntitySources;
 				$scope.allEnrichments = enrichments.allEnrichments;
+				$scope.enrichmentQueries = queries;
 				//when calling filterEnrichmentsBySource() the view is not updated properly, so had to copy the code here...
 				$scope.activeEnrichmentSource = $scope.enrichmentSources[0];
 				$scope.enrichments = _.filter($scope.allEnrichments, function(e) {
@@ -2101,6 +2160,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 				$scope.nothingFound = true;
 				$scope.enrichments = [];
 				$scope.allEnrichments = [];
+				$scope.enrichmentQueries = [];
 				$scope.enrichmentSources = [];
 				$scope.enrichmentEntitySources = [];
 				$scope.activeEnrichmentSource = null;
@@ -2173,7 +2233,12 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.ok = function () {
 		if($scope.savedEnrichments) {
-			$modalInstance.close({dimension: $scope.dimension, enrichments : $scope.savedEnrichments});
+			$modalInstance.close({
+				dimension: $scope.dimension,
+				savedEnrichments : $scope.savedEnrichments,
+				allEnrichments : $scope.allEnrichments,
+				queries : $scope.enrichmentQueries
+			});
 		} else {
 			alert('Please add a label');
 		}
@@ -2182,6 +2247,8 @@ angular.module('linkedtv').controller('informationCardModalController',
 	$scope.cancel = function () {
 		$modalInstance.dismiss('cancel');
 	};
+
+	//----------------------------UPDATE EVENTS FROM ENTITY EXPANSION------------------------------
 
 	//this function will update the expanded entities when they are shown
 	$scope.update = function(chapters) {
