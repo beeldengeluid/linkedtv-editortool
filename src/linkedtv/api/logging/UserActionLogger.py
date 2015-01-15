@@ -11,11 +11,8 @@ class UserActionLogger():
 		)
 
 	def log(self, logData):
-		print 'Logging some stuff'
 		key = logData['timeCreated']
-		print logData['chapterTitle']
 		self.store.hset('userLogs', '%s' % key, simplejson.dumps(logData))
-		#self.exportToCSV()
 		return True
 
 	def exportToCSV(self):
@@ -26,9 +23,7 @@ class UserActionLogger():
 			#now loop through the log records stored in the Redis store
 			keys = self.store.hkeys('userLogs')
 			for k in keys:
-				print k
 				l = simplejson.loads(self.store.hget('userLogs', k))
-				print l
 				writer.writerow({
 					'timeCreated': k,
 					'user' : l['user'],
@@ -45,7 +40,6 @@ class UserActionLogger():
 		keys = self.store.hkeys('userLogs')
 		keys.sort()
 		for k in keys:
-			print k
 			logs.append(simplejson.loads(self.store.hget('userLogs', k)))
 		#self.exportToCSV()
 		return logs
