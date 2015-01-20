@@ -255,5 +255,5 @@ var config = angular.module('configuration', []).constant('conf', {
 	loadingImage : '/site_media/images/loading.gif',
 	platform : 'linkedtv',
 	logUserActions : true,
-	syncLinkedTVChapters : true
+	syncLinkedTVChapters : false
 });
