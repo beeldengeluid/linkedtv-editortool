@@ -50,6 +50,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	};
 
 	$scope.addToTemplate = function(triple, literal) {
+		//Create a triple
 		var t = null;
 		if(triple) {
 			var val = {};
@@ -73,7 +74,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 			}
 		}
 
-		//Also add the triple to the list of triples (for convencience)
+		//then add the triple to the active template (the template will be copied to the $scope.card on save)
 		if(!$scope.activeTemplate) {
 			$scope.activeTemplate = {};
 		}
@@ -121,7 +122,8 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.useAsTemplate = function() {
 		$scope.useTemplate = false;
-		$scope.card.uri = $scope.selectedUri;
+		$scope.card = {};
+		$scope.card.uri = $scope.selectedUri;//TODO!! add some check that this entity was already added as a card
 		$scope.activeTemplate = {properties : []};
 		_.each($scope.fetchedTriples, function(triple) {
 			$scope.addToTemplate(triple);

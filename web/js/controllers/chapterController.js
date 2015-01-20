@@ -11,6 +11,7 @@ angular.module('linkedtv').controller('chapterController',
 		$scope.safeApply(function() {
 			$scope.allChapters = chapters;
 			$scope.chapters = chapters;
+			$scope.applyChapterFilter();
 		});
 	};
 
@@ -27,6 +28,10 @@ angular.module('linkedtv').controller('chapterController',
 
 	$scope.toggleShowCuratedOnly = function() {
 		$scope.showCuratedOnly = !$scope.showCuratedOnly;
+		$scope.applyChapterFilter();
+	};
+
+	$scope.applyChapterFilter = function() {
 		if($scope.showCuratedOnly) {
 			$scope.chapters = _.filter($scope.allChapters, function(c) {
 				return c.type == 'curated';
@@ -34,7 +39,7 @@ angular.module('linkedtv').controller('chapterController',
 		} else {
 			$scope.chapters = $scope.allChapters;
 		}
-	};
+	}
 
 	$scope.setActiveChapter = function(chapter) {
 		chapterCollection.setActiveChapter(chapter);
@@ -58,8 +63,11 @@ angular.module('linkedtv').controller('chapterController',
 
 	$scope.openChapterDialog = function(chapter) {
 		if(chapter) {
-			chapter = {//copy the chapter
+			//copy the chapter (FIXME this is a very nasty bit! It's easy to overlook this when you extend your chapter object!!)
+			chapter = {
 				annotationURI: chapter.annotationURI,
+				mediaFragmentId : chapter.mediaFragmentId,
+				solrId : chapter.solrId,
 				bodyURI: chapter.bodyURI,
 				confidence: chapter.confidence,
 				dimensions: chapter.dimensions,

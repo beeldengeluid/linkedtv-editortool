@@ -1,6 +1,7 @@
 from linkedtv.api.dimension.ltv.TvEnricher import TvEnricher
 from linkedtv.api.dimension.ltv.TvNewsEnricher import TvNewsEnricher
 from linkedtv.api.dimension.ltv.IRAPI import IRAPI
+from linkedtv.api.dimension.ltv.RelatedChapterEnricher import RelatedChapterEnricher
 
 from linkedtv.api.dimension.public.EuropeanaAPI import EuropeanaAPI
 from linkedtv.api.dimension.public.AnefoAPI import AnefoAPI
@@ -15,6 +16,7 @@ class DimensionHandler(object):
 			'TvEnricher' : TvEnricher(),
 			'TvNewsEnricher' : TvNewsEnricher(),
 			'IRAPI' : IRAPI(),
+			'RelatedChapterEnricher' : RelatedChapterEnricher(),
 			'EuropeanaAPI' : EuropeanaAPI(),
 			'AnefoAPI' : AnefoAPI()
 		}

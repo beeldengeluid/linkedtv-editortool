@@ -6,9 +6,9 @@ The chapter collection contains all of the curated data:
 
 angular.module('linkedtv').factory('chapterCollection',
 	['$rootScope', 'conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
-	 'dataService', 'timeUtils', 'entityExpansionService', 'loggingService',
+	 'dataService', 'timeUtils', 'entityExpansionService', 'loggingService', 'idUtils',
 	 function($rootScope, conf, imageService, entityCollection, shotCollection,
-	 	subtitleCollection, dataService, timeUtils, entityExpansionService, loggingService) {
+	 	subtitleCollection, dataService, timeUtils, entityExpansionService, loggingService, idUtils) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
@@ -52,13 +52,17 @@ angular.module('linkedtv').factory('chapterCollection',
 		});
 	}
 
-	//always update the guid?
+	//always update the guid? ---> NO!
 	//important function that makes sure that chapters have dimensions assigned to them at all times
 	//also makes sure the correct thumbnail is set and that the start and end times are available in human readable format
-	function setBasicProperties(chapter, updateGuid) {
-		if(updateGuid) {
-			//chapter.guid = _.uniqueId('chapter_');
-			chapter.guid = timeUtils.guid();
+	function setBasicProperties(chapter, updateDimensionData) {
+		//only update the guid if it is not there yet
+		if(!chapter.guid) {
+			chapter.guid = idUtils.guid();
+		}
+
+		//make sure the dimension data is properly copied to the object
+		if(updateDimensionData) {
 			var dimensions = {};
 			_.each(conf.programmeConfig.dimensions, function(d) {
 				//copy the properties from the saved dimension
@@ -79,12 +83,16 @@ angular.module('linkedtv').factory('chapterCollection',
 				dimensions[d.id] = temp;
 			});
 			chapter.dimensions = dimensions;
-
 		}
+
+		//always make sure to set the poster and start times
 		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
 		chapter.prettyStart = timeUtils.toPrettyTime(chapter.start);
 		chapter.prettyEnd = timeUtils.toPrettyTime(chapter.end);
+		chapter.mediaFragmentId = idUtils.generateMediaFragmentId(chapter.start, chapter.end);
 	}
+
+
 
 	function addObserver(observer) {
 		_observers.push(observer);
@@ -157,7 +165,12 @@ angular.module('linkedtv').factory('chapterCollection',
 				_chapters.splice(index, 1);
 			}
 		});
+		if(conf.syncLinkedTVChapters && chapter.solrId) {
+			console.debug('Deleting chapter from index...');
+			dataService.deleteChapterFromIndex(chapter);
+		}
 		saveOnServer();
+		notifyObservers();
 	}
 
 	function saveChapter(chapter, entityExpand) {
@@ -189,7 +202,7 @@ angular.module('linkedtv').factory('chapterCollection',
 			return a.start - b.start;
 		});
 		//update the entire resource on the server
-		saveOnServer();
+		saveOnServer(chapter);
 		//notify observers
 		notifyObservers();
 	}
@@ -222,13 +235,13 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveChapter(_activeChapter);
 	}
 
-	//works for both information cards and enrichments
+	//works for both information cards and enrichments (UGLY=check based on URI or URL :s :s)
 	function saveEnrichment(dimension, enrichment, isInformationCard) {
 		var dimensionAnnotations = _activeChapter.dimensions[dimension.id].annotations;
-		console.debug(_activeChapter);
 		if(enrichment.remove) {
 			for(var i=0;i<dimensionAnnotations.length;i++) {
-				if(dimensionAnnotations[i].url == enrichment.url) {
+				if((!isInformationCard && dimensionAnnotations[i].url == enrichment.url) ||
+					(isInformationCard && dimensionAnnotations[i].uri == enrichment.uri)) {
 					dimensionAnnotations.splice(i, 1);
 					break;
 				}
@@ -254,8 +267,25 @@ angular.module('linkedtv').factory('chapterCollection',
 		saveChapter(_activeChapter);
 	}
 
-	function saveOnServer() {
-		dataService.saveResource(getCuratedChapters());
+	//passing the chapter is optional (in all cases all data will be saved again)
+	function saveOnServer(chapter) {
+		dataService.saveResource(getCuratedChapters(), chapter, onChapterIndexUpdatedOnServer);
+	}
+
+	function onChapterIndexUpdatedOnServer(data) {
+		if(data) {
+			//make sure the solrId is added to the right chapter
+			for(c in _chapters) {
+				if(_chapters[c].guid == data.guid) {
+					_chapters[c].solrId = data.solrId;
+					break;
+				}
+			}
+			//also update the active chapter (if applicable)
+			if(_activeChapter && _activeChapter.guid == data.guid) {
+				_activeChapter.solrId = data.solrId;
+			}
+		}
 	}
 
 	return {

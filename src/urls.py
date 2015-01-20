@@ -33,5 +33,6 @@ urlpatterns = patterns('',
     url(r'^entityproxy$', 'views.entityproxy'),
     url(r'^entityexpand$', 'views.entityexpand'),
     url(r'^autocomplete$', 'views.autocomplete'),
-
+    url(r'^updatesolr$', 'views.updatesolr'),
+    url(r'^deletesolr$', 'views.deletesolr'),
 )

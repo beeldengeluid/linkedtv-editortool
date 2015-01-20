@@ -1,4 +1,5 @@
-angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
+angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', 'subtitleCollection',
+	function($rootScope, conf, subtitleCollection) {
 
 	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
 	function getResourceData(loadData, callback) {
@@ -37,12 +38,23 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', functio
 	}
 
 	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
-	function saveResource(chapters, action) {
-		action = action == undefined ? 'save' : action; //not used on the server (yet?)
-		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
+	function saveResource(chapters, chapter, callback) {
+		if(conf.syncLinkedTVChapters && chapter) {
+			updateChapterIndexAndSaveOnServer(chapters, chapter, callback);//this will subsequently call saveDataOnServer()
+		} else {
+			saveDataOnServer(chapters);
+		}
+	}
+
+	function saveDataOnServer(chapters) {
+		var saveData = {
+			'uri' : $rootScope.resourceUri,
+			'chapters' : chapters
+		};
+		var url = '/save';
 		$.ajax({
 			type: 'POST',
-			url: '/save?action=' + action,
+			url: url,
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {
@@ -50,7 +62,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', functio
 				if(json.error) {
 					alert('Could not save data');
 				} else {
-					//TODO animate the saved data on the screen
+					//todo animate some stuff
 				}
 			},
 			error: function(err) {
@@ -58,6 +70,60 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', functio
 			},
 			dataType: 'json'
 		});
+	}
+
+	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
+	function updateChapterIndexAndSaveOnServer(chapters, chapter, callback) {
+		var data = {
+			'uri' : $rootScope.resourceUri,
+			'provider' : $rootScope.provider,
+			'subtitles' : subtitleCollection.getChapterSubtitles(),
+			'chapter' : chapter
+		};
+		var url = '/updatesolr';
+		$.ajax({
+			type: 'POST',
+			url: url,
+			data: JSON.stringify(data),
+			dataType : 'json',
+			success: function(json) {
+				console.debug(json);
+				if(json.error) {
+					console.debug('Could not update the chapter index');
+					callback(null);
+				} else {
+					callback(json);//makes sure the client side also is updated with the new solrId
+				}
+				saveDataOnServer(chapters);
+			},
+			error: function(err) {
+	    		console.debug(err);
+	    		callback(null);
+	    		saveDataOnServer(chapters);
+			},
+			dataType: 'json'
+		});
+	}
+
+	function deleteChapterFromIndex(chapter) {
+		if(chapter.solrId) {
+			var data = {'id' : chapter.solrId, 'provider' : $rootScope.provider};
+			$.ajax({
+				type: 'POST',
+				url: '/deletesolr',
+				data : JSON.stringify(data),
+				dataType : 'json',
+				success: function(json) {
+					if(json.error) {
+						console.debug('Could not delete the chapter from the index');
+					}
+				},
+				error: function(err) {
+		    		console.debug(err);
+				},
+				dataType: 'json'
+			});
+		}
 	}
 
 	function publishResource(chapters, unpublish, callback) {
@@ -89,7 +155,8 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', functio
 		getResourceData : getResourceData,
 		getCuratedData : getCuratedData,
 		saveResource : saveResource,
-		publishResource : publishResource
+		publishResource : publishResource,
+		deleteChapterFromIndex : deleteChapterFromIndex
 	}
 
 }]);

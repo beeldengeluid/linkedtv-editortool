@@ -55,8 +55,8 @@ class Api():
     def log(self, logData):
         ual = UserActionLogger()
         if ual.log(logData):
-            return "{\"success\" : \"OK\"}"
-        return None
+            return True
+        return False
 
     def showlogs(self):
         ual = UserActionLogger()

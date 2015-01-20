@@ -93,7 +93,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('WITH <%s> ' % self.SAVE_GRAPH)
 
 		#Construct the URIs
-		mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, mediaResourceUri, start, end)
+		mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, mediaResourceUri, start, end)#should be exactly the same as the SOLR id
 		bodyURI = '%s/%s' % (self.LTV_CHAPTER_PF, uuid.uuid1())
 		aURI = '%s/%s' % (self.LTV_ANNOTATION_PF, uuid.uuid1())
 
@@ -103,9 +103,9 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query.append('<%s> a <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
 		query.append('a <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
 		query.append('ma:isFragmentOf <%s/%s> ; ' % (self.LTV_MEDIA_PF, mediaResourceUri))
-		query.append('ma:duration "%s"^^xsd:float ; ' % duration)
-		query.append('nsa:temporalStart "%s"^^xsd:float ; ' % start)
-		query.append('nsa:temporalEnd "%s"^^xsd:float ; ' % end)
+		query.append('ma:duration "%s"^^xsd:float ; ' % str(duration))
+		query.append('nsa:temporalStart "%s"^^xsd:float ; ' % str(start))
+		query.append('nsa:temporalEnd "%s"^^xsd:float ; ' % str(end))
 		query.append('nsa:temporalUnit "npt" . ')
 
 		#body -> type=chapter + label
@@ -169,9 +169,9 @@ class LinkedTVPublishingPoint(PublishingPoint):
 			query.append('<%s> a <%s> ; ' % (mfURI, self.MEDIA_FRAGMENT))
 			query.append('a <%s> ; ' % self.MEDIA_FRAGMENT_NINSUNA)
 			query.append('ma:isFragmentOf <%s/%s> ; ' % (self.LTV_MEDIA_PF, mediaResourceUri))
-			query.append('ma:duration "%s"^^xsd:float ; ' % duration)
-			query.append('nsa:temporalStart "%s"^^xsd:float ; ' % start)
-			query.append('nsa:temporalEnd "%s"^^xsd:float ; ' % end)
+			query.append('ma:duration "%s"^^xsd:float ; ' % str(duration))
+			query.append('nsa:temporalStart "%s"^^xsd:float ; ' % str(start))
+			query.append('nsa:temporalEnd "%s"^^xsd:float ; ' % str(end))
 			query.append('nsa:temporalUnit "npt" . ')
 
 		#Create the body containing the enrichment info

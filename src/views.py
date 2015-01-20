@@ -14,12 +14,16 @@ from linkedtv.api.vocabulary.dbpedia.AutoComplete import AutoComplete
 from linkedtv.api.vocabulary.dbpedia.EntityProxy import EntityProxy
 from linkedtv.api.vocabulary.gtaa.OpenSKOSHandler import OpenSKOSHandler
 from linkedtv.api.external.EntityExpansionService import EntityExpansionService
+from linkedtv.api.external.LinkedTVChapterIndexHandler import LinkedTVChapterIndexHandler
 
 from linkedtv.api.Api import *
 
 
 def __getErrorMessage(msg):
-	return "{\"error\" : \"%s\"}" % msg;
+	return "{\"error\" : \"%s\"}" % msg
+
+def __getOkMessage():
+	return "{\"success\" : \"OK\"}"
 
 """This is called to fetch the IP of the connecting client"""
 def __getClientIP(request):
@@ -97,14 +101,12 @@ def load_curated(request):
 """New Saving function"""
 @csrf_exempt
 def save(request):
-	action = request.GET.get('action', None)
 	saveData = request.body
 	api = Api()
 	resp = api.save(saveData)
 	if resp:
 		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Malformed POST data'), mimetype='application/json')
-
 
 """for exporting a resource to the LinkedTV platform"""
 @csrf_exempt
@@ -123,7 +125,6 @@ def publish(request):
 		if resp:
 			return HttpResponse(resp, mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Failed to publish this media resource'), mimetype='application/json')
-
 
 """This is called to fetch an keyframe/thumbnail image from the Noterik server"""
 def image(request):
@@ -199,8 +200,8 @@ def autocomplete(request):
 		if options:
 			return HttpResponse(simplejson.dumps(options), mimetype='application/json')
 		else:
-			return HttpResponse(self.__getErrorMessage('Nothing found'), mimetype='application/json')
-	return HttpResponse(self.__getErrorMessage('Please specify a search term'), mimetype='application/json')
+			return HttpResponse(__getErrorMessage('Nothing found'), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('Please specify a search term'), mimetype='application/json')
 
 #TODO move the logic in this function to a dedicated handler class
 def entityproxy(request):
@@ -226,20 +227,25 @@ def entityexpand(request):
 		ees = EntityExpansionService()
 		resp = ees.fetch(url, date, int(start), int(end))
 		if resp:
-			#return HttpResponse(resp, mimetype='text/plain')
 			return HttpResponse(simplejson.dumps(resp, default=lambda obj: obj.__dict__), mimetype='application/json')
 		else:
 			return HttpResponse(__getErrorMessage('Could not find any entities'), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+
+"""
+*********************************************************************************************************
+External API - Logging user actions
+*********************************************************************************************************
+"""
 
 @csrf_exempt
 def log(request):
 	logData = request.body
 	if logData:
 		api = Api()
-		resp = api.log(simplejson.loads(logData))
-		if resp:
-			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+		success = api.log(simplejson.loads(logData))
+		if success:
+			return HttpResponse(__getOkMessage(), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('There was an error while processing the log data'), mimetype='application/json')
 
 def showlogs(request):
@@ -249,3 +255,31 @@ def showlogs(request):
 		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('There are currently no log records available'), mimetype='application/json')
 
+"""
+*********************************************************************************************************
+External API - LinkedTV SOLR index
+*********************************************************************************************************
+"""
+
+@csrf_exempt
+def updatesolr(request):
+	data = request.body
+	if data:
+		data = simplejson.loads(data)
+		lih = LinkedTVChapterIndexHandler()
+		solrId = lih.updateChapter(data)
+		resp = {'solrId' : solrId, 'guid' : data['chapter']['guid']}
+		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+
+@csrf_exempt
+def deletesolr(request):
+	data = simplejson.loads(request.body)
+	if data.has_key('id') and data.has_key('provider'):
+		lih = LinkedTVChapterIndexHandler()
+		success = lih.deleteChapter(data['id'], data['provider'])
+		if success:
+			return HttpResponse(__getOkMessage(), mimetype='application/json')
+		else:
+			return HttpResponse(__getErrorMessage('Failed to delete the chapter from the index'), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')

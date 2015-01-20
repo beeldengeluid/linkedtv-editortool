@@ -1,5 +1,10 @@
 from linkedtv.model import *
 
+"""
+The DataConverter is used to convert the plain JSON data stored into a model, which is currently used only
+for publishing ET data to an external platform
+"""
+
 class DataConverter():
 
 	@staticmethod

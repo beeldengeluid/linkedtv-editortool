@@ -194,11 +194,9 @@ var tkkConfig = {
 			label : 'Related Chapters',
 			linkedtvDimension : 'RelatedChapter',
 			service : {
-				id : 'TvEnricher',
+				id : 'RelatedChapterEnricher',
 				params : {
-					dimension : 'Solr',
-					index : 'SV',
-					granularity : 'Chapter'
+					provider : 'sv'
 				}
 			}
 		},
@@ -256,5 +254,6 @@ var config = angular.module('configuration', []).constant('conf', {
 	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
 	loadingImage : '/site_media/images/loading.gif',
 	platform : 'linkedtv',
-	logUserActions : true
+	logUserActions : true,
+	syncLinkedTVChapters : true
 });

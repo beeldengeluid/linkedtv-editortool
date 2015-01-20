@@ -125,6 +125,10 @@
 	@include cardProperties(4, false);
 }
 
+.card-edit-form-single {
+	@include cardProperties(2, false);
+}
+
 .card-fetch-form {
 	@include cardProperties(2, true);
 }

@@ -185,11 +185,9 @@ var tkkConfig = {
 			label : 'Related Chapters',
 			linkedtvDimension : 'RelatedChapter',
 			service : {
-				id : 'TvEnricher',
+				id : 'RelatedChapterEnricher',
 				params : {
-					dimension : 'Solr',
-					index : 'SV',
-					granularity : 'Chapter'
+					provider : 'sv'
 				}
 			}
 		},
@@ -247,7 +245,8 @@ var config = angular.module('configuration', []).constant('conf', {
 	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
 	loadingImage : '/site_media/images/loading.gif',
 	platform : 'linkedtv',
-	logUserActions : true
+	logUserActions : true,
+	syncLinkedTVChapters : true
 });
 ;var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
 
@@ -418,6 +417,27 @@ linkedtv.run(function($rootScope, conf) {
 		getConfidenceClass : getConfidenceClass,
 		copyInformationCardTemplate : copyInformationCardTemplate
 	}
+}]);;angular.module('linkedtv').factory('idUtils', ['$rootScope', function($rootScope){
+
+	function generateMediaFragmentId(startMs, endMs) {
+		var start = startMs / 1000.0;
+		var end = endMs / 1000.0;
+		return $rootScope.resourceUri + '#t=' + start + ',' + end;
+	}
+
+	var guid = (function() {
+		function s4() {
+			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+		}
+		return function() {
+			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+	  	};
+	})();
+
+	return {
+		generateMediaFragmentId : generateMediaFragmentId,
+		guid : guid
+	}
 }]);;angular.module('linkedtv').factory('timeUtils', [function(){
 
 	function toMillis(t) {
@@ -483,25 +503,16 @@ linkedtv.run(function($rootScope, conf) {
 		return h + ':' + m + ':' + s + '.' + millis;
 	}
 
-	var guid = (function() {
-		function s4() {
-			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-		}
-		return function() {
-			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-	  	};
-	})();
-
 	return {
 		toMillis : toMillis,
-		toPrettyTime : toPrettyTime,
-		guid : guid
+		toPrettyTime : toPrettyTime
 	}
+
 }]);;angular.module('linkedtv').factory('chapterCollection',
 	['$rootScope', 'conf', 'imageService', 'entityCollection', 'shotCollection', 'subtitleCollection',
-	 'dataService', 'timeUtils', 'entityExpansionService', 'loggingService',
+	 'dataService', 'timeUtils', 'entityExpansionService', 'loggingService', 'idUtils',
 	 function($rootScope, conf, imageService, entityCollection, shotCollection,
-	 	subtitleCollection, dataService, timeUtils, entityExpansionService, loggingService) {
+	 	subtitleCollection, dataService, timeUtils, entityExpansionService, loggingService, idUtils) {
 
 	var TYPE_AUTO = 'auto';
 	var TYPE_CURATED = 'curated';
@@ -545,13 +556,17 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	//always update the guid?
+	//always update the guid? ---> NO!
 	//important function that makes sure that chapters have dimensions assigned to them at all times
 	//also makes sure the correct thumbnail is set and that the start and end times are available in human readable format
-	function setBasicProperties(chapter, updateGuid) {
-		if(updateGuid) {
-			//chapter.guid = _.uniqueId('chapter_');
-			chapter.guid = timeUtils.guid();
+	function setBasicProperties(chapter, updateDimensionData) {
+		//only update the guid if it is not there yet
+		if(!chapter.guid) {
+			chapter.guid = idUtils.guid();
+		}
+
+		//make sure the dimension data is properly copied to the object
+		if(updateDimensionData) {
 			var dimensions = {};
 			_.each(conf.programmeConfig.dimensions, function(d) {
 				//copy the properties from the saved dimension
@@ -572,12 +587,16 @@ linkedtv.run(function($rootScope, conf) {
 				dimensions[d.id] = temp;
 			});
 			chapter.dimensions = dimensions;
-
 		}
+
+		//always make sure to set the poster and start times
 		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
 		chapter.prettyStart = timeUtils.toPrettyTime(chapter.start);
 		chapter.prettyEnd = timeUtils.toPrettyTime(chapter.end);
+		chapter.mediaFragmentId = idUtils.generateMediaFragmentId(chapter.start, chapter.end);
 	}
+
+
 
 	function addObserver(observer) {
 		_observers.push(observer);
@@ -650,7 +669,12 @@ linkedtv.run(function($rootScope, conf) {
 				_chapters.splice(index, 1);
 			}
 		});
+		if(conf.syncLinkedTVChapters && chapter.solrId) {
+			console.debug('Deleting chapter from index...');
+			dataService.deleteChapterFromIndex(chapter);
+		}
 		saveOnServer();
+		notifyObservers();
 	}
 
 	function saveChapter(chapter, entityExpand) {
@@ -682,7 +706,7 @@ linkedtv.run(function($rootScope, conf) {
 			return a.start - b.start;
 		});
 		//update the entire resource on the server
-		saveOnServer();
+		saveOnServer(chapter);
 		//notify observers
 		notifyObservers();
 	}
@@ -715,13 +739,13 @@ linkedtv.run(function($rootScope, conf) {
 		saveChapter(_activeChapter);
 	}
 
-	//works for both information cards and enrichments
+	//works for both information cards and enrichments (UGLY=check based on URI or URL :s :s)
 	function saveEnrichment(dimension, enrichment, isInformationCard) {
 		var dimensionAnnotations = _activeChapter.dimensions[dimension.id].annotations;
-		console.debug(_activeChapter);
 		if(enrichment.remove) {
 			for(var i=0;i<dimensionAnnotations.length;i++) {
-				if(dimensionAnnotations[i].url == enrichment.url) {
+				if((!isInformationCard && dimensionAnnotations[i].url == enrichment.url) ||
+					(isInformationCard && dimensionAnnotations[i].uri == enrichment.uri)) {
 					dimensionAnnotations.splice(i, 1);
 					break;
 				}
@@ -747,8 +771,25 @@ linkedtv.run(function($rootScope, conf) {
 		saveChapter(_activeChapter);
 	}
 
-	function saveOnServer() {
-		dataService.saveResource(getCuratedChapters());
+	//passing the chapter is optional (in all cases all data will be saved again)
+	function saveOnServer(chapter) {
+		dataService.saveResource(getCuratedChapters(), chapter, onChapterIndexUpdatedOnServer);
+	}
+
+	function onChapterIndexUpdatedOnServer(data) {
+		if(data) {
+			//make sure the solrId is added to the right chapter
+			for(c in _chapters) {
+				if(_chapters[c].guid == data.guid) {
+					_chapters[c].solrId = data.solrId;
+					break;
+				}
+			}
+			//also update the active chapter (if applicable)
+			if(_activeChapter && _activeChapter.guid == data.guid) {
+				_activeChapter.solrId = data.solrId;
+			}
+		}
 	}
 
 	return {
@@ -1000,7 +1041,8 @@ linkedtv.run(function($rootScope, conf) {
 		getVideo : getVideo
 	}
 
-});;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
+});;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', 'subtitleCollection',
+	function($rootScope, conf, subtitleCollection) {
 
 	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
 	function getResourceData(loadData, callback) {
@@ -1039,12 +1081,23 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
-	function saveResource(chapters, action) {
-		action = action == undefined ? 'save' : action; //not used on the server (yet?)
-		var saveData = {'uri' : $rootScope.resourceUri, 'chapters' : chapters};
+	function saveResource(chapters, chapter, callback) {
+		if(conf.syncLinkedTVChapters && chapter) {
+			updateChapterIndexAndSaveOnServer(chapters, chapter, callback);//this will subsequently call saveDataOnServer()
+		} else {
+			saveDataOnServer(chapters);
+		}
+	}
+
+	function saveDataOnServer(chapters) {
+		var saveData = {
+			'uri' : $rootScope.resourceUri,
+			'chapters' : chapters
+		};
+		var url = '/save';
 		$.ajax({
 			type: 'POST',
-			url: '/save?action=' + action,
+			url: url,
 			data: JSON.stringify(saveData),
 			dataType : 'json',
 			success: function(json) {
@@ -1052,7 +1105,7 @@ linkedtv.run(function($rootScope, conf) {
 				if(json.error) {
 					alert('Could not save data');
 				} else {
-					//TODO animate the saved data on the screen
+					//todo animate some stuff
 				}
 			},
 			error: function(err) {
@@ -1060,6 +1113,60 @@ linkedtv.run(function($rootScope, conf) {
 			},
 			dataType: 'json'
 		});
+	}
+
+	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
+	function updateChapterIndexAndSaveOnServer(chapters, chapter, callback) {
+		var data = {
+			'uri' : $rootScope.resourceUri,
+			'provider' : $rootScope.provider,
+			'subtitles' : subtitleCollection.getChapterSubtitles(),
+			'chapter' : chapter
+		};
+		var url = '/updatesolr';
+		$.ajax({
+			type: 'POST',
+			url: url,
+			data: JSON.stringify(data),
+			dataType : 'json',
+			success: function(json) {
+				console.debug(json);
+				if(json.error) {
+					console.debug('Could not update the chapter index');
+					callback(null);
+				} else {
+					callback(json);//makes sure the client side also is updated with the new solrId
+				}
+				saveDataOnServer(chapters);
+			},
+			error: function(err) {
+	    		console.debug(err);
+	    		callback(null);
+	    		saveDataOnServer(chapters);
+			},
+			dataType: 'json'
+		});
+	}
+
+	function deleteChapterFromIndex(chapter) {
+		if(chapter.solrId) {
+			var data = {'id' : chapter.solrId, 'provider' : $rootScope.provider};
+			$.ajax({
+				type: 'POST',
+				url: '/deletesolr',
+				data : JSON.stringify(data),
+				dataType : 'json',
+				success: function(json) {
+					if(json.error) {
+						console.debug('Could not delete the chapter from the index');
+					}
+				},
+				error: function(err) {
+		    		console.debug(err);
+				},
+				dataType: 'json'
+			});
+		}
 	}
 
 	function publishResource(chapters, unpublish, callback) {
@@ -1091,7 +1198,8 @@ linkedtv.run(function($rootScope, conf) {
 		getResourceData : getResourceData,
 		getCuratedData : getCuratedData,
 		saveResource : saveResource,
-		publishResource : publishResource
+		publishResource : publishResource,
+		deleteChapterFromIndex : deleteChapterFromIndex
 	}
 
 }]);;angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(videoModel) {
@@ -1552,6 +1660,7 @@ linkedtv.run(function($rootScope, conf) {
 		$scope.safeApply(function() {
 			$scope.allChapters = chapters;
 			$scope.chapters = chapters;
+			$scope.applyChapterFilter();
 		});
 	};
 
@@ -1568,6 +1677,10 @@ linkedtv.run(function($rootScope, conf) {
 
 	$scope.toggleShowCuratedOnly = function() {
 		$scope.showCuratedOnly = !$scope.showCuratedOnly;
+		$scope.applyChapterFilter();
+	};
+
+	$scope.applyChapterFilter = function() {
 		if($scope.showCuratedOnly) {
 			$scope.chapters = _.filter($scope.allChapters, function(c) {
 				return c.type == 'curated';
@@ -1575,7 +1688,7 @@ linkedtv.run(function($rootScope, conf) {
 		} else {
 			$scope.chapters = $scope.allChapters;
 		}
-	};
+	}
 
 	$scope.setActiveChapter = function(chapter) {
 		chapterCollection.setActiveChapter(chapter);
@@ -1599,8 +1712,11 @@ linkedtv.run(function($rootScope, conf) {
 
 	$scope.openChapterDialog = function(chapter) {
 		if(chapter) {
-			chapter = {//copy the chapter
+			//copy the chapter (FIXME this is a very nasty bit! It's easy to overlook this when you extend your chapter object!!)
+			chapter = {
 				annotationURI: chapter.annotationURI,
+				mediaFragmentId : chapter.mediaFragmentId,
+				solrId : chapter.solrId,
 				bodyURI: chapter.bodyURI,
 				confidence: chapter.confidence,
 				dimensions: chapter.dimensions,
@@ -1854,6 +1970,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	};
 
 	$scope.addToTemplate = function(triple, literal) {
+		//Create a triple
 		var t = null;
 		if(triple) {
 			var val = {};
@@ -1877,7 +1994,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 			}
 		}
 
-		//Also add the triple to the list of triples (for convencience)
+		//then add the triple to the active template (the template will be copied to the $scope.card on save)
 		if(!$scope.activeTemplate) {
 			$scope.activeTemplate = {};
 		}
@@ -1925,7 +2042,8 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.useAsTemplate = function() {
 		$scope.useTemplate = false;
-		$scope.card.uri = $scope.selectedUri;
+		$scope.card = {};
+		$scope.card.uri = $scope.selectedUri;//TODO!! add some check that this entity was already added as a card
 		$scope.activeTemplate = {properties : []};
 		_.each($scope.fetchedTriples, function(triple) {
 			$scope.addToTemplate(triple);
