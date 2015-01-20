@@ -246,7 +246,7 @@ var config = angular.module('configuration', []).constant('conf', {
 	loadingImage : '/site_media/images/loading.gif',
 	platform : 'linkedtv',
 	logUserActions : true,
-	syncLinkedTVChapters : false
+	syncLinkedTVChapters : true
 });
 ;var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
 
