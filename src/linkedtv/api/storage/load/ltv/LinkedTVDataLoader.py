@@ -48,7 +48,7 @@ class LinkedTVDataLoader(DataLoader):
 				#get the playout URL
 				if mr.has_key('locator'):
 					vph = VideoPlayoutHandler()
-					playoutURL = 'none' #vph.getPlayoutURL(mr['locator'], clientIP)
+					playoutURL = vph.getPlayoutURL(mr['locator'], clientIP)
 					mediaResource.setPlayoutUrl(playoutURL)
 
 				#set the video metadata in the mediaresource
