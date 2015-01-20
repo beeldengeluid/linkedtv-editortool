@@ -1,11 +1,12 @@
 #https://code.google.com/p/solrpy/
 import solr
 from linkedtv.utils.TimeUtils import TimeUtils
+from linkedtv.LinkedtvSettings import LTV_SOLR_INDEX
 
 class LinkedTVChapterIndexHandler(object):
 
 	def __init__(self):
-		self.SOLR_CONN_URL = 'http://data.linkedtv.eu:8983/solr'
+		self.SOLR_CONN_URL = 'http://%s:%d/solr' % (LTV_SOLR_INDEX['host'], LTV_SOLR_INDEX['port'])
 		self.PROVIDER_MAPPING = {
 			'rbb' : { 'index' : 'RBBindex', 'chapterType' : 'NewsItem'},
 			'sv' : { 'index' : 'SVindex', 'chapterType' : 'ArtObject'}

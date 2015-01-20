@@ -24,6 +24,7 @@ import logging
 import re
 from simplejson import JSONDecodeError
 from linkedtv.api.storage.publish.PublishingPoint import PublishingPoint
+from linkedtv.LinkedtvSettings import LTV_SAVE_GRAPH, LTV_SPARQL_ENDPOINT
 from linkedtv.utils.TimeUtils import TimeUtils
 
 logger = logging.getLogger(__name__)
@@ -31,11 +32,6 @@ logger = logging.getLogger(__name__)
 class LinkedTVPublishingPoint(PublishingPoint):
 
 	def __init__(self):
-		#connection details
-		self.SPARQL_ENDPOINT = 'http://data.linkedtv.eu/sparql'
-		self.SAVE_GRAPH = 'http://data.linkedtv.eu/graph/et_v2'
-		#self.SAVE_GRAPH = 'http://data.linkedtv.eu/graph/linkedtv'
-
 		#external ontology prefixes
 		self.NERD_ONTO_PF = 'http://nerd.eurecom.fr/ontology#'
 		self.DBPEDIA_ONTOLOGY_PF = 'http://dbpedia.org/ontology'
@@ -90,7 +86,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		#Head part of the query
 		query = self.__getQueryPrefix()
-		query.append('WITH <%s> ' % self.SAVE_GRAPH)
+		query.append('WITH <%s> ' % LTV_SAVE_GRAPH)
 
 		#Construct the URIs
 		mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, mediaResourceUri, start, end)#should be exactly the same as the SOLR id
@@ -155,7 +151,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		query = self.__getQueryPrefix()
 
 		#The graph storing the ET data
-		query.append('WITH <%s> ' % self.SAVE_GRAPH)
+		query.append('WITH <%s> ' % LTV_SAVE_GRAPH)
 
 		#Construct the URIs
 		mfURI = '%s/%s#t=%s,%s' % (self.LTV_MEDIA_PF, mediaResourceUri, start, end)
@@ -226,14 +222,14 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 		#in this mode only the URI of the entity will be stored in the GRAPH
 		if entity.getUri():
-			query.append('WITH <%s> ' % self.SAVE_GRAPH)
+			query.append('WITH <%s> ' % LTV_SAVE_GRAPH)
 			query.append('INSERT { ')
 			query.append('<%s> prov:wasDerivedFrom <%s> . ' % (annotationURI, entity.getUri()))
 			query.append(' } ')
 
 		#in this mode also the properties of the entity are stored (in a new entity with a newly generated URI)
 		"""
-		query.append('WITH <%s> ' % self.SAVE_GRAPH)
+		query.append('WITH <%s> ' % LTV_SAVE_GRAPH)
 		#Construct the URI
 		etURI = '%s/%s' % (self.LTV_ENTITY_PF, uuid.uuid1())
 
@@ -264,7 +260,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 
 	def __deleteCuratedDataFromMediaResource(self, mediaResourceUri):
 		query = self.__getQueryPrefix()
-		query.append('WITH <%s> ' % self.SAVE_GRAPH)
+		query.append('WITH <%s> ' % LTV_SAVE_GRAPH)
 		query.append('DELETE { ')
 		query.append('?annotation ?p1 ?o1 . ')
 		query.append('?mediaFragment ?p2 ?o2 . ')
@@ -311,7 +307,7 @@ class LinkedTVPublishingPoint(PublishingPoint):
 		cmd_arr.append('curl')
 		cmd_arr.append('-X')
 		cmd_arr.append('POST')
-		cmd_arr.append(self.SPARQL_ENDPOINT)
+		cmd_arr.append(LTV_SPARQL_ENDPOINT)
 		cmd_arr.append('-H')
 		cmd_arr.append('Accept: application/sparql-results+json')
 		cmd_arr.append('-d')
