@@ -5,6 +5,7 @@ from linkedtv.api.dimension.ltv.RelatedChapterEnricher import RelatedChapterEnri
 
 from linkedtv.api.dimension.public.EuropeanaAPI import EuropeanaAPI
 from linkedtv.api.dimension.public.AnefoAPI import AnefoAPI
+from linkedtv.api.dimension.public.NewsReaderAPI import NewsReaderAPI
 
 """
 See the DimensionService class to see what data the fetch() function needs to return
@@ -18,7 +19,8 @@ class DimensionHandler(object):
 			'IRAPI' : IRAPI(),
 			'RelatedChapterEnricher' : RelatedChapterEnricher(),
 			'EuropeanaAPI' : EuropeanaAPI(),
-			'AnefoAPI' : AnefoAPI()
+			'AnefoAPI' : AnefoAPI(),
+			'NewsReaderAPI' : NewsReaderAPI()
 		}
 
 	def getRegisteredServices(self):
