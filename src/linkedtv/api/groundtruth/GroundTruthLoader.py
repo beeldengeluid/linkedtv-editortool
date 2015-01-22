@@ -9,7 +9,7 @@ from linkedtv.utils.TimeUtils import TimeUtils
 """
 This class supports parsing a spreadsheet containing ground truth data:
 - each row must be a chapter and must contain the video ID in the first column
-- an example of the currently supported format can be found in the docs directory
+- an example of the currently supported format can be found in the resources/groundtruths directory
 
 Note: this class is called when:
 - the parameter 'loadGroundTruth' is set to true in config.js
@@ -40,7 +40,7 @@ class GroundTruthLoader():
 			print 'Found some ground truth data in cache!'
 			videos = simplejson.loads(self.store.get(LTV_GROUND_TRUTH['id']))
 		else:
-			videos = self.extractDataFromFile(LTV_GROUND_TRUTH['chapters'])
+			videos = simplejson.loads(self.extractDataFromFile(LTV_GROUND_TRUTH['chapters']))
 		if videos and videos.has_key(resourceUri):
 			print 'The chapter was available in the ground truth'
 			return videos[resourceUri]
@@ -65,7 +65,7 @@ class GroundTruthLoader():
 					videos[curVideo.getId()] = curVideo
 					chapters = []
 				curVideo = MediaResource(sheet.cell_value(x, 0))
-			if sheet.ncols == 6:
+			if sheet.ncols == 6 and sheet.cell_value(x, 3) != "":
 				c = Chapter(
 					sheet.cell_value(x, 3),
 					start=TimeUtils.srtTimeToMillis(sheet.cell_value(x, 4), False),
@@ -80,12 +80,11 @@ class GroundTruthLoader():
 		#add the last video
 		curVideo.setChapters(chapters)
 		videos[curVideo.getId()] = curVideo
+		print 'NUMBER OF VIDEOS FOUND IN GROUND TRUTH: %d' % len(videos)
+
+		videoData = simplejson.dumps(videos, default=lambda obj: obj.__dict__)
 
 		#store the data in the redis store
-		self.store.set(
-			LTV_GROUND_TRUTH['id'],
-			simplejson.dumps(videos, default=lambda obj: obj.__dict__)
-		)
+		self.store.set(LTV_GROUND_TRUTH['id'],videoData)
 
-		print 'NUMBER OF VIDEOS FOUND IN GROUND TRUTH: %d' % len(videos)
-		return videos
+		return videoData
