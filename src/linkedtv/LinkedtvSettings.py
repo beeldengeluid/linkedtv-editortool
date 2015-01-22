@@ -24,10 +24,17 @@ LTV_LOGGING_SETTINGS = getattr(settings, 'LTV_LOGGING_SETTINGS', {
 	'output-csv' : '/Users/jblom/temp/linkedtv-user-log.csv'
 })
 
+LTV_GROUND_TRUTH = getattr(settings, 'LTV_GROUND_TRUTH', {
+	'id' : 'TKKChapters',
+	'chapters' : '/Users/jblom/experiments/linkedtv/ground_truth_chapters.xlsx',
+	'redis-host' : 'localhost',
+	'redis-port' : 6379,
+	'redis-db' : 8
+})
+
 LTV_PLATFORM_LOGIN = getattr(settings, 'LTV_PLATFORM_LOGIN', {
 	'user' : 'admin',
-	'password' :
-	'linkedtv'
+	'password' : 'linkedtv'
 })
 
 LTV_EUROPEANA = getattr(settings, 'LTV_EUROPEANA', {

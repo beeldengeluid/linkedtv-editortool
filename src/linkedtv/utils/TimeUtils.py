@@ -17,16 +17,20 @@ class TimeUtils():
             return 0
 
     @staticmethod
-    def srtTimeToMillis(t):
-        #00:28:14,720
-        try:
-            d = datetime.strptime(t, '%H:%M:%S,%f')
-        except ValueError, e:
-            print e
-            return 0
-        ms = d.hour * 3600000 + d.minute * 60000 + d.second * 1000
-        ms += d.microsecond / 1000
-        return ms
+    def srtTimeToMillis(t, useComma=True):
+        #00:28:14,720 OR 00:28:14.720
+        if t and len(t) > 0:
+            try:
+                if useComma:
+                    d = datetime.strptime(t, '%H:%M:%S,%f')
+                else:
+                    d = datetime.strptime(t, '%H:%M:%S.%f')
+            except ValueError, e:
+                print e
+                return 0
+            ms = d.hour * 3600000 + d.minute * 60000 + d.second * 1000
+            ms += d.microsecond / 1000
+            return ms
 
     @staticmethod
     def toTimeTuple(mediafragmentTime):

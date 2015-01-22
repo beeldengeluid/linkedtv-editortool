@@ -28,9 +28,9 @@ class Api():
     def load(self, platform, resourceUri, clientIP, loadAnnotations):
         return self.dataLoadHandler.loadMediaResourceData(platform, resourceUri, clientIP, loadAnnotations)
 
-    def load_curated(self, resourceUri):
+    def load_curated(self, resourceUri, loadGroundTruth):
         sep = SaveEndpoint()
-        return sep.loadCuratedResource(resourceUri)
+        return sep.loadCuratedResource(resourceUri, loadGroundTruth)
 
     def save(self, saveData):
         sep = SaveEndpoint()

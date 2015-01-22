@@ -1,6 +1,7 @@
 import simplejson
 import redis
 from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS
+from linkedtv.api.groundtruth.GroundTruthLoader import GroundTruthLoader
 
 class SaveEndpoint():
 
@@ -13,8 +14,11 @@ class SaveEndpoint():
 		self.cache.set('__%s' % saveData['uri'], simplejson.dumps(sd))
 		return {'uri' : saveData['uri']}
 
-	def loadCuratedResource(self, uri):
+	def loadCuratedResource(self, uri, loadGroundTruth):
 		print 'Getting %s from cache' % uri
 		if self.cache.exists('__%s' % uri):
 			return simplejson.loads(self.cache.get('__%s' % uri))
+		elif loadGroundTruth:
+			gtl = GroundTruthLoader()
+			return gtl.loadGroundTruth(uri)
 		return None

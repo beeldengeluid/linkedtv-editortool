@@ -79,6 +79,7 @@ var informationCardTemplates = {
 
 var rbbConfig = {
 	entityExpansion : true,
+	loadGroundTruth : false,
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -146,6 +147,7 @@ var rbbConfig = {
 
 var tkkConfig = {
 	entityExpansion : false,
+	loadGroundTruth : true,
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -204,6 +206,7 @@ var tkkConfig = {
 
 var trialConfig = {
 	entityExpansion : false,
+	loadGroundTruth : false,
 	dimensions : [
 		{
 			id : 'maintopic',
@@ -1044,11 +1047,11 @@ linkedtv.run(function($rootScope, conf) {
 });;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', 'subtitleCollection',
 	function($rootScope, conf, subtitleCollection) {
 
-	//rename this to: loadDataFromLinkedTVPlatform or something that reflects this
+	//loads (automatically generated) data from the specified platform (config.js)
 	function getResourceData(loadData, callback) {
 		var url = '/load?id=';
 		url += $rootScope.resourceUri;
-		url += '&ld=' + (loadData ? 'true' : 'false');
+		url += '&ld=' + (loadData ? 'true' : 'false');//FIXME this is a weird/old parameter that must be removed later on
 		url += '&p=' + conf.platform;
 		$.ajax({
 			method: 'GET',
@@ -1064,12 +1067,17 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	//TODO create a new function for loading curated data from the platform!
+	//loads the curated data (always stored in the ET)
 	function getCuratedData(callback) {
+		var url = '/load_curated';
+		url += '?id=' + $rootScope.resourceUri;
+		if(conf.programmeConfig.loadGroundTruth) {
+			url += '&gt=true';
+		}
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/load_curated?id=' + $rootScope.resourceUri,
+			url : url,
 			success : function(json) {
 				callback(json.error ? null : json);
 			},
@@ -1080,7 +1088,7 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
+	//if configured, this function first updates the chapter index in the SOLR index and then update the ET storage
 	function saveResource(chapters, chapter, callback) {
 		if(conf.syncLinkedTVChapters && chapter) {
 			updateChapterIndexAndSaveOnServer(chapters, chapter, callback);//this will subsequently call saveDataOnServer()

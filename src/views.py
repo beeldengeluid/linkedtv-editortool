@@ -88,9 +88,10 @@ def load(request):
 """This is called to fetched the curated data from the Redis store"""
 def load_curated(request):
 	resourceUri = request.GET.get('id', None)
+	loadGroundTruth = request.GET.get('gt', None) == 'true'
 	if resourceUri:
 		api = Api()
-		resp = api.load_curated(resourceUri)
+		resp = api.load_curated(resourceUri, loadGroundTruth)
 		if resp:
 			httpResp = HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 			#to enable CORS

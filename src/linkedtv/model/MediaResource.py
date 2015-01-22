@@ -1,5 +1,3 @@
-
-
 class MediaResource(object):
 
 	def __init__(self, mediaResourceID = None, title = None, date = None, concepts = [], nes = [], shots = [], chapters = [],
