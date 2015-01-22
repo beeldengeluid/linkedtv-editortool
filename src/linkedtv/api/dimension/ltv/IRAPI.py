@@ -49,6 +49,7 @@ class IRAPI(DimensionService):
 	def __search(self, query, entities, dimension, strictQuery, numResults):
 		http = httplib2.Http()
 		url = self.__constructServiceQueryUrl(query, entities, dimension, strictQuery, numResults)
+		print url
 		if url:
 			headers = {'Accept':'application/json'}
 			resp, content = http.request(url, 'GET', headers=headers)

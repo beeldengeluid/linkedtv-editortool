@@ -174,9 +174,9 @@ var tkkConfig = {
 			label : 'Background',
 			linkedtvDimension : 'Background',
 			service : {
-				id : 'TvEnricher',
+				id : 'IRAPI',
 				params : {
-					dimension : 'SV'
+					domain : 'SV'
 				}
 			}
 		},
