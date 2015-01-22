@@ -74,7 +74,6 @@ class GroundTruthLoader():
 					confidence=1#full confidence in the ground truth
 				)
 				chapters.append(c)
-				print '%s (%s - %s)' % (c.getLabel(), c.getStart(), c.getEnd())
 			x += 1
 
 		#add the last video
