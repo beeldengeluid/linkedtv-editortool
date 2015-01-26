@@ -178,7 +178,7 @@ var tkkConfig = {
 			service : {
 				id : 'EuropeanaAPI',
 				params : {
-					queryParts : ['COUNTRY:netherlands']
+					//queryParts : ['COUNTRY:netherlands']
 				}
 			}
 		},

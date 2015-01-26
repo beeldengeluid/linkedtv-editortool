@@ -47,6 +47,12 @@ class LinkedTVChapterIndexHandler(object):
 			return c['mediaFragmentId']
 		return None
 
+	def updateSolrDocument(self, provider, solrDoc):
+		conn = solr.Solr('http://data.linkedtv.eu:8983/solr/%s' % self.PROVIDER_MAPPING[provider]['index'])
+		conn.add(solrDoc)
+		conn.commit()
+		conn.close()
+
 	def deleteChapter(self, solrId, provider):
 		conn = solr.Solr('http://data.linkedtv.eu:8983/solr/%s' % self.PROVIDER_MAPPING[provider]['index'])
 		conn.delete(id=solrId)
