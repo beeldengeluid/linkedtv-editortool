@@ -11,6 +11,11 @@ from linkedtv.api.storage.load.ltv.LinkedTVDataUtils import LinkedTVDataUtils
 from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN
 from linkedtv.utils.TimeUtils import TimeUtils
 
+"""
+
+TODO integrate with the LinkedTVSubtitleLoader and remove all subtitle fetching code here
+"""
+
 class EntityExpansionService:
 
 	def __init__(self):

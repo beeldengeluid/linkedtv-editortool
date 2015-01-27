@@ -4,6 +4,10 @@ import simplejson
 from linkedtv.api.storage.SaveEndpoint import SaveEndpoint
 from linkedtv.api.storage.publish.PublishingHandler import PublishingHandler
 from linkedtv.api.storage.load.DataLoadHandler import DataLoadHandler
+from linkedtv.api.storage.synchronize.SynchronizationHandler import SynchronizationHandler
+
+#subtitle loader, should be integrated with the dataloadhandlers
+from linkedtv.api.storage.load.ltv.LinkedTVSubtitleLoader import LinkedTVSubtitleLoader
 
 #image related
 from linkedtv.api.images.ImageFetcher import ImageFetcher
@@ -52,6 +56,10 @@ class Api():
         resp = simplejson.dumps(mr, default=lambda obj: obj.__dict__)
         return resp
 
+    def synchronize(self, platform, resourceUri, provider):
+        sh = SynchronizationHandler()
+        return sh.synchronize(platform, resourceUri, provider)
+
     def log(self, logData):
         ual = UserActionLogger()
         if ual.log(logData):
@@ -75,4 +83,10 @@ class Api():
 
     def image(self, millis, baseUrl):
         fetcher = ImageFetcher()
-        resp = fetcher.getNoterikThumbnailByMillis(millis, baseUrl)
+        return fetcher.getNoterikThumbnailByMillis(millis, baseUrl)
+
+
+    def subtitles(self, resourceUri, start, end):
+        subLoader = LinkedTVSubtitleLoader()
+        return subLoader.loadSubtitleFragmentByResourceUri(resourceUri, start, end)
+

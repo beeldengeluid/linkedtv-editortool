@@ -10,14 +10,20 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.context_processors import csrf
 from django.template import RequestContext
 
+#external services
 from linkedtv.api.vocabulary.dbpedia.AutoComplete import AutoComplete
 from linkedtv.api.vocabulary.dbpedia.EntityProxy import EntityProxy
 from linkedtv.api.vocabulary.gtaa.OpenSKOSHandler import OpenSKOSHandler
 from linkedtv.api.external.EntityExpansionService import EntityExpansionService
-from linkedtv.api.external.LinkedTVChapterIndexHandler import LinkedTVChapterIndexHandler
 
 from linkedtv.api.Api import *
 
+
+"""
+*********************************************************************************************************
+Local helper functions
+*********************************************************************************************************
+"""
 
 def __getErrorMessage(msg):
 	return "{\"error\" : \"%s\"}" % msg
@@ -69,7 +75,7 @@ def provider(request, pub = '', id = ''):
 
 """
 *********************************************************************************************************
-REST API CALLS (loading & saving data, fetching images and video etc)
+API - Loading / saving / publishing / synchronizing
 *********************************************************************************************************
 """
 
@@ -127,6 +133,27 @@ def publish(request):
 			return HttpResponse(resp, mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Failed to publish this media resource'), mimetype='application/json')
 
+def synchronize(request):
+	resourceUri = request.GET.get('uri', None)
+	platform = request.GET.get('platform', None)
+	provider = request.GET.get('p', None)
+	print platform
+	print provider
+	if resourceUri and platform and provider:
+		api = Api()
+		success = api.synchronize(platform, resourceUri, provider)
+		if success:
+			return HttpResponse(__getOkMessage(), mimetype='application/json')
+		else:
+			return HttpResponse(__getErrorMessage('Failed to synchronize with the SOLR index'), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+
+"""
+*********************************************************************************************************
+API - Content related calls
+*********************************************************************************************************
+"""
+
 """This is called to fetch an keyframe/thumbnail image from the Noterik server"""
 def image(request):
 	#id = request.GET.get('id', None)
@@ -150,6 +177,23 @@ def videos(request):
 		if resp:
 			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+
+def subtitles(request):
+	resourceUri = request.GET.get('uri', None)
+	start = request.GET.get('start', -1)
+	end = request.GET.get('end', -1)
+	if resourceUri and (int(end) > int(start) or (end == -1 and start == -1)):
+		api = Api()
+		resp = api.subtitles(resourceUri, int(start), int(end))
+		if resp:
+			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+
+"""
+*********************************************************************************************************
+API - Dimension services
+*********************************************************************************************************
+"""
 
 @csrf_exempt
 def dimension(request):
@@ -178,6 +222,28 @@ def dimensions(request):
 		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('No services have been registered!'), mimetype='application/json')
 
+"""
+*********************************************************************************************************
+API - Logging user actions
+*********************************************************************************************************
+"""
+
+@csrf_exempt
+def log(request):
+	logData = request.body
+	if logData:
+		api = Api()
+		success = api.log(simplejson.loads(logData))
+		if success:
+			return HttpResponse(__getOkMessage(), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('There was an error while processing the log data'), mimetype='application/json')
+
+def showlogs(request):
+	api = Api()
+	resp = api.showlogs()
+	if resp:
+		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('There are currently no log records available'), mimetype='application/json')
 
 """
 *********************************************************************************************************
@@ -233,28 +299,6 @@ def entityexpand(request):
 			return HttpResponse(__getErrorMessage('Could not find any entities'), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
-"""
-*********************************************************************************************************
-External API - Logging user actions
-*********************************************************************************************************
-"""
-
-@csrf_exempt
-def log(request):
-	logData = request.body
-	if logData:
-		api = Api()
-		success = api.log(simplejson.loads(logData))
-		if success:
-			return HttpResponse(__getOkMessage(), mimetype='application/json')
-	return HttpResponse(__getErrorMessage('There was an error while processing the log data'), mimetype='application/json')
-
-def showlogs(request):
-	api = Api()
-	resp = api.showlogs()
-	if resp:
-		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-	return HttpResponse(__getErrorMessage('There are currently no log records available'), mimetype='application/json')
 
 """
 *********************************************************************************************************

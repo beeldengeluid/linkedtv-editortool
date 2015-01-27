@@ -36,8 +36,6 @@ angular.module('linkedtv').controller('appController',
 		console.debug('Loaded the curated/Redis data from the server');
 		console.debug(curatedData);
 
-		//TODO some option when loading curated data from the LTV platform
-
 		//load the videoModel with metadata
 		videoModel.initModelData($scope.resourceData);
 

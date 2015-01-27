@@ -44,7 +44,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', 'subtit
 
 	//if configured, this function first updates the chapter index in the SOLR index and then update the ET storage
 	function saveResource(chapters, chapter, callback) {
-		if(conf.syncLinkedTVChapters && chapter) {
+		if(conf.synchronization.syncOnSave && chapter) {
 			updateChapterIndexAndSaveOnServer(chapters, chapter, callback);//this will subsequently call saveDataOnServer()
 		} else {
 			saveDataOnServer(chapters);
@@ -78,12 +78,14 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', 'subtit
 	}
 
 	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
+	//TODO move this to synchronizationService.js
 	function updateChapterIndexAndSaveOnServer(chapters, chapter, callback) {
 		var data = {
 			'uri' : $rootScope.resourceUri,
 			'provider' : $rootScope.provider,
 			'subtitles' : subtitleCollection.getChapterSubtitles(),
-			'chapter' : chapter
+			'chapter' : chapter,
+			'platform' : conf.synchronization.platform
 		};
 		var url = '/updatesolr';
 		$.ajax({

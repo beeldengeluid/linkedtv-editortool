@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     url(r'^load_curated$', 'views.load_curated'),
     url(r'^save$', 'views.save'),
     url(r'^publish$', 'views.publish'),
+    url(r'^synchronize$', 'views.synchronize'),
 
     #API - logging of user actions
     url(r'^log$', 'views.log'),
@@ -24,6 +25,7 @@ urlpatterns = patterns('',
     #API - load images and other vidoes
     url(r'^image$', 'views.image'),
     url(r'^videos$', 'views.videos'),
+    url(r'^subtitles$', 'views.subtitles'),
 
     #API - dimension services (for fetching enrichments)
     url(r'^dimension$', 'views.dimension'),
@@ -33,6 +35,9 @@ urlpatterns = patterns('',
     url(r'^entityproxy$', 'views.entityproxy'),
     url(r'^entityexpand$', 'views.entityexpand'),
     url(r'^autocomplete$', 'views.autocomplete'),
+
+    #these calls should be abstracted to something that can be reused for synchronizing (chapter) data with
     url(r'^updatesolr$', 'views.updatesolr'),
     url(r'^deletesolr$', 'views.deletesolr'),
+
 )
