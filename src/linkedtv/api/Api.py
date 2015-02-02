@@ -60,6 +60,14 @@ class Api():
         sh = SynchronizationHandler()
         return sh.synchronize(platform, resourceUri, provider)
 
+    def synchronize_chapter(self, platform, chapterData):
+        sh = SynchronizationHandler()
+        return sh.synchronizeChapter(platform, chapterData)
+
+    def disconnect_chapter(self, platform, externalId, provider):
+        sh = SynchronizationHandler()
+        return sh.disconnectChapter(platform, externalId, provider)
+
     def log(self, logData):
         ual = UserActionLogger()
         if ual.log(logData):

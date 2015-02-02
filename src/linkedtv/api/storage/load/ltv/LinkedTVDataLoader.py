@@ -16,6 +16,10 @@ from linkedtv.api.storage.load.DataLoader import DataLoader
 
 logger = logging.getLogger(__name__)
 
+"""
+TODO properly handle communications in case the Redis store is not running
+"""
+
 class LinkedTVDataLoader(DataLoader):
 
 	def __init__(self):

@@ -17,6 +17,8 @@ urlpatterns = patterns('',
     url(r'^save$', 'views.save'),
     url(r'^publish$', 'views.publish'),
     url(r'^synchronize$', 'views.synchronize'),
+    url(r'^synchronize_chapter$', 'views.synchronize_chapter'),
+    url(r'^disconnect_chapter$', 'views.disconnect_chapter'),
 
     #API - logging of user actions
     url(r'^log$', 'views.log'),
@@ -35,9 +37,5 @@ urlpatterns = patterns('',
     url(r'^entityproxy$', 'views.entityproxy'),
     url(r'^entityexpand$', 'views.entityexpand'),
     url(r'^autocomplete$', 'views.autocomplete'),
-
-    #these calls should be abstracted to something that can be reused for synchronizing (chapter) data with
-    url(r'^updatesolr$', 'views.updatesolr'),
-    url(r'^deletesolr$', 'views.deletesolr'),
 
 )

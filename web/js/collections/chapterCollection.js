@@ -185,8 +185,8 @@ angular.module('linkedtv').factory('chapterCollection',
 			}
 		});
 		if(conf.synchronization.syncOnSave && chapter.solrId) {
-			console.debug('Deleting chapter from index...');
-			dataService.deleteChapterFromIndex(chapter);
+			console.debug('Disconnecting chapter from external platform');
+			synchronizationService.disconnectChapter(chapter);
 		}
 		saveOnServer();
 		notifyObservers();
@@ -288,10 +288,17 @@ angular.module('linkedtv').factory('chapterCollection',
 
 	//passing the chapter is optional (in all cases all data will be saved again)
 	function saveOnServer(chapter) {
-		dataService.saveResource(getCuratedChapters(), chapter, onChapterIndexUpdatedOnServer);
+		//if configured, the changed chapter will be synchronized with an external platform prior to saving (see config.js)
+		if(conf.synchronization.syncOnSave && chapter) {
+			console.debug('Synchronizing chapter with external platform');
+			synchronizationService.synchronizeChapter(chapter, onChapterSynched)
+		} else {
+			console.debug('Just saving all data on the server');
+			dataService.saveResource(getCuratedChapters());
+		}
 	}
 
-	function onChapterIndexUpdatedOnServer(data) {
+	function onChapterSynched(data) {
 		if(data) {
 			//make sure the solrId is added to the right chapter
 			for(c in _chapters) {
@@ -300,10 +307,14 @@ angular.module('linkedtv').factory('chapterCollection',
 					break;
 				}
 			}
+
 			//also update the active chapter (if applicable)
 			if(_activeChapter && _activeChapter.guid == data.guid) {
 				_activeChapter.solrId = data.solrId;
 			}
+
+			//now save this on the server
+			dataService.saveResource(getCuratedChapters());
 		}
 	}
 

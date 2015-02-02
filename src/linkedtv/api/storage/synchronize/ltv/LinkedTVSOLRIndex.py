@@ -20,7 +20,7 @@ class LinkedTVSOLRIndex(Synchronizer):
 			'sv' : { 'index' : 'SVindex', 'chapterType' : 'ArtObject'}
 		}
 
-		#This function is used for synching on page load (see synchronize.syncOnLoad in config.js)
+	#This function is used for synching on page load (see synchronize.syncOnLoad in config.js)
 	def synchronize(self, resourceUri, provider):
 		print 'Synchronizing %s with the SOLR index' % resourceUri
 		sep = SaveEndpoint()
@@ -52,21 +52,18 @@ class LinkedTVSOLRIndex(Synchronizer):
 				'chapterType' : self.PROVIDER_MAPPING[provider]['chapterType'],
 				'subtitle' : subtitles, #fetch from subtitle collection on the client side
 			}
-			print doc
-			print '\n\n\n'
 			#check if there is a solrId that does not match the mediafragmentId (out of synch)
 			if solrId and solrId != fragmentId:
-				print 'deleting the old SOLR document first: %s' % solrId
 				conn.delete(id=solrId)
 
 			#add the up to date solr document
 			conn.add(doc)
-		#conn.commit()
+		conn.commit()
 		conn.close()
 		return True
 
 	#This function is used for synching individual chapters (see synchronize.syncOnSave in config.js)
-	def updateChapter(self, data):
+	def synchronizeChapter(self, data):
 		if data.has_key('chapter') and data.has_key('provider') and data.has_key('uri') and data.has_key('subtitles'):
 			c = data['chapter']
 			if not c:
@@ -92,7 +89,6 @@ class LinkedTVSOLRIndex(Synchronizer):
 			}
 			#if the solrId is different delete the old document first (fyi the boundaries of the chapter were changed)
 			if solrId and solrId != c['mediaFragmentId']:
-				print 'deleting the old SOLR document first: %s' % solrId
 				conn.delete(id=solrId)
 			conn.add(doc)
 			conn.commit()
@@ -101,10 +97,10 @@ class LinkedTVSOLRIndex(Synchronizer):
 		return None
 
 	#this function is called when deleting a chapter (and synchronization.syncOnSave == true in config.js)
-	def deleteChapter(self, solrId, provider):
+	def disconnectChapter(self, solrId, provider):
 		conn = solr.Solr('http://data.linkedtv.eu:8983/solr/%s' % self.PROVIDER_MAPPING[provider]['index'])
 		conn.delete(id=solrId)
-		res = conn.commit()
+		conn.commit()
 		conn.close()
 		return True
 

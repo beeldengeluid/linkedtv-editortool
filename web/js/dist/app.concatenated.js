@@ -250,7 +250,7 @@ var config = angular.module('configuration', []).constant('conf', {
 	platform : 'linkedtv',
 	logUserActions : true,
 	synchronization : {
-		syncOnLoad : true,
+		syncOnLoad : false,
 		syncOnSave : false,
 		platform : 'LinkedTVSOLR'
 	}
@@ -696,8 +696,8 @@ linkedtv.run(function($rootScope, conf) {
 			}
 		});
 		if(conf.synchronization.syncOnSave && chapter.solrId) {
-			console.debug('Deleting chapter from index...');
-			dataService.deleteChapterFromIndex(chapter);
+			console.debug('Disconnecting chapter from external platform');
+			synchronizationService.disconnectChapter(chapter);
 		}
 		saveOnServer();
 		notifyObservers();
@@ -799,10 +799,17 @@ linkedtv.run(function($rootScope, conf) {
 
 	//passing the chapter is optional (in all cases all data will be saved again)
 	function saveOnServer(chapter) {
-		dataService.saveResource(getCuratedChapters(), chapter, onChapterIndexUpdatedOnServer);
+		//if configured, the changed chapter will be synchronized with an external platform prior to saving (see config.js)
+		if(conf.synchronization.syncOnSave && chapter) {
+			console.debug('Synchronizing chapter with external platform');
+			synchronizationService.synchronizeChapter(chapter, onChapterSynched)
+		} else {
+			console.debug('Just saving all data on the server');
+			dataService.saveResource(getCuratedChapters());
+		}
 	}
 
-	function onChapterIndexUpdatedOnServer(data) {
+	function onChapterSynched(data) {
 		if(data) {
 			//make sure the solrId is added to the right chapter
 			for(c in _chapters) {
@@ -811,10 +818,14 @@ linkedtv.run(function($rootScope, conf) {
 					break;
 				}
 			}
+
 			//also update the active chapter (if applicable)
 			if(_activeChapter && _activeChapter.guid == data.guid) {
 				_activeChapter.solrId = data.solrId;
 			}
+
+			//now save this on the server
+			dataService.saveResource(getCuratedChapters());
 		}
 	}
 
@@ -1067,8 +1078,7 @@ linkedtv.run(function($rootScope, conf) {
 		getVideo : getVideo
 	}
 
-});;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', 'subtitleCollection',
-	function($rootScope, conf, subtitleCollection) {
+});;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
 
 	//loads (automatically generated) data from the specified platform (config.js)
 	function getResourceData(loadData, callback) {
@@ -1111,16 +1121,7 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
-	//if configured, this function first updates the chapter index in the SOLR index and then update the ET storage
-	function saveResource(chapters, chapter, callback) {
-		if(conf.synchronization.syncOnSave && chapter) {
-			updateChapterIndexAndSaveOnServer(chapters, chapter, callback);//this will subsequently call saveDataOnServer()
-		} else {
-			saveDataOnServer(chapters);
-		}
-	}
-
-	function saveDataOnServer(chapters) {
+	function saveResource(chapters) {
 		var saveData = {
 			'uri' : $rootScope.resourceUri,
 			'chapters' : chapters
@@ -1144,62 +1145,6 @@ linkedtv.run(function($rootScope, conf) {
 			},
 			dataType: 'json'
 		});
-	}
-
-	//now this only takes chapters (which contain evertything), but maybe this needs to be changed later
-	//TODO move this to synchronizationService.js
-	function updateChapterIndexAndSaveOnServer(chapters, chapter, callback) {
-		var data = {
-			'uri' : $rootScope.resourceUri,
-			'provider' : $rootScope.provider,
-			'subtitles' : subtitleCollection.getChapterSubtitles(),
-			'chapter' : chapter,
-			'platform' : conf.synchronization.platform
-		};
-		var url = '/updatesolr';
-		$.ajax({
-			type: 'POST',
-			url: url,
-			data: JSON.stringify(data),
-			dataType : 'json',
-			success: function(json) {
-				console.debug(json);
-				if(json.error) {
-					console.debug('Could not update the chapter index');
-					callback(null);
-				} else {
-					callback(json);//makes sure the client side also is updated with the new solrId
-				}
-				saveDataOnServer(chapters);
-			},
-			error: function(err) {
-	    		console.debug(err);
-	    		callback(null);
-	    		saveDataOnServer(chapters);
-			},
-			dataType: 'json'
-		});
-	}
-
-	function deleteChapterFromIndex(chapter) {
-		if(chapter.solrId) {
-			var data = {'id' : chapter.solrId, 'provider' : $rootScope.provider};
-			$.ajax({
-				type: 'POST',
-				url: '/deletesolr',
-				data : JSON.stringify(data),
-				dataType : 'json',
-				success: function(json) {
-					if(json.error) {
-						console.debug('Could not delete the chapter from the index');
-					}
-				},
-				error: function(err) {
-		    		console.debug(err);
-				},
-				dataType: 'json'
-			});
-		}
 	}
 
 	function publishResource(chapters, unpublish, callback) {
@@ -1231,8 +1176,7 @@ linkedtv.run(function($rootScope, conf) {
 		getResourceData : getResourceData,
 		getCuratedData : getCuratedData,
 		saveResource : saveResource,
-		publishResource : publishResource,
-		deleteChapterFromIndex : deleteChapterFromIndex
+		publishResource : publishResource
 	}
 
 }]);;angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(videoModel) {
@@ -1591,7 +1535,8 @@ linkedtv.run(function($rootScope, conf) {
 		seek : seek
 	}
 
-}]);;angular.module('linkedtv').factory('synchronizationService', ['$rootScope', 'conf', function($rootScope, conf){
+}]);;angular.module('linkedtv').factory('synchronizationService', ['$rootScope', 'conf', 'subtitleCollection',
+	function($rootScope, conf, subtitleCollection){
 
 	function synchronize(callback) {
 		console.debug('Synchronizing with ' + conf.synchronization.platform);
@@ -1615,8 +1560,62 @@ linkedtv.run(function($rootScope, conf) {
 		});
 	}
 
+	function synchronizeChapter(chapter, callback) {
+		var data = {
+			'uri' : $rootScope.resourceUri,
+			'provider' : $rootScope.provider,
+			'subtitles' : subtitleCollection.getChapterSubtitles(),
+			'chapter' : chapter,
+			'platform' : conf.synchronization.platform
+		};
+		var url = '/synchronize_chapter';
+		$.ajax({
+			type: 'POST',
+			url: url,
+			data: JSON.stringify(data),
+			dataType : 'json',
+			success: function(json) {
+				console.debug(json);
+				if(json.error) {
+					console.debug('Could not update the chapter index');
+					callback(null);
+				} else {
+					callback(json);//makes sure the client side also is updated with the new solrId
+				}
+			},
+			error: function(err) {
+	    		console.debug(err);
+	    		callback(null);
+			},
+			dataType: 'json'
+		});
+	}
+
+	function disconnectChapter(chapter) {
+		if(chapter.solrId) {
+			var data = {'id' : chapter.solrId, 'provider' : $rootScope.provider, 'platform' : conf.synchronization.platform};
+			$.ajax({
+				type: 'POST',
+				url: '/disconnect_chapter',
+				data : JSON.stringify(data),
+				dataType : 'json',
+				success: function(json) {
+					if(json.error) {
+						console.debug('Could not delete the chapter from the index');
+					}
+				},
+				error: function(err) {
+		    		console.debug(err);
+				},
+				dataType: 'json'
+			});
+		}
+	}
+
 	return {
-		synchronize : synchronize
+		synchronize : synchronize,
+		synchronizeChapter : synchronizeChapter,
+		disconnectChapter : disconnectChapter
 	}
 
 }]);;angular.module('linkedtv').factory('videoSelectionService', ['conf', function(conf){

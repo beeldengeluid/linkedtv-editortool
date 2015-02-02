@@ -105,7 +105,6 @@ def load_curated(request):
 			return httpResp
 	return HttpResponse(__getErrorMessage('Could not load curated data'), mimetype='application/json')
 
-"""New Saving function"""
 @csrf_exempt
 def save(request):
 	saveData = request.body
@@ -137,8 +136,6 @@ def synchronize(request):
 	resourceUri = request.GET.get('uri', None)
 	platform = request.GET.get('platform', None)
 	provider = request.GET.get('p', None)
-	print platform
-	print provider
 	if resourceUri and platform and provider:
 		api = Api()
 		success = api.synchronize(platform, resourceUri, provider)
@@ -147,6 +144,36 @@ def synchronize(request):
 		else:
 			return HttpResponse(__getErrorMessage('Failed to synchronize with the SOLR index'), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+
+@csrf_exempt
+def synchronize_chapter(request):
+	data = request.body
+	try:
+		data = simplejson.loads(data)
+	except JSONDecodeError, e:
+		data = None
+	if data and data.has_key('platform'):
+		api = Api()
+		solrId = api.synchronize_chapter(data['platform'], data)
+		resp = {'solrId' : solrId, 'guid' : data['chapter']['guid']}#solrId should be abstracted
+		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('Please provide the correct POST data'), mimetype='application/json')
+
+@csrf_exempt
+def disconnect_chapter(request):
+	data = request.body
+	try:
+		data = simplejson.loads(data)
+	except JSONDecodeError, e:
+		data = None
+	if data.has_key('id') and data.has_key('provider') and data.has_key('platform'):
+		api = Api()
+		success = api.disconnect_chapter(data['platform'], data['id'], data['provider'])
+		if success:
+			return HttpResponse(__getOkMessage(), mimetype='application/json')
+		else:
+			return HttpResponse(__getErrorMessage('Failed to delete the chapter from the index'), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('Please provide the correct POST data'), mimetype='application/json')
 
 """
 *********************************************************************************************************
@@ -297,34 +324,4 @@ def entityexpand(request):
 			return HttpResponse(simplejson.dumps(resp, default=lambda obj: obj.__dict__), mimetype='application/json')
 		else:
 			return HttpResponse(__getErrorMessage('Could not find any entities'), mimetype='application/json')
-	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
-
-
-"""
-*********************************************************************************************************
-External API - LinkedTV SOLR index
-*********************************************************************************************************
-"""
-
-@csrf_exempt
-def updatesolr(request):
-	data = request.body
-	if data:
-		data = simplejson.loads(data)
-		lih = LinkedTVChapterIndexHandler()
-		solrId = lih.updateChapter(data)
-		resp = {'solrId' : solrId, 'guid' : data['chapter']['guid']}
-		return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
-	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
-
-@csrf_exempt
-def deletesolr(request):
-	data = simplejson.loads(request.body)
-	if data.has_key('id') and data.has_key('provider'):
-		lih = LinkedTVChapterIndexHandler()
-		success = lih.deleteChapter(data['id'], data['provider'])
-		if success:
-			return HttpResponse(__getOkMessage(), mimetype='application/json')
-		else:
-			return HttpResponse(__getErrorMessage('Failed to delete the chapter from the index'), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')

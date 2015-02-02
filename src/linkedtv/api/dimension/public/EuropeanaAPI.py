@@ -48,7 +48,8 @@ class EuropeanaAPI(DimensionService):
 		if query == '':
 			query = ' '.join(e['label'] for e in entities)
 		query = urllib.quote(query.encode('utf8'))
-		query = urllib.quote('what:%s' %  query)
+		#query = urllib.quote('what:%s' %  query)
+		#query = urllib.quote(query)
 
 		print query
 
@@ -56,7 +57,8 @@ class EuropeanaAPI(DimensionService):
 		if dimension['service']['params'].has_key('queryParts'):
 			for qf in dimension['service']['params']['queryParts']:
 				url += '&qf=%s' % qf
-		url += '&rows=100'
+		url += '&rows=200'
+		print url
 		return url
 
 	"""
