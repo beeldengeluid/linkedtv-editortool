@@ -1,5 +1,6 @@
 #https://code.google.com/p/solrpy/
 import solr
+import re
 
 from linkedtv.api.storage.synchronize.Synchronizer import Synchronizer
 from linkedtv.api.storage.SaveEndpoint import SaveEndpoint
@@ -19,6 +20,7 @@ class LinkedTVSOLRIndex(Synchronizer):
 			'rbb' : { 'index' : 'RBBindex', 'chapterType' : 'NewsItem'},
 			'sv' : { 'index' : 'SVindex', 'chapterType' : 'ArtObject'}
 		}
+		self.TAG_RE = re.compile(r'<[^>]+>')
 
 	#This function is used for synching on page load (see synchronize.syncOnLoad in config.js)
 	def synchronize(self, resourceUri, provider):
@@ -51,7 +53,7 @@ class LinkedTVSOLRIndex(Synchronizer):
 				'endTime' : TimeUtils.toStringSeconds(c['end']),
 				'type' : 'Chapter',
 				'chapterType' : self.PROVIDER_MAPPING[provider]['chapterType'],
-				'subtitle' : subtitles, #fetch from subtitle collection on the client side
+				'subtitle' : self.__removeTags(subtitles), #fetch from subtitle collection on the client side
 			}
 			#check if there is a solrId that does not match the mediafragmentId (out of synch)
 			if solrId and solrId != fragmentId:
@@ -87,7 +89,7 @@ class LinkedTVSOLRIndex(Synchronizer):
 				'endTime' : end,
 				'type' : 'Chapter',
 				'chapterType' : self.PROVIDER_MAPPING[provider]['chapterType'],
-				'subtitle' : subtitles, #fetch from subtitle collection on the client side
+				'subtitle' : self.__removeTags(subtitles), #fetch from subtitle collection on the client side
 			}
 			#if the solrId is different delete the old document first (fyi the boundaries of the chapter were changed)
 			if solrId and solrId != c['mediaFragmentId']:
@@ -113,3 +115,8 @@ class LinkedTVSOLRIndex(Synchronizer):
 			for sub in subs:
 				s.append(sub['label'].strip())
 		return ' '.join(s)
+
+
+
+	def __removeTags(text):
+		return self.TAG_RE.sub('', text)
