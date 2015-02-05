@@ -32,7 +32,7 @@ class LinkedTVSOLRIndex(Synchronizer):
 		conn = solr.Solr('http://data.linkedtv.eu:8983/solr/%s' % self.PROVIDER_MAPPING[provider]['index'])
 		for c in mediaResource['chapters']:
 			subLoader = LinkedTVSubtitleLoader()
-			subtitles = ''#subLoader.loadSubtitleFragmentByResourceUri(resourceUri, c['start'], c['end'])
+			subtitles = subLoader.loadSubtitleFragmentByResourceUri(resourceUri, c['start'], c['end'])
 			fragmentId = None
 			solrId = None
 			if c.has_key('mediaFragmentId'):
