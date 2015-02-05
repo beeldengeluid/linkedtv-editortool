@@ -33,6 +33,8 @@ class LinkedTVSOLRIndex(Synchronizer):
 		for c in mediaResource['chapters']:
 			subLoader = LinkedTVSubtitleLoader()
 			subtitles = subLoader.loadSubtitleFragmentByResourceUri(resourceUri, c['start'], c['end'])
+			print 'SUBTITLES'
+			print subtitles
 			fragmentId = None
 			solrId = None
 			if c.has_key('mediaFragmentId'):
@@ -47,8 +49,8 @@ class LinkedTVSOLRIndex(Synchronizer):
 				'provider' : provider.upper(),
 				'videoId' : mediaResource['uri'],
 				'chapterTitle' : c['label'],
-				'startTime' : c['start'],
-				'endTime' : c['end'],
+				'startTime' : TimeUtils.toStringSeconds(c['start']),
+				'endTime' : TimeUtils.toStringSeconds(c['end']),
 				'type' : 'Chapter',
 				'chapterType' : self.PROVIDER_MAPPING[provider]['chapterType'],
 				'subtitle' : subtitles, #fetch from subtitle collection on the client side
