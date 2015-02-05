@@ -48,9 +48,9 @@ class RelatedChapterEnricher(DimensionService):
 			conn = solr.Solr('http://data.linkedtv.eu:8983/solr/%s' % self.PROVIDER_MAPPING[provider]['index'])
 			select = conn.select
 			res = select.__call__(
-				q='"%s" AND type:Chapter' % query,
+				q='"%s" AND type:Chapter AND curated:true' % query,
 				fields=['id', 'chapterTitle', 'videoId', 'startTime', 'endTime', 'type'],
-				rows=50
+				rows=100
 			)
 			if res:
 				return query, res
