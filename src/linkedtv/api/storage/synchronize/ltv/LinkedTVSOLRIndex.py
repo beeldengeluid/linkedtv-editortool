@@ -33,8 +33,6 @@ class LinkedTVSOLRIndex(Synchronizer):
 		for c in mediaResource['chapters']:
 			subLoader = LinkedTVSubtitleLoader()
 			subtitles = subLoader.loadSubtitleFragmentByResourceUri(resourceUri, c['start'], c['end'])
-			print 'SUBTITLES'
-			print subtitles
 			fragmentId = None
 			solrId = None
 			if c.has_key('mediaFragmentId'):
