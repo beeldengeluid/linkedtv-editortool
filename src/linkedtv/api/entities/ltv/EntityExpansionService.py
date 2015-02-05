@@ -16,7 +16,7 @@ from linkedtv.utils.TimeUtils import TimeUtils
 TODO integrate with the LinkedTVSubtitleLoader and remove all subtitle fetching code here
 """
 
-class EntityExpansionService:
+class EntityExpansionService():
 
 	def __init__(self):
 		self.BASE_URL = 'http://linkedtv.eurecom.fr/entitycontext/api'

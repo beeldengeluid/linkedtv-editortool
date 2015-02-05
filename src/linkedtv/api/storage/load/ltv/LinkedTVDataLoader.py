@@ -13,6 +13,7 @@ from linkedtv.text.TextAnalyzer import *
 from linkedtv.LinkedtvSettings import LTV_REDIS_SETTINGS, LTV_PLATFORM_LOGIN, LTV_SPARQL_ENDPOINT, LTV_STOP_FILE
 from linkedtv.model import *
 from linkedtv.api.storage.load.DataLoader import DataLoader
+from linkedtv.api.entities.ltv.TopicIdentificationService import TopicIdentificationService
 
 logger = logging.getLogger(__name__)
 
@@ -218,6 +219,7 @@ class LinkedTVDataLoader(DataLoader):
 		query.append('OPTIONAL {?body linkedtv:hasRelevance ?r } ')
 		query.append('OPTIONAL {?body rdfs:label ?label}')
 		query.append('}')
+		print '\n\n'
 		print ''.join(query)
 		#logger.debug(''.join(query))
 		resp = LinkedTVDataUtils.sendSearchRequest(''.join(query))
@@ -290,10 +292,15 @@ class LinkedTVDataLoader(DataLoader):
 
 			#add all of the loaded data to the media resource
 			mediaResource.setConcepts(concepts)
-			mediaResource.setNamedEntities(LinkedTVDataUtils.filterStopWords(nes))
 			mediaResource.setShots(shots)
 			mediaResource.setChapters(chapters)
 			mediaResource.setEnrichments(enrichments)
+
+			#do some processing on the entities before adding them to the mediaResource
+			#tis = TopicIdentificationService()
+			temp = LinkedTVDataUtils.filterStopWords(nes)
+			#tis.categorizeEntities(temp) TODO the service response needs to be improved first
+			mediaResource.setNamedEntities(temp)
 
 			return mediaResource
 		return None

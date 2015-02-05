@@ -10,11 +10,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.context_processors import csrf
 from django.template import RequestContext
 
-#external services
+#external services (relocate this somewhere else)
 from linkedtv.api.vocabulary.dbpedia.AutoComplete import AutoComplete
 from linkedtv.api.vocabulary.dbpedia.EntityProxy import EntityProxy
 from linkedtv.api.vocabulary.gtaa.OpenSKOSHandler import OpenSKOSHandler
-from linkedtv.api.external.EntityExpansionService import EntityExpansionService
+from linkedtv.api.entities.ltv.EntityExpansionService import EntityExpansionService
 
 from linkedtv.api.Api import *
 
@@ -311,7 +311,7 @@ def entityproxy(request):
 		return HttpResponse(resp, mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide a DBPedia URI'), mimetype='application/json')
 
-#TODO test this function
+#TODO relocate this to a generic handler that takes care of (named) entities
 def entityexpand(request):
 	url = request.GET.get('url', None)
 	start = request.GET.get('start', -1)

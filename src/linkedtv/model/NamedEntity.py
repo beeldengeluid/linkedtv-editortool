@@ -24,5 +24,5 @@ class NamedEntity(Annotation):
 	def setDisambiguationUrl(self, disambiguationURL):
 		self.disambiguationURL = disambiguationURL
 
-	def getdisambiguationUrl(self):
+	def getDisambiguationUrl(self):
 		return self.disambiguationURL

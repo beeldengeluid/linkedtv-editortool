@@ -66,7 +66,8 @@ class IRAPI(DimensionService):
 		else:
 			query = urllib.quote(query.encode('utf8'))
 		if query:
-			url = '%s?q=%s&row=%d&domain_source=%s&media_type=image'% (self.BASE_URL, query, numResults, dimension['service']['params']['domain'])
+			url = '%s?q=%s&row=%d&domain_source=%s'% (self.BASE_URL, query, numResults, dimension['service']['params']['domain'])
+			#&media_type=image
 			print url
 			return url
 		return None
