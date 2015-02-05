@@ -259,8 +259,8 @@ var config = angular.module('configuration', []).constant('conf', {
 	platform : 'linkedtv',
 	logUserActions : true,
 	synchronization : {
-		syncOnLoad : false,
-		syncOnSave : false,
+		syncOnLoad : true,
+		syncOnSave : true,
 		platform : 'LinkedTVSOLR'
 	}
 });

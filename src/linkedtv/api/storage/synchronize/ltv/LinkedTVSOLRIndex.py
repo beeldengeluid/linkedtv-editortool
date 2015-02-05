@@ -43,6 +43,7 @@ class LinkedTVSOLRIndex(Synchronizer):
 				solrId = c['solrId']
 			doc = {
 				'id' : fragmentId,
+				'curated' : True,
 				'provider' : provider.upper(),
 				'videoId' : mediaResource['uri'],
 				'chapterTitle' : c['label'],
@@ -78,6 +79,7 @@ class LinkedTVSOLRIndex(Synchronizer):
 			conn = solr.Solr('http://data.linkedtv.eu:8983/solr/%s' % self.PROVIDER_MAPPING[provider]['index'])
 			doc = {
 				'id' : c['mediaFragmentId'],
+				'curated' : True,
 				'provider' : provider.upper(),
 				'videoId' : data['uri'],
 				'chapterTitle' : c['label'],
