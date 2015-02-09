@@ -116,7 +116,5 @@ class LinkedTVSOLRIndex(Synchronizer):
 				s.append(sub['label'].strip())
 		return ' '.join(s)
 
-
-
 	def __removeTags(self, text):
 		return self.TAG_RE.sub('', text)

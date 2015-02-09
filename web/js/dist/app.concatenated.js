@@ -93,52 +93,24 @@ var rbbConfig = {
 			}
 		},
 		{
-			id : 'tvne_1',
-			label : 'Aktuell',
-			linkedtvDimension : 'CurrentEvents',
-			service : {
-				id : 'TvNewsEnricher',
-				params : {
-					dimension : 'othermedia',
-					periodInDays : 7,
-					endDate : '$VIDEO_DATE'
-				}
-			}
-		},
-		{
-			id : 'tvne_2',
+			id : 'irapi_1',
 			label : 'Hintergrund',
 			linkedtvDimension : 'Background',
 			service : {
-				id : 'TvNewsEnricher',
+				id : 'IRAPI',
 				params : {
-					dimension : 'othermedia',
-					periodInDays : 365 * 10,//search for events in the last 10 years
-					endDate : '$VIDEO_DATE'
+					domain : 'RBB'
 				}
 			}
 		},
 		{
-			id : 'tve_1',
-			label : 'Related RBB News',
+			id : 'solr_1',
+			label : 'RBB Beiträge',
 			linkedtvDimension : 'RelatedChapter',
 			service : {
-				id :'TvEnricher',
+				id : 'RelatedChapterEnricher',
 				params : {
-					dimension : 'Solr',
-					index : 'RBB',
-					granularity : 'Chapter'
-				}
-			}
-		},
-		{
-			id : 'tve_2',
-			label : 'Andere Medien',
-			linkedtvDimension : 'OtherMedia',
-			service : {
-				id : 'TvEnricher',
-				params : {
-					dimension : 'RBB'//+ current date
+					provider : 'rbb'
 				}
 			}
 		}
