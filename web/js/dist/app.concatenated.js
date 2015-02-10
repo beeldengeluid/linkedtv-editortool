@@ -731,7 +731,6 @@ linkedtv.run(function($rootScope, conf) {
 		if(conf.logUserActions) {
 			loggingService.logUserAction(allEnrichments, freshlySavedEnrichments, queries, _activeChapter.label);
 		}
-
 		//update the active chapter and save it
 		_activeChapter.dimensions[dimension.id].annotations = savedEnrichments;
 		saveChapter(_activeChapter);
@@ -1203,7 +1202,8 @@ linkedtv.run(function($rootScope, conf) {
 				poster : e.poster,
 				entities : e.entities,
 				date : e.date ? e.date : 'No date',
-				creator : e.creator ? e.creator : 'unknown'
+				creator : e.creator ? e.creator : 'unknown',
+				nativeProperties : e.nativeProperties //this way clients are fully 'service aware'
 			}
 			//add the source to the list of possible sources and attach it to the retrieved enrichment
 			if(sources.indexOf(e.source) == -1) {

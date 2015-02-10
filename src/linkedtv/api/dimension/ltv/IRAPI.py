@@ -91,9 +91,11 @@ class IRAPI(DimensionService):
 	def __formatResponse(self, data, entities, dimension):
 		enrichments = []
 		data = simplejson.loads(data)
+
 		if not data.has_key('error'):
 			for source in data.keys(): #all the available sources
 				for e in data[source]: #each source contains a list of enrichments
+					print e.keys()
 					title = None
 					if e.has_key('micropost') and e['micropost'].has_key('plainText'):
 						title = e['micropost']['plainText']
@@ -109,5 +111,7 @@ class IRAPI(DimensionService):
 						enrichment.setEnrichmentType(e['type'])
 					if e.has_key('mediaUrl'):
 						enrichment.setPoster(e['mediaUrl'])
+					#also add all of the properties to the enrichment
+					enrichment.setNativeProperties(e)
 					enrichments.append(enrichment)
 		return enrichments

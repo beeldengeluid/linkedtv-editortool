@@ -149,5 +149,6 @@ class EuropeanaAPI(DimensionService):
 						enrichment.setDate(e['year'][0])
 					if e.has_key('edmPreview'):
 						enrichment.setPoster(e['edmPreview'][0])
+					enrichment.setNativeProperties(e)
 					enrichments.append(enrichment)
 		return enrichments

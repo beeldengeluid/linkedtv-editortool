@@ -50,7 +50,8 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 				poster : e.poster,
 				entities : e.entities,
 				date : e.date ? e.date : 'No date',
-				creator : e.creator ? e.creator : 'unknown'
+				creator : e.creator ? e.creator : 'unknown',
+				nativeProperties : e.nativeProperties //this way clients are fully 'service aware'
 			}
 			//add the source to the list of possible sources and attach it to the retrieved enrichment
 			if(sources.indexOf(e.source) == -1) {

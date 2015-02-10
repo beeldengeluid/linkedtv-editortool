@@ -248,7 +248,6 @@ angular.module('linkedtv').factory('chapterCollection',
 		if(conf.logUserActions) {
 			loggingService.logUserAction(allEnrichments, freshlySavedEnrichments, queries, _activeChapter.label);
 		}
-
 		//update the active chapter and save it
 		_activeChapter.dimensions[dimension.id].annotations = savedEnrichments;
 		saveChapter(_activeChapter);

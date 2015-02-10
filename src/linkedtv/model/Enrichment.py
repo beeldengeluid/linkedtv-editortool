@@ -4,7 +4,7 @@ class Enrichment(Annotation):
 
 	def __init__(self, label,  description = None, start = 0, end = 0, annotationURI = None, relevance = 1,
 		confidence = 1, uri = None, poster = None, source=None, creator=None, date=None,
-		entities=None,	enrichmentType=None, url=None, additionalProperties=None):
+		entities=None,	enrichmentType=None, url=None, nativeProperties=None):
 		Annotation.__init__(self, label, description, start, end, annotationURI, relevance, confidence)
 		self.uri = uri #only used for information cards
 		self.url = url #used for regular enrichments
@@ -14,7 +14,7 @@ class Enrichment(Annotation):
 		self.date = date
 		self.enrichmentType = enrichmentType #video/audio/image, but possibly other things...
 		self.entities = entities #Entity + also used in the UI for filtering
-		self.additionalProperties = additionalProperties #stores all properties that do not fit this class
+		self.nativeProperties = nativeProperties #stores all properties that do not fit this class
 
 	def setUri(self, uri):
 		self.uri = uri
@@ -64,11 +64,11 @@ class Enrichment(Annotation):
 	def getEntities(self):
 		return self.entities
 
-	def setAdditionalProperties(self, additionalProperties):
-		self.additionalProperties = additionalProperties
+	def setNativeProperties(self, nativeProperties):
+		self.nativeProperties = nativeProperties
 
-	def getAdditionalProperties(self):
-		return additionalProperties
+	def getNativeProperties(self):
+		return nativeProperties
 
 	def __eq__(self, other):
 		if self.uri:
