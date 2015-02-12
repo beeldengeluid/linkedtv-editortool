@@ -8,6 +8,10 @@ angular.module('linkedtv').factory('imageService', [function(){
 			return '/image?ms=' + millis + '&baseUrl=' + thumbBaseUrl;
 		}
 		var h = m = s = 0;
+		//round up to full seconds
+		if (millis % 1000 != 0) {
+			millis += 1000 - millis % 1000;
+		}
 		while (millis >= 3600000) {
 			h ++;
             millis -= 3600000;

@@ -114,7 +114,7 @@ var rbbConfig = {
 		},
 		{
 			id : 'solr_1',
-			label : 'RBB Beiträge',
+			label : 'Aktuelle RBB-Videos',
 			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id : 'RelatedChapterEnricher',
@@ -172,14 +172,6 @@ var tkkConfig = {
 				params : {
 					provider : 'sv'
 				}
-			}
-		},
-		{
-			id : 'anefo_1',
-			label : 'Related photos',
-			linkedtvDimension : 'RelatedArtWork',
-			service : {
-				id : 'AnefoAPI'
 			}
 		}
 	]

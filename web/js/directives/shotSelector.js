@@ -34,8 +34,13 @@ angular.module('linkedtv').directive('shotSelector',
                     return 'in-range';
                 }
                 //then check if it's within the range of two selected shots
-                if($scope.start !== -1) {
-                    return shot.start >= $scope.start && shot.start <= $scope.end ? 'in-range' : '';
+                if($scope.start != -1) {
+                    if (parseInt(shot.start) >= parseInt($scope.start) && parseInt(shot.end) <= parseInt($scope.end)) {
+                        return 'in-range';
+                    } else {
+                        return '';
+                    }
+
                 }
                 return '';
             }
@@ -51,7 +56,6 @@ angular.module('linkedtv').directive('shotSelector',
                         $scope.setSelectionEnd(shot);
                     }
                 }
-
             }
 
             $scope.updatePrettyTimes = function() {
@@ -68,7 +72,7 @@ angular.module('linkedtv').directive('shotSelector',
 
             $scope.setSelectionEnd = function(shot) {
                 if(shot.start > $scope.start) {
-                    $scope.end = shot.start;
+                    $scope.end = shot.end;
                     $scope.settingStart = !$scope.settingStart;
                     $scope.updatePrettyTimes();
                 }

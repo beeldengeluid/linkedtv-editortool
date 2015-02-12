@@ -19,14 +19,16 @@ angular.module('linkedtv').factory('timeUtils', [function(){
 				ms = parseInt(t_arr[0]) * 3600000;
 				//add the minutes
 				ms += parseInt(t_arr[1]) * 60000;
-				if(t_arr[2].indexOf('.') == -1) {
+				var s_arr = t_arr[2].split('.');
+
+				if(s_arr.length == 1) {
 					//add the seconds
 					ms += parseInt(t_arr[2]) * 1000;
 				} else {
 					//add the seconds before the '.'
-					ms += parseInt(t_arr[2].substring(0, t_arr[2].indexOf('.'))) * 1000;
+					ms += parseInt(s_arr[0]) * 1000;
 					//add the remaining ms after the '.'
-					ms += parseInt(t_arr[2].indexOf('.') + 1);
+					ms += parseInt(s_arr[1]);
 				}
 				return ms;
 			}

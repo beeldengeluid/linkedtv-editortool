@@ -1,6 +1,6 @@
 angular.module('linkedtv').controller('chapterModalController',
-	['$scope', '$modalInstance', 'timeUtils', 'chapter',
-	function ($scope, $modalInstance, timeUtils, chapter) {
+	['$scope', '$modalInstance', 'chapter', 'timeUtils',
+	function ($scope, $modalInstance, chapter, timeUtils) {
 
 	$scope.chapter = chapter || {};
 

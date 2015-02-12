@@ -38,7 +38,7 @@ angular.module('linkedtv').factory('playerService', [function() {
 	function seek(millis) {
 		if(_videoPlayer) {
 			try {
-				_videoPlayer.currentTime = millis / 1000;
+				_videoPlayer.currentTime = millis / 1000.0;
 			} catch(err) {
 				console.debug(err);
 			}

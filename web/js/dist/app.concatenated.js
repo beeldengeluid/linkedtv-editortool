@@ -105,7 +105,7 @@ var rbbConfig = {
 		},
 		{
 			id : 'solr_1',
-			label : 'RBB Beiträge',
+			label : 'Aktuelle RBB-Videos',
 			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id : 'RelatedChapterEnricher',
@@ -164,14 +164,6 @@ var tkkConfig = {
 					provider : 'sv'
 				}
 			}
-		},
-		{
-			id : 'anefo_1',
-			label : 'Related photos',
-			linkedtvDimension : 'RelatedArtWork',
-			service : {
-				id : 'AnefoAPI'
-			}
 		}
 	]
 };
@@ -222,8 +214,8 @@ var config = angular.module('configuration', []).constant('conf', {
 	platform : 'linkedtv',
 	logUserActions : true,
 	synchronization : {
-		syncOnLoad : true,
-		syncOnSave : true,
+		syncOnLoad : false,
+		syncOnSave : false,
 		platform : 'LinkedTVSOLR'
 	}
 });
@@ -438,14 +430,16 @@ linkedtv.run(function($rootScope, conf) {
 				ms = parseInt(t_arr[0]) * 3600000;
 				//add the minutes
 				ms += parseInt(t_arr[1]) * 60000;
-				if(t_arr[2].indexOf('.') == -1) {
+				var s_arr = t_arr[2].split('.');
+
+				if(s_arr.length == 1) {
 					//add the seconds
 					ms += parseInt(t_arr[2]) * 1000;
 				} else {
 					//add the seconds before the '.'
-					ms += parseInt(t_arr[2].substring(0, t_arr[2].indexOf('.'))) * 1000;
+					ms += parseInt(s_arr[0]) * 1000;
 					//add the remaining ms after the '.'
-					ms += parseInt(t_arr[2].indexOf('.') + 1);
+					ms += parseInt(s_arr[1]);
 				}
 				return ms;
 			}
@@ -1353,6 +1347,10 @@ linkedtv.run(function($rootScope, conf) {
 			return '/image?ms=' + millis + '&baseUrl=' + thumbBaseUrl;
 		}
 		var h = m = s = 0;
+		//round up to full seconds
+		if (millis % 1000 != 0) {
+			millis += 1000 - millis % 1000;
+		}
 		while (millis >= 3600000) {
 			h ++;
             millis -= 3600000;
@@ -1465,7 +1463,7 @@ linkedtv.run(function($rootScope, conf) {
 	function seek(millis) {
 		if(_videoPlayer) {
 			try {
-				_videoPlayer.currentTime = millis / 1000;
+				_videoPlayer.currentTime = millis / 1000.0;
 			} catch(err) {
 				console.debug(err);
 			}
@@ -1792,8 +1790,8 @@ linkedtv.run(function($rootScope, conf) {
 	chapterCollection.addObserver($scope.update);
 
 });;angular.module('linkedtv').controller('chapterModalController',
-	['$scope', '$modalInstance', 'timeUtils', 'chapter',
-	function ($scope, $modalInstance, timeUtils, chapter) {
+	['$scope', '$modalInstance', 'chapter', 'timeUtils',
+	function ($scope, $modalInstance, chapter, timeUtils) {
 
 	$scope.chapter = chapter || {};
 
@@ -2611,8 +2609,13 @@ angular.module('linkedtv').controller('informationCardModalController',
                     return 'in-range';
                 }
                 //then check if it's within the range of two selected shots
-                if($scope.start !== -1) {
-                    return shot.start >= $scope.start && shot.start <= $scope.end ? 'in-range' : '';
+                if($scope.start != -1) {
+                    if (parseInt(shot.start) >= parseInt($scope.start) && parseInt(shot.end) <= parseInt($scope.end)) {
+                        return 'in-range';
+                    } else {
+                        return '';
+                    }
+
                 }
                 return '';
             }
@@ -2628,7 +2631,6 @@ angular.module('linkedtv').controller('informationCardModalController',
                         $scope.setSelectionEnd(shot);
                     }
                 }
-
             }
 
             $scope.updatePrettyTimes = function() {
@@ -2645,7 +2647,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 
             $scope.setSelectionEnd = function(shot) {
                 if(shot.start > $scope.start) {
-                    $scope.end = shot.start;
+                    $scope.end = shot.end;
                     $scope.settingStart = !$scope.settingStart;
                     $scope.updatePrettyTimes();
                 }
