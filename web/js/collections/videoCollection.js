@@ -2,7 +2,7 @@ angular.module('linkedtv').factory('videoCollection', ['imageService', function(
 
 	var _videos = [];
 	var _observers = [];
-	var THUMBNAIL_SECOND = 60;
+	var THUMBNAIL_SECOND = 20;
 
 	function initCollectionData(videos) {
 		console.debug('Initializing video collection');
