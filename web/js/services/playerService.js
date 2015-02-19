@@ -66,12 +66,10 @@ angular.module('linkedtv').factory('playerService', [function() {
 
 	function onPlay(e) {
 		_mediaPlaying = true;
-		console.debug('play');
 	}
 
 	function onPause(e) {
 		_mediaPlaying = false;
-		console.debug('pause');
 	}
 
 	return {

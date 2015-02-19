@@ -11,8 +11,6 @@ class ESRelatedVideoEnricher(DimensionService):
 	def __init__(self):
 		DimensionService.__init__(self, 'ESChapterEnricher')
 		self.es = Elasticsearch(host=LTV_ES_SETTINGS['host'], port=LTV_ES_SETTINGS['port'])
-		self.indexName = LTV_ES_SETTINGS['index']
-		self.docType = LTV_ES_SETTINGS['doc-type']
 		self.searchLimit = 50
 
 	def fetch(self, query, entities, dimension):
@@ -42,7 +40,7 @@ class ESRelatedVideoEnricher(DimensionService):
 		}
 
 		print query
-		resp = self.es.search(index=self.indexName, doc_type=self.docType, body=query, timeout="10s")
+		resp = self.es.search(index=LTV_ES_SETTINGS['index'], doc_type=LTV_ES_SETTINGS['doc-type'], body=query, timeout="10s")
 		if resp:
 			return query, resp
 		return None, None

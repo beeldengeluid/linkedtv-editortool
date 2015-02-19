@@ -1554,12 +1554,10 @@ linkedtv.run(function($rootScope, conf) {
 
 	function onPlay(e) {
 		_mediaPlaying = true;
-		console.debug('play');
 	}
 
 	function onPause(e) {
 		_mediaPlaying = false;
-		console.debug('pause');
 	}
 
 	return {
