@@ -97,6 +97,7 @@ class LinkedTVDataLoader(DataLoader):
 						'date' : self.__getDateFromVideoTitle(vd['mediaResource']['titleName']),
 						'locator' : vd['mediaResource']['locator'],
 						'thumbBaseUrl' : thumbBaseUrl,
+						'thumbUrl' : '%sh/0/m/1/sec0.jpg' % thumbBaseUrl,
 						'dateInserted' : vd['mediaResource']['dateInserted']#TODO convert to pretty date
 					}
 					videos.append(video)

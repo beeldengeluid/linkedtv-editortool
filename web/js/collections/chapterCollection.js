@@ -49,7 +49,7 @@ angular.module('linkedtv').factory('chapterCollection',
 
 	function onChapterInitialized() {
 		//synchronize the curated data with the configured synchronization platform
-		if(conf.synchronization.syncOnLoad) {
+		if(conf.programmeConfig.synchronization && conf.programmeConfig.synchronization.syncOnLoad) {
 			synchronizationService.synchronize(onSynchronizationComplete);
 		}
 	}
@@ -184,7 +184,9 @@ angular.module('linkedtv').factory('chapterCollection',
 				_chapters.splice(index, 1);
 			}
 		});
-		if(conf.synchronization.syncOnSave && chapter.solrId) {
+		if(conf.programmeConfig.synchronization &&
+			conf.programmeConfig.synchronization.syncOnSave &&
+			chapter.solrId) {
 			console.debug('Disconnecting chapter from external platform');
 			synchronizationService.disconnectChapter(chapter);
 		}
@@ -245,7 +247,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	// you also need to update this (when you want to add a property to a dimension)!!! (below also)
 	function saveEnrichments(dimension, savedEnrichments, freshlySavedEnrichments, allEnrichments, queries) {
 		//if user logging is enabled, save which enrichments were chosen by the user for which query
-		if(conf.logUserActions) {
+		if(conf.programmeConfig.logUserActions) {
 			loggingService.logUserAction(allEnrichments, freshlySavedEnrichments, queries, _activeChapter.label);
 		}
 		//update the active chapter and save it
@@ -288,7 +290,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	//passing the chapter is optional (in all cases all data will be saved again)
 	function saveOnServer(chapter) {
 		//if configured, the changed chapter will be synchronized with an external platform prior to saving (see config.js)
-		if(conf.synchronization.syncOnSave && chapter) {
+		if(conf.programmeConfig.synchronization && conf.programmeConfig.synchronization.syncOnSave && chapter) {
 			console.debug('Synchronizing chapter with external platform');
 			synchronizationService.synchronizeChapter(chapter, onChapterSynched)
 		} else {

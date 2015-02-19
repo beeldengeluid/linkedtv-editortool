@@ -1,11 +1,11 @@
 angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
 
 	//loads (automatically generated) data from the specified platform (config.js)
-	function getResourceData(loadData, callback) {
+	function loadMediaResource(loadData, callback) {
 		var url = '/load?id=';
 		url += $rootScope.resourceUri;
 		url += '&ld=' + (loadData ? 'true' : 'false');//FIXME this is a weird/old parameter that must be removed later on
-		url += '&p=' + conf.platform;
+		url += '&p=' + conf.programmeConfig.platform;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -21,7 +21,7 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', functio
 	}
 
 	//loads the curated data (always stored in the ET)
-	function getCuratedData(callback) {
+	function loadCuratedMediaResource(callback) {
 		var url = '/load_curated';
 		url += '?id=' + $rootScope.resourceUri;
 		if(conf.programmeConfig.loadGroundTruth) {
@@ -93,8 +93,8 @@ angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', functio
 	}
 
 	return {
-		getResourceData : getResourceData,
-		getCuratedData : getCuratedData,
+		loadMediaResource : loadMediaResource,
+		loadCuratedMediaResource : loadCuratedMediaResource,
 		saveResource : saveResource,
 		publishResource : publishResource
 	}

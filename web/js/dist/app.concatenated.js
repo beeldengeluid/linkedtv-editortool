@@ -72,14 +72,23 @@ var informationCardTemplates = {
 			]
 		}
 	],
+	euspace : null,
 
 	trial : null
 
 }
 
 var rbbConfig = {
+	lang : 'de',
 	entityExpansion : true,
 	loadGroundTruth : false,
+	platform : 'linkedtv',
+	logUserActions : true,
+	synchronization : {
+		syncOnLoad : true,
+		syncOnSave : true,
+		platform : 'LinkedTVSOLR'
+	},
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -118,8 +127,16 @@ var rbbConfig = {
 };
 
 var tkkConfig = {
+	lang : 'nl',
 	entityExpansion : false,
 	loadGroundTruth : true,
+	platform : 'linkedtv',
+	logUserActions : true,
+	synchronization : {
+		syncOnLoad : true,
+		syncOnSave : true,
+		platform : 'LinkedTVSOLR'
+	},
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -168,9 +185,57 @@ var tkkConfig = {
 	]
 };
 
-var trialConfig = {
+var europeanaSpaceConfig = {
+	lang : 'de',
 	entityExpansion : false,
 	loadGroundTruth : false,
+	platform : 'europeanaspace',
+	logUserActions : false,
+	synchronization : false,
+	dimensions : [
+		{
+			id : 'maintopic',
+			label : 'About',
+			linkedtvDimension : 'InDepth',
+			service : {
+				id :'informationCards',
+				params : {
+					vocabulary : 'DBpedia'
+				}
+			}
+		},
+		{
+			id : 'tve_2',
+			label : 'Related Europeana links',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'EuropeanaAPI',
+				params : {
+					//queryParts : ['COUNTRY:netherlands']
+				}
+			}
+		},
+		{
+			id : 'tve_3',
+			label : 'Related Videos',
+			linkedtvDimension : 'RelatedChapter',
+			service : {
+				id : 'ESRelatedVideoEnricher',
+				params : {
+					provider : 'rbb'
+				}
+			}
+		}
+	]
+}
+
+var trialConfig = {
+	lang : 'nl',
+	entityExpansion : false,
+	loadGroundTruth : false,
+	platform : 'linkedtv',
+	logUserActions : false,
+	synchronization : false,
 	dimensions : [
 		{
 			id : 'maintopic',
@@ -202,34 +267,30 @@ var trialConfig = {
 	]
 }
 
+//specific config for each television program / content provider
 var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
+	euspace : europeanaSpaceConfig,
 	trial : trialConfig
 }
 
+//main config
 var config = angular.module('configuration', []).constant('conf', {
-	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
-	loadingImage : '/site_media/images/loading.gif',
-	platform : 'linkedtv',
-	logUserActions : true,
-	synchronization : {
-		syncOnLoad : false,
-		syncOnSave : false,
-		platform : 'LinkedTVSOLR'
-	}
+	loadingImage : '/site_media/images/loading.gif'
 });
-;var linkedtv = angular.module('linkedtv', ['ngRoute', 'ui.bootstrap', 'configuration']);
+;var linkedtv = angular.module('linkedtv', ['ui.bootstrap', 'configuration']);
 
 linkedtv.run(function($rootScope, conf) {
 
 	var urlParts = window.location.pathname.split('/');
-
 	//set the provider as a property of the rootScope
 	if(urlParts && urlParts.length >= 3) {
 		$rootScope.provider = urlParts[2];
 		conf.programmeConfig = programmeConfigs[$rootScope.provider];
 		conf.templates = informationCardTemplates[$rootScope.provider];
+
+		console.debug(conf);
 	} else if(urlParts && urlParts[1] == 'trial') {
 		$rootScope.provider = 'trial';
 		conf.programmeConfig = programmeConfigs[$rootScope.provider];
@@ -526,7 +587,7 @@ linkedtv.run(function($rootScope, conf) {
 
 	function onChapterInitialized() {
 		//synchronize the curated data with the configured synchronization platform
-		if(conf.synchronization.syncOnLoad) {
+		if(conf.programmeConfig.synchronization && conf.programmeConfig.synchronization.syncOnLoad) {
 			synchronizationService.synchronize(onSynchronizationComplete);
 		}
 	}
@@ -661,7 +722,9 @@ linkedtv.run(function($rootScope, conf) {
 				_chapters.splice(index, 1);
 			}
 		});
-		if(conf.synchronization.syncOnSave && chapter.solrId) {
+		if(conf.programmeConfig.synchronization &&
+			conf.programmeConfig.synchronization.syncOnSave &&
+			chapter.solrId) {
 			console.debug('Disconnecting chapter from external platform');
 			synchronizationService.disconnectChapter(chapter);
 		}
@@ -722,7 +785,7 @@ linkedtv.run(function($rootScope, conf) {
 	// you also need to update this (when you want to add a property to a dimension)!!! (below also)
 	function saveEnrichments(dimension, savedEnrichments, freshlySavedEnrichments, allEnrichments, queries) {
 		//if user logging is enabled, save which enrichments were chosen by the user for which query
-		if(conf.logUserActions) {
+		if(conf.programmeConfig.logUserActions) {
 			loggingService.logUserAction(allEnrichments, freshlySavedEnrichments, queries, _activeChapter.label);
 		}
 		//update the active chapter and save it
@@ -765,7 +828,7 @@ linkedtv.run(function($rootScope, conf) {
 	//passing the chapter is optional (in all cases all data will be saved again)
 	function saveOnServer(chapter) {
 		//if configured, the changed chapter will be synchronized with an external platform prior to saving (see config.js)
-		if(conf.synchronization.syncOnSave && chapter) {
+		if(conf.programmeConfig.synchronization && conf.programmeConfig.synchronization.syncOnSave && chapter) {
 			console.debug('Synchronizing chapter with external platform');
 			synchronizationService.synchronizeChapter(chapter, onChapterSynched)
 		} else {
@@ -1046,11 +1109,11 @@ linkedtv.run(function($rootScope, conf) {
 });;angular.module('linkedtv').factory('dataService', ['$rootScope', 'conf', function($rootScope, conf) {
 
 	//loads (automatically generated) data from the specified platform (config.js)
-	function getResourceData(loadData, callback) {
+	function loadMediaResource(loadData, callback) {
 		var url = '/load?id=';
 		url += $rootScope.resourceUri;
 		url += '&ld=' + (loadData ? 'true' : 'false');//FIXME this is a weird/old parameter that must be removed later on
-		url += '&p=' + conf.platform;
+		url += '&p=' + conf.programmeConfig.platform;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -1066,7 +1129,7 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	//loads the curated data (always stored in the ET)
-	function getCuratedData(callback) {
+	function loadCuratedMediaResource(callback) {
 		var url = '/load_curated';
 		url += '?id=' + $rootScope.resourceUri;
 		if(conf.programmeConfig.loadGroundTruth) {
@@ -1138,8 +1201,8 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	return {
-		getResourceData : getResourceData,
-		getCuratedData : getCuratedData,
+		loadMediaResource : loadMediaResource,
+		loadCuratedMediaResource : loadCuratedMediaResource,
 		saveResource : saveResource,
 		publishResource : publishResource
 	}
@@ -1281,7 +1344,7 @@ linkedtv.run(function($rootScope, conf) {
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/entityproxy?uri=' + uri + '&lang=' + conf.languageMap[$rootScope.provider],
+			url : '/entityproxy?uri=' + uri + '&lang=' + conf.programmeConfig.lang,
 			success : function(json) {
 				callback(json.error ? null : formatResponse(json));
 			},
@@ -1509,76 +1572,88 @@ linkedtv.run(function($rootScope, conf) {
 	function($rootScope, conf, subtitleCollection){
 
 	function synchronize(callback) {
-		console.debug('Synchronizing with ' + conf.synchronization.platform);
-		var url = '/synchronize'
-		url += '?uri=' + $rootScope.resourceUri;
-		url += '&platform=' + conf.synchronization.platform;
-		url += '&p=' + $rootScope.provider;
+		if(conf.programmeConfig.synchronization) {
+			console.debug('Synchronizing with ' + conf.programmeConfig.synchronization.platform);
+			var url = '/synchronize'
+			url += '?uri=' + $rootScope.resourceUri;
+			url += '&platform=' + conf.programmeConfig.synchronization.platform;
+			url += '&p=' + $rootScope.provider;
 
-		$.ajax({
-			method: 'GET',
-			dataType : 'json',
-			url : url,
-			success : function(json) {
-				console.debug(json)
-				callback(json.success ? true : false);
-			},
-			error : function(err) {
-				console.debug(err);
-				callback(false);
-			}
-		});
+			$.ajax({
+				method: 'GET',
+				dataType : 'json',
+				url : url,
+				success : function(json) {
+					console.debug(json)
+					callback(json.success ? true : false);
+				},
+				error : function(err) {
+					console.debug(err);
+					callback(false);
+				}
+			});
+		} else {
+			console.debug('Synchronization has been disabled in the config');
+		}
 	}
 
 	function synchronizeChapter(chapter, callback) {
-		var data = {
-			'uri' : $rootScope.resourceUri,
-			'provider' : $rootScope.provider,
-			'subtitles' : subtitleCollection.getChapterSubtitles(),
-			'chapter' : chapter,
-			'platform' : conf.synchronization.platform
-		};
-		var url = '/synchronize_chapter';
-		$.ajax({
-			type: 'POST',
-			url: url,
-			data: JSON.stringify(data),
-			dataType : 'json',
-			success: function(json) {
-				console.debug(json);
-				if(json.error) {
-					console.debug('Could not update the chapter index');
-					callback(null);
-				} else {
-					callback(json);//makes sure the client side also is updated with the new solrId
-				}
-			},
-			error: function(err) {
-	    		console.debug(err);
-	    		callback(null);
-			},
-			dataType: 'json'
-		});
-	}
-
-	function disconnectChapter(chapter) {
-		if(chapter.solrId) {
-			var data = {'id' : chapter.solrId, 'provider' : $rootScope.provider, 'platform' : conf.synchronization.platform};
+		if(conf.programmeConfig.synchronization) {
+			var data = {
+				'uri' : $rootScope.resourceUri,
+				'provider' : $rootScope.provider,
+				'subtitles' : subtitleCollection.getChapterSubtitles(),
+				'chapter' : chapter,
+				'platform' : conf.programmeConfig.synchronization.platform
+			};
+			var url = '/synchronize_chapter';
 			$.ajax({
 				type: 'POST',
-				url: '/disconnect_chapter',
-				data : JSON.stringify(data),
+				url: url,
+				data: JSON.stringify(data),
 				dataType : 'json',
 				success: function(json) {
+					console.debug(json);
 					if(json.error) {
-						console.debug('Could not delete the chapter from the index');
+						console.debug('Could not update the chapter index');
+						callback(null);
+					} else {
+						callback(json);//makes sure the client side also is updated with the new solrId
 					}
 				},
 				error: function(err) {
 		    		console.debug(err);
+		    		callback(null);
 				},
 				dataType: 'json'
 			});
+		} else {
+			console.debug('Synchronization has been disabled in the config');
+		}
+	}
+
+	function disconnectChapter(chapter) {
+		if(conf.programmeConfig.synchronization) {
+			if(chapter.solrId) {//FIXME SOLRID MUST BE ABSTRACTED!!!
+				var data = {'id' : chapter.solrId, 'provider' : $rootScope.provider, 'platform' : conf.programmeConfig.synchronization.platform};
+				$.ajax({
+					type: 'POST',
+					url: '/disconnect_chapter',
+					data : JSON.stringify(data),
+					dataType : 'json',
+					success: function(json) {
+						if(json.error) {
+							console.debug('Could not delete the chapter from the index');
+						}
+					},
+					error: function(err) {
+			    		console.debug(err);
+					},
+					dataType: 'json'
+				});
+			}
+		} else {
+			console.debug('Synchronization has been disabled in the config');
 		}
 	}
 
@@ -1593,7 +1668,7 @@ linkedtv.run(function($rootScope, conf) {
 	function getVideosOfProvider(provider, callback) {
 		console.debug('Getting videos of provider: ' + provider);
 		var url = '/videos?cp=' + provider;
-		url += '&p=' + conf.platform;
+		url += '&p=' +conf.programmeConfig.platform;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
@@ -1627,7 +1702,7 @@ linkedtv.run(function($rootScope, conf) {
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
 		if(resourceUri) {
-			dataService.getResourceData(true, $scope.dataLoaded);
+			dataService.loadMediaResource(true, $scope.dataLoaded);
 		}
 	});
 
@@ -1648,7 +1723,7 @@ linkedtv.run(function($rootScope, conf) {
 		console.debug('Loaded the SPARQL data from the server');
 		console.debug(resourceData);
 		$scope.resourceData = resourceData;
-		dataService.getCuratedData($scope.curatedDataLoaded);
+		dataService.loadCuratedMediaResource($scope.curatedDataLoaded);
 	};
 
 	$scope.curatedDataLoaded = function(curatedData) {

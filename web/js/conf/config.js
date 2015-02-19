@@ -81,14 +81,23 @@ var informationCardTemplates = {
 			]
 		}
 	],
+	euspace : null,
 
 	trial : null
 
 }
 
 var rbbConfig = {
+	lang : 'de',
 	entityExpansion : true,
 	loadGroundTruth : false,
+	platform : 'linkedtv',
+	logUserActions : true,
+	synchronization : {
+		syncOnLoad : true,
+		syncOnSave : true,
+		platform : 'LinkedTVSOLR'
+	},
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -127,8 +136,16 @@ var rbbConfig = {
 };
 
 var tkkConfig = {
+	lang : 'nl',
 	entityExpansion : false,
 	loadGroundTruth : true,
+	platform : 'linkedtv',
+	logUserActions : true,
+	synchronization : {
+		syncOnLoad : true,
+		syncOnSave : true,
+		platform : 'LinkedTVSOLR'
+	},
 	dimensions : [
 		{
 			id : 'maintopic',//check this
@@ -177,9 +194,57 @@ var tkkConfig = {
 	]
 };
 
-var trialConfig = {
+var europeanaSpaceConfig = {
+	lang : 'de',
 	entityExpansion : false,
 	loadGroundTruth : false,
+	platform : 'europeanaspace',
+	logUserActions : false,
+	synchronization : false,
+	dimensions : [
+		{
+			id : 'maintopic',
+			label : 'About',
+			linkedtvDimension : 'InDepth',
+			service : {
+				id :'informationCards',
+				params : {
+					vocabulary : 'DBpedia'
+				}
+			}
+		},
+		{
+			id : 'tve_2',
+			label : 'Related Europeana links',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'EuropeanaAPI',
+				params : {
+					//queryParts : ['COUNTRY:netherlands']
+				}
+			}
+		},
+		{
+			id : 'tve_3',
+			label : 'Related Videos',
+			linkedtvDimension : 'RelatedChapter',
+			service : {
+				id : 'ESRelatedVideoEnricher',
+				params : {
+					provider : 'rbb'
+				}
+			}
+		}
+	]
+}
+
+var trialConfig = {
+	lang : 'nl',
+	entityExpansion : false,
+	loadGroundTruth : false,
+	platform : 'linkedtv',
+	logUserActions : false,
+	synchronization : false,
 	dimensions : [
 		{
 			id : 'maintopic',
@@ -211,20 +276,15 @@ var trialConfig = {
 	]
 }
 
+//specific config for each television program / content provider
 var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
+	euspace : europeanaSpaceConfig,
 	trial : trialConfig
 }
 
+//main config
 var config = angular.module('configuration', []).constant('conf', {
-	languageMap : {'rbb' : 'de', 'sv' : 'nl'},
-	loadingImage : '/site_media/images/loading.gif',
-	platform : 'linkedtv',
-	logUserActions : true,
-	synchronization : {
-		syncOnLoad : true,
-		syncOnSave : true,
-		platform : 'LinkedTVSOLR'
-	}
+	loadingImage : '/site_media/images/loading.gif'
 });

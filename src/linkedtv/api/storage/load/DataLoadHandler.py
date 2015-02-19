@@ -1,11 +1,13 @@
 from linkedtv.api.storage.load.ltv.LinkedTVDataLoader import LinkedTVDataLoader
 from linkedtv.api.storage.load.beng.BengDataLoader import BengDataLoader
+from linkedtv.api.storage.load.europeanaspace.EuropeanaSpaceDataLoader import EuropeanaSpaceDataLoader
 
 class DataLoadHandler(object):
 
 	def __init__(self):
 		self.platforms = {
 			'linkedtv' : LinkedTVDataLoader(),
+			'europeanaspace' : EuropeanaSpaceDataLoader(),
 			'beng' : BengDataLoader()
 		}
 

@@ -79,7 +79,7 @@ API - Loading / saving / publishing / synchronizing
 *********************************************************************************************************
 """
 
-"""This is called to fetch the data of a single media resource (including the curated data from SPARQL!!!)"""
+"""This is called to fetch the data of a single media resource"""
 def load(request):
 	platform = request.GET.get('p', None)
 	resourceUri = request.GET.get('id', None)

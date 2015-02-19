@@ -8,7 +8,7 @@ angular.module('linkedtv').controller('appController',
 	//fetch all of this resource's data from the server
 	$rootScope.$watch('resourceUri', function(resourceUri) {
 		if(resourceUri) {
-			dataService.getResourceData(true, $scope.dataLoaded);
+			dataService.loadMediaResource(true, $scope.dataLoaded);
 		}
 	});
 
@@ -29,7 +29,7 @@ angular.module('linkedtv').controller('appController',
 		console.debug('Loaded the SPARQL data from the server');
 		console.debug(resourceData);
 		$scope.resourceData = resourceData;
-		dataService.getCuratedData($scope.curatedDataLoaded);
+		dataService.loadCuratedMediaResource($scope.curatedDataLoaded);
 	};
 
 	$scope.curatedDataLoaded = function(curatedData) {

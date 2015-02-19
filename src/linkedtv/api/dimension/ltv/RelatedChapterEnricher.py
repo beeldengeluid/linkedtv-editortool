@@ -36,7 +36,6 @@ class RelatedChapterEnricher(DimensionService):
 
 	#TODO switch to the HTTP endpoint?
 	def __search(self, query, entities, dimension):
-		enrichments = []
 		provider = dimension['service']['params']['provider']
 		if self.PROVIDER_MAPPING.has_key(provider):
 			#create the query

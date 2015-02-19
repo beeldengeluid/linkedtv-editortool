@@ -3,7 +3,7 @@ angular.module('linkedtv').factory('videoSelectionService', ['conf', function(co
 	function getVideosOfProvider(provider, callback) {
 		console.debug('Getting videos of provider: ' + provider);
 		var url = '/videos?cp=' + provider;
-		url += '&p=' + conf.platform;
+		url += '&p=' +conf.programmeConfig.platform;
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',

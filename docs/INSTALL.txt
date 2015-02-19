@@ -68,9 +68,14 @@ sudo npm install grunt-contrib-uglify --save-dev
 
 		import os
 		os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
-		from django.contrib.auth.models import User
+		from django.contrib.auth.models import User, Group
 		user = User.objects.create_user('YOURUSER', 'YOUREMAIL', 'YOURPASSWORD')
 		user.save()
+
+	create an organization/group and add your user to it
+
+		mygroup, created = Group.objects.get_or_create(name='YOURGROUP')
+		user.groups.add(mygroup)
 
 
 

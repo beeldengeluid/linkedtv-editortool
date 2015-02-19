@@ -5,7 +5,7 @@ angular.module('linkedtv').factory('entityProxyService', ['$rootScope', 'conf', 
 		$.ajax({
 			method: 'GET',
 			dataType : 'json',
-			url : '/entityproxy?uri=' + uri + '&lang=' + conf.languageMap[$rootScope.provider],
+			url : '/entityproxy?uri=' + uri + '&lang=' + conf.programmeConfig.lang,
 			success : function(json) {
 				callback(json.error ? null : formatResponse(json));
 			},

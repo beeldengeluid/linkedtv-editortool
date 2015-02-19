@@ -90,11 +90,12 @@
 	margin:$defaultMargin 0px;
 	cursor: pointer;
 	padding: 5px;
-	font-weight: bold;
+	color: $wonderblue;
 	background-color: gainsboro;
 
 	&:hover {
 		background-color: whitesmoke;
+		text-decoration:underline;
 	}
 
 	.glyphicon {
