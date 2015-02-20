@@ -13,23 +13,24 @@ class IRAPI(DimensionService):
 	def __init__(self):
 		DimensionService.__init__(self, 'IRAPI')
 		self.BASE_URL = 'http://ir.lmcloud.vse.cz/irapi/media-server'
-		self.DESIRED_AMOUNT_OF_RESULTS = 20
+		self.DESIRED_AMOUNT_OF_RESULTS = 30
 
 	#TODO check if everything makes sense
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
 			queries = []
 			#first do a field query to get the most relevant results
-			queryUrl, results = self.__search(query, entities, dimension, True, self.DESIRED_AMOUNT_OF_RESULTS)
+			queryUrl, results = self.__search(query, entities, dimension, None, self.DESIRED_AMOUNT_OF_RESULTS - 10)
 			enrichments = self.__formatResponse(
 				results,
 				entities,
 				dimension
 			)
 			queries.append(queryUrl)
+			#try to add some videos
 			if len(enrichments) < self.DESIRED_AMOUNT_OF_RESULTS:
 				numResults = self.DESIRED_AMOUNT_OF_RESULTS - len(enrichments)
-				queryUrl, results = self.__search(query, entities, dimension, False, numResults)
+				queryUrl, results = self.__search(query, entities, dimension, 'video', numResults)
 				if queryUrl and results:
 					moreEnrichments = self.__formatResponse(
 						results,
@@ -38,6 +39,19 @@ class IRAPI(DimensionService):
 					)
 					queries.append(queryUrl)
 					enrichments = list(set(enrichments) | set(moreEnrichments))
+			#try to search for images
+			if len(enrichments) < self.DESIRED_AMOUNT_OF_RESULTS:
+				numResults = self.DESIRED_AMOUNT_OF_RESULTS - len(enrichments)
+				queryUrl, results = self.__search(query, entities, dimension, 'image', numResults)
+				if queryUrl and results:
+					moreEnrichments = self.__formatResponse(
+						results,
+						entities,
+						dimension
+					)
+					queries.append(queryUrl)
+					enrichments = list(set(enrichments) | set(moreEnrichments))
+
 			return { 'enrichments' : enrichments, 'queries' : queries}
 		return None
 
@@ -46,9 +60,9 @@ class IRAPI(DimensionService):
 			if dimension['service'].has_key('id') and dimension['service'].has_key('params'):
 				return dimension['service']['params'].has_key('domain')
 
-	def __search(self, query, entities, dimension, strictQuery, numResults):
+	def __search(self, query, entities, dimension, mediaType, numResults):
 		http = httplib2.Http()
-		url = self.__constructServiceQueryUrl(query, entities, dimension, strictQuery, numResults)
+		url = self.__constructServiceQueryUrl(query, entities, dimension, mediaType, numResults)
 		print url
 		if url:
 			headers = {'Accept':'application/json'}
@@ -57,17 +71,15 @@ class IRAPI(DimensionService):
 				return url, content
 		return None, None
 
-	def __constructServiceQueryUrl(self, query, entities, dimension, strictQuery, numResults):
+	def __constructServiceQueryUrl(self, query, entities, dimension, mediaType, numResults):
 		if query == '' and len(entities) > 0:
-			if strictQuery:
-				query = self.__constructStrictQuery(entities)
-			else:
-				query = self.__constructQuery(entities)
+			query = self.__constructStrictQuery(entities)
 		else:
 			query = urllib.quote(query.encode('utf8'))
 		if query:
 			url = '%s?q=%s&row=%d&domain_source=%s'% (self.BASE_URL, query, numResults, dimension['service']['params']['domain'])
-			#&media_type=image
+			if mediaType:
+				url += '&media_type=%s' % mediaType
 			print url
 			return url
 		return None
@@ -78,6 +90,7 @@ class IRAPI(DimensionService):
 			queryParts.append('"%s"' % e['label'])
 		return urllib.quote(' '.join(queryParts).encode('utf8'))
 
+	"""
 	def __constructQuery(self, entities):
 		queryParts = []
 		if len(entities) > 1:
@@ -85,6 +98,7 @@ class IRAPI(DimensionService):
 				queryParts.append('"%s"' % entities[i]['label'])
 			return urllib.quote(' '.join(queryParts).encode('utf8'))
 		return None
+	"""
 
 
 	#the data returnde from Anefo is in some RSS format
@@ -95,7 +109,6 @@ class IRAPI(DimensionService):
 		if not data.has_key('error'):
 			for source in data.keys(): #all the available sources
 				for e in data[source]: #each source contains a list of enrichments
-					print e.keys()
 					title = None
 					if e.has_key('micropost') and e['micropost'].has_key('plainText'):
 						title = e['micropost']['plainText']
