@@ -13,14 +13,15 @@ class IRAPI(DimensionService):
 	def __init__(self):
 		DimensionService.__init__(self, 'IRAPI')
 		self.BASE_URL = 'http://ir.lmcloud.vse.cz/irapi/media-server'
-		self.DESIRED_AMOUNT_OF_RESULTS = 30
+		self.DESIRED_AMOUNT_OF_RESULTS = 50
+		self.MAX_QUERY_SIZE = 20
 
 	#TODO check if everything makes sense
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
 			queries = []
 			#first do a field query to get the most relevant results
-			queryUrl, results = self.__search(query, entities, dimension, None, self.DESIRED_AMOUNT_OF_RESULTS - 10)
+			queryUrl, results = self.__search(query, entities, dimension, None, self.MAX_QUERY_SIZE)
 			enrichments = self.__formatResponse(
 				results,
 				entities,
@@ -77,6 +78,8 @@ class IRAPI(DimensionService):
 		else:
 			query = urllib.quote(query.encode('utf8'))
 		if query:
+			if numResults > self.MAX_QUERY_SIZE:
+				numResults = self.MAX_QUERY_SIZE
 			url = '%s?q=%s&row=%d&domain_source=%s'% (self.BASE_URL, query, numResults, dimension['service']['params']['domain'])
 			if mediaType:
 				url += '&media_type=%s' % mediaType
