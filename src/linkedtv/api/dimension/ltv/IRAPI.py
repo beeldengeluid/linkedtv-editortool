@@ -125,8 +125,10 @@ class IRAPI(DimensionService):
 						enrichment.setEnrichmentType(eType)
 					if e.has_key('mediaUrl'):
 						enrichment.setPoster(e['mediaUrl'])
+					"""
 					if e.has_key('publicationDate'):
 						enrichment.setDate(self.__formatDate(e['publicationDate']))
+					"""
 					#also add all of the properties to the enrichment
 					enrichment.setNativeProperties(e)
 					enrichments.append(enrichment)

@@ -65,6 +65,8 @@ class LinkedTVDataLoader(DataLoader):
 							mediaResource.setThumbBaseUrl(mrr['relationTarget'])
 						elif mrr['relationType'] == 'srt':
 							mediaResource.setSrtUrl(mrr['relationTarget'])
+						elif mrr['relationType'] == 'asr-srt':#todo test this!
+							mediaResource.setSrtUrl(mrr['relationTarget'])
 
 		#get the subtitles if desired
 		subLoader = LinkedTVSubtitleLoader()

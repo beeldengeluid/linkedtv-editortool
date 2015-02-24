@@ -25,6 +25,7 @@ class EntityExpansionService():
 		self.RELEVANT = '/entities/relevant'
 		self.cache = redis.Redis(host=LTV_REDIS_SETTINGS['host'], port=LTV_REDIS_SETTINGS['port'], db=LTV_REDIS_SETTINGS['db'])
 		self.periodInDays = 7
+		self.TAG_RE = re.compile(r'<[^>]+>')
 
 	def fetch(self, srtUrl, date = None, start = -1, end = -1):
 		transcriptText = None
@@ -33,7 +34,8 @@ class EntityExpansionService():
 			transcriptText = self.cache.get(srtUrl)
 		else:
 			transcriptText = self.__getSrtData(srtUrl)
-		transcriptText = self.__toPlainText(transcriptText, start, end)
+		isSrt = srtUrl.find('_asr.srt') == -1
+		transcriptText = self.__toPlainText(transcriptText, start, end, isSrt)
 		return self.__formatResponse(self.__sendRequest(transcriptText, date), start, end)
 
 
@@ -56,7 +58,6 @@ class EntityExpansionService():
 		headers = {'Content-type': 'application/json'}
 		print url
 		http = httplib2.Http()
-		print urllib.quote(text)
 		resp, content = http.request(url, 'POST', urllib.quote(text).replace('%20', ' '), headers=headers)
 		print 'RESPONSE:'
 		if resp and resp['status'] == '200':
@@ -103,14 +104,15 @@ class EntityExpansionService():
 			'Authorization' : 'Basic %s' % pw,
 		}
 		resp, content = http.request(srtUrl, 'GET', headers=headers)
-		print resp
 		if resp and resp['status'] == '200':
 			self.cache.set(srtUrl, content)
 			return content
 		return None
 
-	def __toPlainText(self, text, start, end):
+	def __toPlainText(self, text, start, end, isSrt = True):
 		print 'fetching %d to %d' % (start, end)
+		i = 0
+		#print repr(text)
 		noTimeCheck = start == -1 and end == -1
 		result = []
 		c = 0
@@ -118,10 +120,18 @@ class EntityExpansionService():
 		l = None
 		s = 0
 		e = 0
-		RE_ITEM = re.compile(r'(?P<index>\d+).'
+		RE_ITEM = None
+		if isSrt:
+			RE_ITEM = re.compile(r'(?P<index>\d+).'
 			r'(?P<start>\d{2}:\d{2}:\d{2},\d{3}) --> '
 			r'(?P<end>\d{2}:\d{2}:\d{2},\d{3}).'
 			r'(?P<text>.*?)(\n\n|$)', re.DOTALL)
+		else:
+			RE_ITEM = re.compile(r'(?P<index>\d+)\r\n'
+				r'(?P<start>\d{2}:\d{2}:\d{2},\d{3}) --> '
+				r'(?P<end>\d{2}:\d{2}:\d{2},\d{3})\r\n'
+				r'(?P<text>.*?)(\r\n\r\n|$)', re.DOTALL)
+
 		for i in RE_ITEM.finditer(text):
 			s = TimeUtils.srtTimeToMillis(i.group('start'))
 			e = TimeUtils.srtTimeToMillis(i.group('end'))
@@ -132,4 +142,7 @@ class EntityExpansionService():
 				t = '%s %s' % (t, l)
 				c += 1
 		print t
-		return t
+		return self.__removeTags(t)
+
+	def __removeTags(self, text):
+		return self.TAG_RE.sub('', text)
