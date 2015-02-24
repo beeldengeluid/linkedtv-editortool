@@ -107,6 +107,7 @@ var rbbConfig = {
 			linkedtvDimension : 'Background',
 			service : {
 				id : 'IRAPI',
+				class : 'linkedtv.api.dimension.ltv.IRAPI',
 				params : {
 					domain : 'RBB'
 				}
@@ -118,8 +119,10 @@ var rbbConfig = {
 			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id : 'RelatedChapterEnricher',
+				class : 'linkedtv.api.dimension.ltv.RelatedChapterEnricher',
 				params : {
-					provider : 'rbb'
+					provider : 'rbb',
+					curatedOnly : false
 				}
 			}
 		}
@@ -155,6 +158,7 @@ var tkkConfig = {
 			linkedtvDimension : 'Background',
 			service : {
 				id : 'IRAPI',
+				class : 'linkedtv.api.dimension.ltv.IRAPI',
 				params : {
 					domain : 'SV'
 				}
@@ -166,6 +170,7 @@ var tkkConfig = {
 			linkedtvDimension : 'RelatedArtWork',
 			service : {
 				id : 'EuropeanaAPI',
+				class : 'linkedtv.api.dimension.public.EuropeanaAPI',
 				params : {
 					//queryParts : ['COUNTRY:netherlands']
 				}
@@ -177,8 +182,10 @@ var tkkConfig = {
 			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id : 'RelatedChapterEnricher',
+				class : 'linkedtv.api.dimension.ltv.RelatedChapterEnricher',
 				params : {
-					provider : 'sv'
+					provider : 'sv',
+					curatedOnly : true
 				}
 			}
 		}
@@ -210,6 +217,7 @@ var europeanaSpaceConfig = {
 			linkedtvDimension : 'Background',
 			service : {
 				id : 'EuropeanaAPI',
+				class : 'linkedtv.api.dimension.public.EuropeanaAPI',
 				params : {
 					//queryParts : ['COUNTRY:netherlands']
 				}
@@ -221,6 +229,7 @@ var europeanaSpaceConfig = {
 			linkedtvDimension : 'RelatedChapter',
 			service : {
 				id : 'ESRelatedVideoEnricher',
+				class : 'linkedtv.api.dimension.europeanaspace.ESRelatedVideoEnricher',
 				params : {
 					provider : 'rbb'
 				}
@@ -253,7 +262,8 @@ var trialConfig = {
 			label : 'Background Information',
 			linkedtvDimension : 'Background',
 			service : {
-				id : 'TvEnricher'
+				id : 'TvEnricher',
+				class : 'linkedtv.api.dimension.ltv.TvEnricher'
 			}
 		},
 		{
@@ -261,7 +271,8 @@ var trialConfig = {
 			label : 'Related photos',
 			linkedtvDimension : 'Background',
 			service : {
-				id : 'AnefoAPI'
+				id : 'AnefoAPI',
+				class : 'linkedtv.api.dimension.public.AnefoAPI'
 			}
 		}
 	]

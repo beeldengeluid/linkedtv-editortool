@@ -74,7 +74,7 @@ class IRAPI(DimensionService):
 
 	def __constructServiceQueryUrl(self, query, entities, dimension, mediaType, numResults):
 		if query == '' and len(entities) > 0:
-			query = self.__constructStrictQuery(entities)
+			query = self.__constructQuery(entities)
 		else:
 			query = urllib.quote(query.encode('utf8'))
 		if query:
@@ -83,26 +83,14 @@ class IRAPI(DimensionService):
 			url = '%s?q=%s&row=%d&domain_source=%s'% (self.BASE_URL, query, numResults, dimension['service']['params']['domain'])
 			if mediaType:
 				url += '&media_type=%s' % mediaType
-			print url
 			return url
 		return None
 
-	def __constructStrictQuery(self, entities):
+	def __constructQuery(self, entities):
 		queryParts = []
 		for e in entities:
 			queryParts.append('"%s"' % e['label'])
 		return urllib.quote(' '.join(queryParts).encode('utf8'))
-
-	"""
-	def __constructQuery(self, entities):
-		queryParts = []
-		if len(entities) > 1:
-			for i in range(0, len(entities) -1):
-				queryParts.append('"%s"' % entities[i]['label'])
-			return urllib.quote(' '.join(queryParts).encode('utf8'))
-		return None
-	"""
-
 
 	#the data returnde from Anefo is in some RSS format
 	def __formatResponse(self, data, entities, dimension):
