@@ -192,6 +192,10 @@
 									<a href="{{e.url}}" target="_external">
 										{{e.label | limitTo:28}}
 									</a>
+									<br>
+									<i ng-if="e.type == 'video'" class="glyphicon glyphicon-facetime-video"></i>
+									<i ng-if="e.type == 'audio'" class="glyphicon glyphicon-volume-down"></i>
+									<i ng-if="e.type == 'image'" class="glyphicon glyphicon-picture"></i>
 								</div>
 							</div>
 						</li>

@@ -1269,6 +1269,7 @@ linkedtv.run(function($rootScope, conf) {
 				description : e.description,
 				poster : e.poster,
 				entities : e.entities,
+				type : e.enrichmentType,
 				date : e.date ? e.date : 'No date',
 				creator : e.creator ? e.creator : 'unknown',
 				nativeProperties : e.nativeProperties //this way clients are fully 'service aware'

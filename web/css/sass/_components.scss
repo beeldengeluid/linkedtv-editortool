@@ -16,6 +16,7 @@
 		}
 		a {
 			color: $wonderblue;
+			white-space: nowrap;
 		}
 	}
 
@@ -62,6 +63,7 @@
 			.caption {
 				overflow:hidden;
 				padding-top:2px;
+				white-space: nowrap;
 				.status-icon {
 					float:left;
 				}
