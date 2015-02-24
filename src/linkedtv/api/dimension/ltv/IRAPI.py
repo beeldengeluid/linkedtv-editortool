@@ -118,7 +118,11 @@ class IRAPI(DimensionService):
 						elif e['micropost'].has_key('plainText'):
 							enrichment.setDescription(e['micropost']['plainText'])
 					if e.has_key('type'):
-						enrichment.setEnrichmentType(e['type'])
+						eType = e['type']
+						if e.has_key('mediaUrl'):
+							if e['micropostUrl'] == e['mediaUrl']:
+								eType = 'webpage'
+						enrichment.setEnrichmentType(eType)
 					if e.has_key('mediaUrl'):
 						enrichment.setPoster(e['mediaUrl'])
 					if e.has_key('publicationDate'):
