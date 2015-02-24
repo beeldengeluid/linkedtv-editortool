@@ -3,7 +3,7 @@ import simplejson
 import urllib
 import httplib2
 from lxml import etree
-from datetime import datetime
+import time
 
 from linkedtv.model import Enrichment
 from linkedtv.api.dimension.DimensionService import DimensionService
@@ -101,21 +101,39 @@ class IRAPI(DimensionService):
 			for source in data.keys(): #all the available sources
 				for e in data[source]: #each source contains a list of enrichments
 					title = None
-					if e.has_key('micropost') and e['micropost'].has_key('plainText'):
-						title = e['micropost']['plainText']
+					if e.has_key('micropost'):
+						if e['micropost'].has_key('title'):
+							title = e['micropost']['title']
+						elif e['micropost'].has_key('plainText'):
+							title = e['micropost']['plainText']
 					enrichment = Enrichment(
 						title,
 						url=e['micropostUrl'],
 						source=source,
 						entities=[entity['label'] for entity in entities]
 					)
-					if e.has_key('micropost') and e['micropost'].has_key('html'):
-						enrichment.setDescription(e['micropost']['html'])
+					if e.has_key('micropost'):
+						if e['micropost'].has_key('html'):
+							enrichment.setDescription(e['micropost']['html'])
+						elif e['micropost'].has_key('plainText'):
+							enrichment.setDescription(e['micropost']['plainText'])
 					if e.has_key('type'):
 						enrichment.setEnrichmentType(e['type'])
 					if e.has_key('mediaUrl'):
 						enrichment.setPoster(e['mediaUrl'])
+					if e.has_key('publicationDate'):
+						enrichment.setDate(self.__formatDate(e['publicationDate']))
 					#also add all of the properties to the enrichment
 					enrichment.setNativeProperties(e)
 					enrichments.append(enrichment)
 		return enrichments
+
+	#Formats e.g. 'Sat Oct 11 08:27:41 CEST 2014' to '11-11-2014'
+	def __formatDate(self, d):
+		if d:
+			try:
+				t = time.strptime(d, '%a %b %d %H:%M:%S CEST %Y')
+				return time.strftime('%d-%M-%Y', t)
+			except ValueError, e:
+				pass
+		return None

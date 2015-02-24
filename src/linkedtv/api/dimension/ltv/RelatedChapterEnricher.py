@@ -3,7 +3,6 @@ import urllib
 import httplib2
 import solr
 import base64
-from datetime import datetime, date, timedelta
 
 from linkedtv.model import Enrichment
 from linkedtv.api.dimension.DimensionService import DimensionService
