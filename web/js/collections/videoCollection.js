@@ -11,7 +11,7 @@ angular.module('linkedtv').factory('videoCollection', ['imageService', function(
 				v.poster = imageService.getThumbnail(v.thumbBaseUrl, THUMBNAIL_SECOND * 1000);
 			});
 			videos.sort(function(a, b) {
-				return parseInt(a.dateInserted) - parseInt(b.dateInserted);
+				return  parseInt(b.dateInserted) - parseInt(a.dateInserted);
 			});
 		}
 		setVideos(videos);
