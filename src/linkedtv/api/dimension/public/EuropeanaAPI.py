@@ -7,7 +7,11 @@ from linkedtv.LinkedtvSettings import LTV_EUROPEANA
 from linkedtv.api.dimension.DimensionService import DimensionService
 
 """
-http://www.europeana.eu/portal/api-search-json.html
+SEARCH API DOCS:
+	http://www.europeana.eu/portal/api-search-json.html
+
+FOR THE RIGHTS/LICENSES CHECK:
+	http://pro.europeana.eu/share-your-data/rights-statement-guidelines/available-rights-statements
 """
 
 class EuropeanaAPI(DimensionService):
@@ -16,6 +20,22 @@ class EuropeanaAPI(DimensionService):
 		DimensionService.__init__(self, 'EuropeanaAPI')
 		self.API_KEY = LTV_EUROPEANA['apikey']
 		self.BASE_URL = 'http://www.europeana.eu/api/v2/search.json'
+		self.RIGHTS = {
+			'http://creativecommons.org/publicdomain/mark/1.0/' : ['open'],
+			'http://www.europeana.eu/rights/out-of-copyright-non-commercial/' : ['restricted'],
+			'http://creativecommons.org/publicdomain/zero/1.0/' : ['open'],
+			'http://creativecommons.org/licenses/by/4.0/' : ['credit'],
+			'http://creativecommons.org/licenses/by-sa/4.0/' : ['sa'],
+			'http://creativecommons.org/licenses/by-nd/4.0/' : ['nd', 'sa'],
+			'http://creativecommons.org/licenses/by-nc/4.0/' : ['nc'],
+			'http://creativecommons.org/licenses/by-nc-sa/4.0/' : ['nc', 'sa'],
+			'http://creativecommons.org/licenses/by-nc-nd/4.0/' : ['nc', 'nd'],
+			'http://www.europeana.eu/rights/rr-f/' : ['restricted'],
+			'http://www.europeana.eu/rights/rr-p/' : ['restricted', 'paid'],
+			'http://www.europeana.eu/rights/orphan-work-eu/' : ['orphan'],
+			'http://www.europeana.eu/rights/unknown/' : ['unknown']
+		}
+		self.DESIRED_AMOUNT_OF_RESULTS = 300
 		#1hfhGH67Jhs
 		#KtbDppuVD
 
@@ -57,9 +77,23 @@ class EuropeanaAPI(DimensionService):
 		if dimension['service']['params'].has_key('queryParts'):
 			for qf in dimension['service']['params']['queryParts']:
 				url += '&qf=%s' % qf
-		url += '&rows=200'
+		url += self.__getRightsUrlPart(dimension)
+		url += '&rows=%d' % self.DESIRED_AMOUNT_OF_RESULTS
 		print url
 		return url
+
+	def __getRightsUrlPart(self, dimension):
+		if dimension['service']['params'].has_key('rights'):
+			#url += '&qf=rights:%s' % ','.join(dimension['service']['params']['rights'])
+			rights = dimension['service']['params']['rights']
+			requestedRights = []
+			for r in rights:
+				for key in self.RIGHTS.keys():
+					if r in self.RIGHTS[key]:
+						requestedRights.append(key)
+			print requestedRights
+			return  '&qf=RIGHTS:%s' % '&qf=RIGHTS:'.join(requestedRights)
+		return ''
 
 	"""
 	{
@@ -141,7 +175,8 @@ class EuropeanaAPI(DimensionService):
 					enrichment = Enrichment(
 						e['title'][0],
 						url=e['guid'],
-						enrichmentType=e['type']
+						enrichmentType=e['type'],
+						description=e['title'][0]
 					)
 					if e.has_key('dataProvider'):
 						enrichment.setSource(e['dataProvider'][0])

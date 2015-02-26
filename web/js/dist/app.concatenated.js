@@ -220,6 +220,7 @@ var europeanaSpaceConfig = {
 				class : 'linkedtv.api.dimension.public.EuropeanaAPI',
 				params : {
 					//queryParts : ['COUNTRY:netherlands']
+					rights : ['sa', 'open', 'nc']
 				}
 			}
 		},

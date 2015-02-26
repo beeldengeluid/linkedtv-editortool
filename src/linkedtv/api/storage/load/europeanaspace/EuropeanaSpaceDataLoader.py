@@ -7,6 +7,38 @@ from linkedtv.LinkedtvSettings import LTV_ES_SETTINGS
 from linkedtv.api.storage.load.DataLoader import DataLoader
 from linkedtv.api.storage.load.ltv.video.VideoPlayoutHandler import VideoPlayoutHandler
 
+
+"""
+Tour videos:
+	1.
+		/videos/gleim-tunnel-sealed-off-800/
+		http://localhost:1234/user/euspace/235/
+	2.
+		/videos/berlin-contemporary-witness-last-trip-to-cinema-812/
+		http://localhost:1234/user/euspace/217/
+
+	3.
+		/videos/contemporary-witness-troublespot-bernauer-strasse-797/
+
+
+	4.
+		/videos/video-surveillance-of-the-wall-and-tourist-attraction-585/
+		http://localhost:1234/user/euspace/57/
+
+	6.
+		/videos/church-of-reconciliation-in-the-death-strip-576/
+		http://localhost:1234/user/euspace/48/
+
+	7.
+		/videos/church-of-reconciliation-demolished-695/
+		http://localhost:1234/user/euspace/151/
+
+	8.
+		/videos/berlin-contemporary-witness-burying-tips-in-tiergarten-805/
+		http://localhost:1234/user/euspace/226/
+
+"""
+
 class EuropeanaSpaceDataLoader(DataLoader):
 
 	def __init__(self):
@@ -86,7 +118,6 @@ class EuropeanaSpaceDataLoader(DataLoader):
 		vd = self.es.get(index=LTV_ES_SETTINGS['index'], doc_type=LTV_ES_SETTINGS['doc-type'], id=mediaResource.getId())
 		if vd:
 			vd = vd['_source']
-			print vd
 			mediaResource.setVideoMetadata(vd)
 
 			#load the video URL from Noterik

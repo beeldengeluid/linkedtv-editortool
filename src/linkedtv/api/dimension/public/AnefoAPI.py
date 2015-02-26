@@ -15,7 +15,7 @@ class AnefoAPI(DimensionService):
 		self.BASE_URL = 'http://www.gahetna.nl'
 		self.NAMESPACE_DC = 'http://purl.org/dc/elements/1.1/'
 		self.NAMESPACE_ESE = 'http://www.europeana.eu/schemas/ese/'
-		self.DESIRED_AMOUNT_OF_RESULTS = 20
+		self.DESIRED_AMOUNT_OF_RESULTS = 50
 
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
