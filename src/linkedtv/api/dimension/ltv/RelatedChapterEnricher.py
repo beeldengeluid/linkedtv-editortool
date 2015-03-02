@@ -25,10 +25,12 @@ class RelatedChapterEnricher(DimensionService):
 			queryUrl, results = self.__search(query, entities, dimension)
 			enrichments = self.__formatResponse(results, dimension)
 			if queryUrl and results:
+				"""
 				if dimension['service']['params'].has_key('sillyHack') and dimension['service']['params']['sillyHack'] == True:
 					mediathekResults = self.__sillyHack(query, entities, dimension)
 					if mediathekResults:
 						enrichments = list(set(enrichments) | set(mediathekResults))
+				"""
 				return {'enrichments' : enrichments, 'queries' : [queryUrl]}
 		return None
 
