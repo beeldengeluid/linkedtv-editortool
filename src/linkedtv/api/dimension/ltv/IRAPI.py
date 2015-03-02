@@ -21,17 +21,18 @@ class IRAPI(DimensionService):
 		if self.__isValidDimension(dimension):
 			queries = []
 			#first do a field query to get the most relevant results
-			queryUrl, results = self.__search(query, entities, dimension, None, self.MAX_QUERY_SIZE)
+			queryUrl, results = self.__search(query, entities, dimension, 'video', self.MAX_QUERY_SIZE)
 			enrichments = self.__formatResponse(
 				results,
 				entities,
 				dimension
 			)
 			queries.append(queryUrl)
-			#try to add some videos
+			#try to add some web pages
+			print 'NUMBER ALREADY FOUND: %d' % len(enrichments)
 			if len(enrichments) < self.DESIRED_AMOUNT_OF_RESULTS:
 				numResults = self.DESIRED_AMOUNT_OF_RESULTS - len(enrichments)
-				queryUrl, results = self.__search(query, entities, dimension, 'video', numResults)
+				queryUrl, results = self.__search(query, entities, dimension, None, numResults)
 				if queryUrl and results:
 					moreEnrichments = self.__formatResponse(
 						results,
@@ -65,7 +66,7 @@ class IRAPI(DimensionService):
 	def __search(self, query, entities, dimension, mediaType, numResults):
 		http = httplib2.Http()
 		url = self.__constructServiceQueryUrl(query, entities, dimension, mediaType, numResults)
-		print url
+		print 'URL ==> %s' % url
 		if url:
 			headers = {'Accept':'application/json'}
 			resp, content = http.request(url, 'GET', headers=headers)
@@ -97,7 +98,6 @@ class IRAPI(DimensionService):
 	def __formatResponse(self, data, entities, dimension):
 		enrichments = []
 		data = simplejson.loads(data)
-
 		if not data.has_key('error'):
 			for source in data.keys(): #all the available sources
 				for e in data[source]: #each source contains a list of enrichments
@@ -131,6 +131,7 @@ class IRAPI(DimensionService):
 						enrichment.setDate(self.__formatDate(e['publicationDate']))
 					"""
 					#also add all of the properties to the enrichment
+
 					enrichment.setNativeProperties(e)
 					enrichments.append(enrichment)
 		return enrichments
