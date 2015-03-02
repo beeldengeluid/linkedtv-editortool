@@ -53,7 +53,8 @@ class IRAPI(DimensionService):
 					queries.append(queryUrl)
 					enrichments = list(set(enrichments) | set(moreEnrichments))
 
-			return { 'enrichments' : enrichments, 'queries' : queries}
+			return {'enrichments' : enrichments, 'queries' : queries}
+		print 'dimension not VALID'
 		return None
 
 	def __isValidDimension(self, dimension):

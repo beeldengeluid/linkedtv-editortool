@@ -83,10 +83,10 @@ var rbbConfig = {
 	entityExpansion : true,
 	loadGroundTruth : false,
 	platform : 'linkedtv',
-	logUserActions : true,
+	logUserActions : false,
 	synchronization : {
-		syncOnLoad : true,
-		syncOnSave : true,
+		syncOnLoad : false,
+		syncOnSave : false,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [
@@ -122,7 +122,8 @@ var rbbConfig = {
 				class : 'linkedtv.api.dimension.ltv.RelatedChapterEnricher',
 				params : {
 					provider : 'rbb',
-					curatedOnly : false
+					curatedOnly : false,
+					sillyHack : true
 				}
 			}
 		}
@@ -134,10 +135,10 @@ var tkkConfig = {
 	entityExpansion : false,
 	loadGroundTruth : true,
 	platform : 'linkedtv',
-	logUserActions : true,
+	logUserActions : false,
 	synchronization : {
-		syncOnLoad : true,
-		syncOnSave : true,
+		syncOnLoad : false,
+		syncOnSave : false,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [

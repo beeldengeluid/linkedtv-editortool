@@ -12,30 +12,38 @@ from linkedtv.api.storage.load.ltv.video.VideoPlayoutHandler import VideoPlayout
 Tour videos:
 	1.
 		/videos/gleim-tunnel-sealed-off-800/
-		http://localhost:1234/user/euspace/235/
+		http://editortool.linkedtv.eu/load_curated?id=235
+		http://a1.noterik.com:8081/smithers2/domain/espace/user/rbb/presentation/18
 	2.
 		/videos/berlin-contemporary-witness-last-trip-to-cinema-812/
-		http://localhost:1234/user/euspace/217/
+		http://editortool.linkedtv.eu/load_curated?id=217
+		http://a1.noterik.com:8081/smithers2/domain/espace/user/rbb/presentation/28
 
 	3.
 		/videos/contemporary-witness-troublespot-bernauer-strasse-797/
-
+		?
+		http://a1.noterik.com:8081/smithers2/domain/espace/user/rbb/presentation/15
 
 	4.
 		/videos/video-surveillance-of-the-wall-and-tourist-attraction-585/
-		http://localhost:1234/user/euspace/57/
+		http://editortool.linkedtv.eu/load_curated?id=57
+		http://a1.noterik.com:8081/smithers2/domain/espace/user/rbb/presentation/97
 
 	6.
 		/videos/church-of-reconciliation-in-the-death-strip-576/
-		http://localhost:1234/user/euspace/48/
+		http://editortool.linkedtv.eu/load_curated?id=48
+		http://a1.noterik.com:8081/smithers2/domain/espace/user/rbb/presentation/84
 
 	7.
 		/videos/church-of-reconciliation-demolished-695/
-		http://localhost:1234/user/euspace/151/
+		http://editortool.linkedtv.eu/load_curated?id=151
+		http://a1.noterik.com:8081/smithers2/domain/espace/user/rbb/presentation/198
 
 	8.
 		/videos/berlin-contemporary-witness-burying-tips-in-tiergarten-805/
-		http://localhost:1234/user/euspace/226/
+		http://editortool.linkedtv.eu/load_curated?id=226
+		http://a1.noterik.com:8081/smithers2/domain/espace/user/rbb/presentation/23
+
 
 """
 

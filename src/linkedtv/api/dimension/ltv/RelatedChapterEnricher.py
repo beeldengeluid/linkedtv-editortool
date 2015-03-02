@@ -23,9 +23,27 @@ class RelatedChapterEnricher(DimensionService):
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
 			queryUrl, results = self.__search(query, entities, dimension)
+			enrichments = self.__formatResponse(results, dimension)
 			if queryUrl and results:
-				return {'enrichments' : self.__formatResponse(results, dimension), 'queries' : [queryUrl]}
+				if dimension['service']['params'].has_key('sillyHack') and dimension['service']['params']['sillyHack'] == True:
+					mediathekResults = self.__sillyHack(query, entities, dimension)
+					if mediathekResults:
+						enrichments = list(set(enrichments) | set(mediathekResults))
+				return {'enrichments' : enrichments, 'queries' : [queryUrl]}
 		return None
+
+	def __sillyHack(self, query, entities, dimension):
+		from linkedtv.api.dimension.ltv.IRAPI import IRAPI
+		results = []
+		i = IRAPI()
+		#inject the proper parameter for IRAPI
+		dimension['service']['params']['domain'] = 'RBB'
+		res = i.fetch(query, entities, dimension)
+		if res:
+			for v in res['enrichments']:
+				if v.getEnrichmentType() == 'video':
+					results.append(v)
+		return results
 
 	def __isValidDimension(self, dimension):
 		if dimension.has_key('service'):
