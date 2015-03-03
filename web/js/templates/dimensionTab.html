@@ -15,7 +15,7 @@
 
 					<ul class="enrichments">
 						<li ng-repeat="e in activeChapter.dimensions[d.id].annotations track by $index"
-							ng-click="setActiveLink($index)" ng-dblclick="editSingleEnrichment(d, e)" title="{{e.label}}">
+							ng-click="setActiveLink($index)" ng-dblclick="editSingleEnrichment(d, e)" title="{{e.label}} - {{e.uri}}">
 							<div class="thumbnail" ng-if="e.label">
 								<img ng-if="e.poster" ng-src="{{e.poster}}" alt="{{e.label}}">
 

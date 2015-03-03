@@ -131,8 +131,7 @@ var rbbConfig = {
 				class : 'linkedtv.api.dimension.ltv.RelatedChapterEnricher',
 				params : {
 					provider : 'rbb',
-					curatedOnly : false,
-					sillyHack : true
+					curatedOnly : false
 				}
 			}
 		}

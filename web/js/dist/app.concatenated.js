@@ -83,10 +83,10 @@ var rbbConfig = {
 	entityExpansion : true,
 	loadGroundTruth : false,
 	platform : 'linkedtv',
-	logUserActions : false,
+	logUserActions : true,
 	synchronization : {
-		syncOnLoad : false,
-		syncOnSave : false,
+		syncOnLoad : true,
+		syncOnSave : true,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [
@@ -122,8 +122,7 @@ var rbbConfig = {
 				class : 'linkedtv.api.dimension.ltv.RelatedChapterEnricher',
 				params : {
 					provider : 'rbb',
-					curatedOnly : false,
-					sillyHack : true
+					curatedOnly : false
 				}
 			}
 		}
@@ -135,10 +134,10 @@ var tkkConfig = {
 	entityExpansion : false,
 	loadGroundTruth : true,
 	platform : 'linkedtv',
-	logUserActions : false,
+	logUserActions : true,
 	synchronization : {
-		syncOnLoad : false,
-		syncOnSave : false,
+		syncOnLoad : true,
+		syncOnSave : true,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [
@@ -2155,17 +2154,33 @@ angular.module('linkedtv').controller('informationCardModalController',
 		return triple.uri ? 'dbpedia' : '';
 	};
 
-	$scope.useAsTemplate = function() {
-		$scope.useTemplate = false;
-		$scope.card = {};
-		$scope.card.uri = $scope.selectedUri;//TODO!! add some check that this entity was already added as a card
-		$scope.activeTemplate = {properties : []};
-		_.each($scope.fetchedTriples, function(triple) {
-			$scope.addToTemplate(triple);
-		});
-		//set the poster, if any
-		if($scope.thumbs) {
-			$scope.poster = $scope.thumbs[$scope.thumbIndex];
+	$scope.useAsCard = function() {
+		var goAhead = true;
+		//if you are not replacing the current entity (which is fine), check if it was already added in this dimension
+		if($scope.card.uri != $scope.selectedUri) {
+			var c = chapterCollection.getActiveChapter();
+			var annotations = c.dimensions[$scope.dimension.id].annotations;
+			if(annotations && annotations.length > 0) {
+				for (var a=0; a<annotations.length;a++) {
+					if(annotations[a].uri == $scope.selectedUri) {
+						goAhead = false;
+						alert('An information card with the same entity already exists in this dimension');
+					}
+				}
+			}
+		}
+		if(goAhead) {
+			$scope.useTemplate = false;
+			$scope.card = {};
+			$scope.card.uri = $scope.selectedUri;
+			$scope.activeTemplate = {properties : []};
+			_.each($scope.fetchedTriples, function(triple) {
+				$scope.addToTemplate(triple);
+			});
+			//set the poster, if any
+			if($scope.thumbs) {
+				$scope.poster = $scope.thumbs[$scope.thumbIndex];
+			}
 		}
 	}
 
@@ -2176,9 +2191,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 		console.debug(entity);
 		var uri = entity.disambiguationURL ? entity.disambiguationURL : entity.uri;
 		if(uri) {
-			if(!$scope.useTemplate) {
-				$scope.selectedUri = uri;
-			}
+			$scope.selectedUri = uri;
 			entityProxyService.fetch(uri, $scope.entityInfoFetched);
 			$scope.loading = true;
 		}
@@ -2217,12 +2230,6 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$scope.card.poster = $scope.poster;
 
 		if(!$scope.card.uri) {
-			/*
-			_.each($scope.activeTemplate.properties, function(p){
-				if(p.key == 'uri') {
-					$scope.card.uri = p.value;
-				}
-			});*/
 			$scope.card.uri = $scope.generateUri();
 		}
 

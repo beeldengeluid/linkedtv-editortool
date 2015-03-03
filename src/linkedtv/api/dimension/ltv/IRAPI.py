@@ -20,7 +20,7 @@ class IRAPI(DimensionService):
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
 			queries = []
-			#first do a field query to get the most relevant results
+			#first search for videos
 			queryUrl, results = self.__search(query, entities, dimension, 'video', self.MAX_QUERY_SIZE)
 			enrichments = self.__formatResponse(
 				results,
@@ -28,11 +28,11 @@ class IRAPI(DimensionService):
 				dimension
 			)
 			queries.append(queryUrl)
-			#try to add some web pages
+			#then search for images
 			print 'NUMBER ALREADY FOUND: %d' % len(enrichments)
 			if len(enrichments) < self.DESIRED_AMOUNT_OF_RESULTS:
 				numResults = self.DESIRED_AMOUNT_OF_RESULTS - len(enrichments)
-				queryUrl, results = self.__search(query, entities, dimension, None, numResults)
+				queryUrl, results = self.__search(query, entities, dimension, 'image', numResults)
 				if queryUrl and results:
 					moreEnrichments = self.__formatResponse(
 						results,
@@ -41,10 +41,10 @@ class IRAPI(DimensionService):
 					)
 					queries.append(queryUrl)
 					enrichments = list(set(enrichments) | set(moreEnrichments))
-			#try to search for images
+			#then do a general search
 			if len(enrichments) < self.DESIRED_AMOUNT_OF_RESULTS:
 				numResults = self.DESIRED_AMOUNT_OF_RESULTS - len(enrichments)
-				queryUrl, results = self.__search(query, entities, dimension, 'image', numResults)
+				queryUrl, results = self.__search(query, entities, dimension, None, numResults)
 				if queryUrl and results:
 					moreEnrichments = self.__formatResponse(
 						results,
