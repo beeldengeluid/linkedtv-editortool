@@ -38,10 +38,6 @@ class RelatedChapterEnricher(DimensionService):
 	def __search(self, query, entities, dimension):
 		provider = dimension['service']['params']['provider']
 		curatedOnly = dimension['service']['params']['curatedOnly']
-		if curatedOnly:
-			curatedOnly = 'true'
-		else:
-			curatedOnly = 'false'
 		if self.PROVIDER_MAPPING.has_key(provider):
 			#create the query
 			if query == '':
@@ -51,8 +47,12 @@ class RelatedChapterEnricher(DimensionService):
 			#send to SOLR
 			conn = solr.Solr('http://data.linkedtv.eu:8983/solr/%s' % self.PROVIDER_MAPPING[provider]['index'])
 			select = conn.select
+			if curatedOnly:
+				queryString ='%s AND type:Chapter AND curated:true' % query
+			else:
+				queryString ='%s AND type:Chapter' % query
 			res = select.__call__(
-				q='%s AND type:Chapter AND curated:%s' % (query, curatedOnly),
+				q=queryString,
 				fields=['id', 'chapterTitle', 'videoId', 'startTime', 'endTime', 'type'],
 				rows=100
 			)
