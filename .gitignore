@@ -3,3 +3,5 @@ node_modules
 *.pyc
 .DS_Store
 .sass-cache
+*.vtt
+videoindexer
