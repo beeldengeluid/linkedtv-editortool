@@ -83,7 +83,7 @@ var rbbConfig = {
 	entityExpansion : true,
 	loadGroundTruth : false,
 	platform : 'linkedtv',
-	logUserActions : true,
+	logUserActions : false,
 	synchronization : {
 		syncOnLoad : true,
 		syncOnSave : true,
@@ -134,7 +134,7 @@ var tkkConfig = {
 	entityExpansion : false,
 	loadGroundTruth : true,
 	platform : 'linkedtv',
-	logUserActions : true,
+	logUserActions : false,
 	synchronization : {
 		syncOnLoad : true,
 		syncOnSave : true,
@@ -283,7 +283,7 @@ var trialConfig = {
 var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
-	euspace : europeanaSpaceConfig,
+	//euspace : europeanaSpaceConfig,
 	trial : trialConfig
 }
 
@@ -315,8 +315,8 @@ linkedtv.run(function($rootScope, conf) {
 	} else if (trialId) {
 		$rootScope.resourceUri = trialId;
 	}
-});;angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', 'timeUtils',
-	function($modal, chapterCollection, timeUtils) {
+});;angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', 'timeUtils', 'enrichmentService',
+	function($modal, chapterCollection, timeUtils, enrichmentService) {
 
 	function openMultipleLinkDialog(dimension) {
 		var modalInstance = $modal.open({
@@ -341,6 +341,7 @@ linkedtv.run(function($rootScope, conf) {
 				data.queries
 			);
 		}, function () { //when the modal is closed otherwise (e.g. using the escape button)
+			enrichmentService.cancelRequest();
 			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 		});
 	};
@@ -1221,6 +1222,16 @@ linkedtv.run(function($rootScope, conf) {
 
 }]);;angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(videoModel) {
 
+	var _xhr = null;
+
+
+	function cancelRequest() {
+		if(_xhr && _xhr.readystate != 4) {
+            _xhr.abort();
+            console.debug('request is cancelled');
+        }
+	}
+
 	function search(query, entities, dimension, callback) {
 		fillInDynamicProperties(dimension);
 		var data = {
@@ -1228,7 +1239,7 @@ linkedtv.run(function($rootScope, conf) {
 			'dimension' : dimension,
 			'entities' : entities
 		};
-		$.ajax({
+		_xhr = $.ajax({
 			method: 'POST',
 			data: JSON.stringify(data),
 			dataType : 'json',
@@ -1238,12 +1249,16 @@ linkedtv.run(function($rootScope, conf) {
 				if(!json.error) {
 					callback(formatGenericResponse(json.enrichments, dimension), json.queries);
 				} else {
-					callback(null);
+					callback(null, null, false);
 				}
 			},
 			error : function(err) {
 				console.debug(err);
-				callback(null);
+				if(err.statusText == "abort") {
+					callback(null, null, true);
+				} else {
+					callback(null, null, false);
+				}
 			}
 		});
 	}
@@ -1312,7 +1327,9 @@ linkedtv.run(function($rootScope, conf) {
 	}
 
 	return {
-		search : search
+		search : search,
+		cancelRequest : cancelRequest
+
 	}
 
 }]);;angular.module('linkedtv').factory('entityExpansionService', ['$rootScope', 'conf', function($rootScope, conf){
@@ -2369,6 +2386,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	//the actual enrichments will be shown in the enrichment tab
 	$scope.fetchEnrichments = function() {
+		$scope.xhrCancelled = false;
 		$scope.enrichmentQuery = $('#e_query').val();//FIXME ugly hack, somehow the ng-model does not work in this form!!!
 		if ($scope.enrichmentQuery != '' || !$scope.isEmpty($scope.activeEntities)) {
 			//update the text of the search button
@@ -2390,7 +2408,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 		}
 	};
 
-	$scope.onSearchEnrichments = function(enrichments, queries) {
+	$scope.onSearchEnrichments = function(enrichments, queries, requestAborted) {
 		//reset the button and the selected entities
 		$scope.fetchButtonText = 'Find links';
 		$scope.enrichmentsCollapsed = false;
@@ -2411,7 +2429,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 				}
 		});
 			});
-		} else {
+		} else if(!requestAborted) {
 			alert('No enrichments found');
 			$scope.$apply(function() {
 				$scope.enrichmentsCollapsed = true;
@@ -2510,6 +2528,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 
 	$scope.ok = function () {
 		if($scope.savedEnrichments) {
+			enrichmentService.cancelRequest();
 			$modalInstance.close({
 				dimension: $scope.dimension,
 				savedEnrichments : $scope.savedEnrichments,
@@ -2523,6 +2542,7 @@ angular.module('linkedtv').controller('informationCardModalController',
 	};
 
 	$scope.cancel = function () {
+		enrichmentService.cancelRequest();
 		$modalInstance.dismiss('cancel');
 	};
 

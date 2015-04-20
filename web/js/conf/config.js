@@ -92,7 +92,7 @@ var rbbConfig = {
 	entityExpansion : true,
 	loadGroundTruth : false,
 	platform : 'linkedtv',
-	logUserActions : true,
+	logUserActions : false,
 	synchronization : {
 		syncOnLoad : true,
 		syncOnSave : true,
@@ -143,7 +143,7 @@ var tkkConfig = {
 	entityExpansion : false,
 	loadGroundTruth : true,
 	platform : 'linkedtv',
-	logUserActions : true,
+	logUserActions : false,
 	synchronization : {
 		syncOnLoad : true,
 		syncOnSave : true,
@@ -292,7 +292,7 @@ var trialConfig = {
 var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
-	euspace : europeanaSpaceConfig,
+	//euspace : europeanaSpaceConfig,
 	trial : trialConfig
 }
 

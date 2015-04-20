@@ -1,5 +1,5 @@
-angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', 'timeUtils',
-	function($modal, chapterCollection, timeUtils) {
+angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollection', 'timeUtils', 'enrichmentService',
+	function($modal, chapterCollection, timeUtils, enrichmentService) {
 
 	function openMultipleLinkDialog(dimension) {
 		var modalInstance = $modal.open({
@@ -24,6 +24,7 @@ angular.module('linkedtv').factory('enrichmentUtils', ['$modal', 'chapterCollect
 				data.queries
 			);
 		}, function () { //when the modal is closed otherwise (e.g. using the escape button)
+			enrichmentService.cancelRequest();
 			chapterCollection.removeObserver();//the observer was added in the modal to react to found expanded entities
 		});
 	};

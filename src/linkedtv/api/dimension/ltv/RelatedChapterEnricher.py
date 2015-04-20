@@ -53,7 +53,7 @@ class RelatedChapterEnricher(DimensionService):
 				queryString ='%s AND type:Chapter' % query
 			res = select.__call__(
 				q=queryString,
-				fields=['id', 'chapterTitle', 'videoId', 'startTime', 'endTime', 'type'],
+				fields=['id', 'chapterTitle', 'videoId', 'startTime', 'endTime', 'type', 'subtitle'],
 				rows=100
 			)
 			if res:
@@ -96,7 +96,7 @@ class RelatedChapterEnricher(DimensionService):
 						title = '%s [%s]' % (e['chapterTitle'], videoData['title'])
 					enrichment = Enrichment(
 						title,
-						description=title,
+						description=e['subtitle'],
 						url='http://api.linkedtv.eu/mediaresource/%s' % e['id'], #the ide is the mediafragment id
 						start=int(e['startTime'] * 1000),
 						end=int(e['endTime'] * 1000),

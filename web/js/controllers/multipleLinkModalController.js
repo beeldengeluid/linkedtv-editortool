@@ -47,6 +47,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 
 	//the actual enrichments will be shown in the enrichment tab
 	$scope.fetchEnrichments = function() {
+		$scope.xhrCancelled = false;
 		$scope.enrichmentQuery = $('#e_query').val();//FIXME ugly hack, somehow the ng-model does not work in this form!!!
 		if ($scope.enrichmentQuery != '' || !$scope.isEmpty($scope.activeEntities)) {
 			//update the text of the search button
@@ -68,7 +69,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 		}
 	};
 
-	$scope.onSearchEnrichments = function(enrichments, queries) {
+	$scope.onSearchEnrichments = function(enrichments, queries, requestAborted) {
 		//reset the button and the selected entities
 		$scope.fetchButtonText = 'Find links';
 		$scope.enrichmentsCollapsed = false;
@@ -89,7 +90,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 				}
 		});
 			});
-		} else {
+		} else if(!requestAborted) {
 			alert('No enrichments found');
 			$scope.$apply(function() {
 				$scope.enrichmentsCollapsed = true;
@@ -188,6 +189,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 
 	$scope.ok = function () {
 		if($scope.savedEnrichments) {
+			enrichmentService.cancelRequest();
 			$modalInstance.close({
 				dimension: $scope.dimension,
 				savedEnrichments : $scope.savedEnrichments,
@@ -201,6 +203,7 @@ angular.module('linkedtv').controller('multipleLinkModalController',
 	};
 
 	$scope.cancel = function () {
+		enrichmentService.cancelRequest();
 		$modalInstance.dismiss('cancel');
 	};
 

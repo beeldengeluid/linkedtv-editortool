@@ -1,5 +1,15 @@
 angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(videoModel) {
 
+	var _xhr = null;
+
+
+	function cancelRequest() {
+		if(_xhr && _xhr.readystate != 4) {
+            _xhr.abort();
+            console.debug('request is cancelled');
+        }
+	}
+
 	function search(query, entities, dimension, callback) {
 		fillInDynamicProperties(dimension);
 		var data = {
@@ -7,7 +17,7 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 			'dimension' : dimension,
 			'entities' : entities
 		};
-		$.ajax({
+		_xhr = $.ajax({
 			method: 'POST',
 			data: JSON.stringify(data),
 			dataType : 'json',
@@ -17,12 +27,16 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 				if(!json.error) {
 					callback(formatGenericResponse(json.enrichments, dimension), json.queries);
 				} else {
-					callback(null);
+					callback(null, null, false);
 				}
 			},
 			error : function(err) {
 				console.debug(err);
-				callback(null);
+				if(err.statusText == "abort") {
+					callback(null, null, true);
+				} else {
+					callback(null, null, false);
+				}
 			}
 		});
 	}
@@ -91,7 +105,9 @@ angular.module('linkedtv').factory('enrichmentService', ['videoModel', function(
 	}
 
 	return {
-		search : search
+		search : search,
+		cancelRequest : cancelRequest
+
 	}
 
 }]);
