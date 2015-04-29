@@ -56,6 +56,8 @@ bower install angular#1.2.20
 
 bower install bootstrap
 
+bower install bootstrap-sass
+
 bower install underscore
 ```
 
