@@ -1,22 +1,20 @@
-----------------------------------------------------------------------------------------------------
 Useful developer documentation:
-----------------------------------------------------------------------------------------------------
+=========
 
----------------
 For styling / CSS
 ---------------
 
 
-	[Compass CSS styles for SASS]
+[Compass CSS styles for SASS]
 
-	http://compass-style.org/examples/compass/css3/box_shadow/
+http://compass-style.org/examples/compass/css3/box_shadow/
 
 
-	[Bootstrap]
+[Bootstrap]
 
-	http://getbootstrap.com/
+http://getbootstrap.com/
 
-	[Overriding Bootstrap SASS]
+[Overriding Bootstrap SASS]
 
 
 
@@ -30,7 +28,7 @@ JavaScript
 
 
 
----------------
+
 Redis
 ---------------
 
@@ -39,11 +37,11 @@ Redis
 		http://redis-py.readthedocs.org/en/latest/
 
 
----------------
+
 LinkedTV APIs
 ---------------
 
-	[TVEnricher]
 
-	http://www.linkedtv.eu/wiki/index.php/Tvenricher
+
+
 
