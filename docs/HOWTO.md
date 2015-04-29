@@ -7,8 +7,10 @@ Run compass
 
 In order to automaticcaly compile the SASS files in the [YOUR_INSTALL_DIR]/web/css/sass directory make sure to run Compass:
 
- cd [YOUR_INSTALL_DIR]/web
- compass watch
+<code>
+cd [YOUR_INSTALL_DIR]/web
+compass watch
+</code>
 
 Whenever you change a .scss file the file [YOUR_INSTALL_DIR]/web/css/linkedtv-et.css, which is included in each HTML file will be updated.
 
@@ -20,4 +22,6 @@ Since the site is build in Angular.JS with many separate JavaScript files, a gru
 
 So whenever you have edited a JS file within [YOUR_INSTALL_DIR]/web/js, please run the following command in [YOUR_INSTALL_DIR]/web:
 
- grunt concat
+<code>
+grunt concat
+</code>
