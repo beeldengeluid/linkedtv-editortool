@@ -9,6 +9,7 @@ In order to automaticcaly compile the SASS files in the [YOUR_INSTALL_DIR]/web/c
 
 <code>
 cd [YOUR_INSTALL_DIR]/web
+
 compass watch
 </code>
 
