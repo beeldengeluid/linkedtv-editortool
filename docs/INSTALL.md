@@ -3,6 +3,8 @@ Installation
 
 This file shows the installations for setting up a proper work environment.
 
+`YOUR_INSTALL_DIR` means the directory you have cloned this project including the `linkedtv-editortool` folder (which name you might have changed locally)
+
 
 Compass
 --------------
@@ -21,13 +23,13 @@ sudo npm install -g grunt-cli
 sudo npm install -g grunt-init
 ```
 
--* create a package.json file and copy it to the [linkedtv-et-v2]/web directory *-
+Create a `package.json` file and copy it to the [YOUR_INSTALL_DIR]/web directory
 
 ```
 npm init
 ```
 
--* install grunt modules (in the same dir as package.json) *-
+Install grunt modules (in the same dir as package.json)
 
 (Read: https://github.com/gruntjs/grunt-contrib-concat)
 
@@ -67,12 +69,50 @@ Check the file /css/sass/_bootstrap-overrides.scss and make sure the icon path i
 $icon-font-path: "../bower_components/bootstrap-sass-official/assets/fonts/bootstrap/" !default;
 ```
 
-
-Create users with Django
+Redis
 --------------
 
+[Download](http://redis.io/download) the latest Redis package from redis.io and follow the installation instructions on the same page
 
-go into the python shell:
+
+
+Django settings
+--------------
+
+Make sure the settings.py is according to your local environment:
+
+```
+TEMPLATE_BASE = '/Users/you/workspace/linkedtv-editortool/web'
+LABS_BASE = '/Users/you/workspace/linkedtv-editortool/src'
+
+...
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'linkedtv',
+        'USER': 'linkedtv',
+        'PASSWORD': 'yourpassword',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    }
+}
+
+...
+
+STATIC_URL = '/site_media/'
+
+```
+
+Note: when hooking up Django to Apache, make sure the STATIC_URL matches the static Apache path defined in the Apache (virtual host)config [see HOWTO.md](https://github.com/beeldengeluid/linkedtv-editortool/blob/master/docs/HOWTO.md)
+
+
+Django users
+--------------
+
+Before running it you have to create at least one Django user.
+
+Go into the python shell:
 
 ```
 import os
