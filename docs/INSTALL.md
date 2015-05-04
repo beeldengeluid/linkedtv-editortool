@@ -130,4 +130,5 @@ create an organization/group and add your user to it
 ```
 mygroup, created = Group.objects.get_or_create(name='YOURGROUP')
 user.groups.add(mygroup)
+user.save()
 ```
