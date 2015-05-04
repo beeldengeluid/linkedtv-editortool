@@ -105,6 +105,9 @@ class LinkedTVDataLoader(DataLoader):
 					videos.append(video)
 		return {'videos' : videos}
 
+	def reindex(self, provider = None):
+		return False
+
 	#directly uses the linkedTV platform
 	def __getVideoData(self, resourceUri):
 		pw = base64.b64encode(b'%s:%s' % (LTV_PLATFORM_LOGIN['user'], LTV_PLATFORM_LOGIN['password']))

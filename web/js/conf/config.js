@@ -83,19 +83,21 @@ var informationCardTemplates = {
 	],
 	euspace : null,
 
+	orf : null,
+
 	trial : null
 
 }
 
 var rbbConfig = {
 	lang : 'de',
-	entityExpansion : true,
+	entityExpansion : false,
 	loadGroundTruth : false,
 	platform : 'linkedtv',
 	logUserActions : false,
 	synchronization : {
-		syncOnLoad : true,
-		syncOnSave : true,
+		syncOnLoad : false,
+		syncOnSave : false,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [
@@ -145,8 +147,8 @@ var tkkConfig = {
 	platform : 'linkedtv',
 	logUserActions : false,
 	synchronization : {
-		syncOnLoad : true,
-		syncOnSave : true,
+		syncOnLoad : false,
+		syncOnSave : false,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [
@@ -248,6 +250,50 @@ var europeanaSpaceConfig = {
 	]
 }
 
+var openbeeldenConfig = {
+	lang : 'nl',
+	entityExpansion : false,
+	loadGroundTruth : false,
+	platform : 'openbeelden',
+	logUserActions : false,
+	synchronization : false,
+	dimensions : [
+		{
+			id : 'maintopic',
+			label : 'Main Topics',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'informationCards',
+				params : {
+					vocabulary : 'GTAA'
+				}
+			}
+		},
+		{
+			id : 'tve_2',
+			label : 'Related Europeana links',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'EuropeanaAPI',
+				class : 'linkedtv.api.dimension.public.EuropeanaAPI',
+				params : {
+					//queryParts : ['COUNTRY:netherlands']
+					rights : ['sa', 'open', 'nc']
+				}
+			}
+		},
+		{
+			id : 'anefo_1',
+			label : 'Related photos',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'AnefoAPI',
+				class : 'linkedtv.api.dimension.public.AnefoAPI'
+			}
+		}
+	]
+}
+
 var trialConfig = {
 	lang : 'nl',
 	entityExpansion : false,
@@ -293,6 +339,7 @@ var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
 	//euspace : europeanaSpaceConfig,
+	openbeelden : openbeeldenConfig,
 	trial : trialConfig
 }
 

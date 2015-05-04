@@ -74,19 +74,21 @@ var informationCardTemplates = {
 	],
 	euspace : null,
 
+	orf : null,
+
 	trial : null
 
 }
 
 var rbbConfig = {
 	lang : 'de',
-	entityExpansion : true,
+	entityExpansion : false,
 	loadGroundTruth : false,
 	platform : 'linkedtv',
 	logUserActions : false,
 	synchronization : {
-		syncOnLoad : true,
-		syncOnSave : true,
+		syncOnLoad : false,
+		syncOnSave : false,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [
@@ -136,8 +138,8 @@ var tkkConfig = {
 	platform : 'linkedtv',
 	logUserActions : false,
 	synchronization : {
-		syncOnLoad : true,
-		syncOnSave : true,
+		syncOnLoad : false,
+		syncOnSave : false,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [
@@ -239,6 +241,50 @@ var europeanaSpaceConfig = {
 	]
 }
 
+var openbeeldenConfig = {
+	lang : 'nl',
+	entityExpansion : false,
+	loadGroundTruth : false,
+	platform : 'openbeelden',
+	logUserActions : false,
+	synchronization : false,
+	dimensions : [
+		{
+			id : 'maintopic',
+			label : 'Main Topics',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'informationCards',
+				params : {
+					vocabulary : 'GTAA'
+				}
+			}
+		},
+		{
+			id : 'tve_2',
+			label : 'Related Europeana links',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'EuropeanaAPI',
+				class : 'linkedtv.api.dimension.public.EuropeanaAPI',
+				params : {
+					//queryParts : ['COUNTRY:netherlands']
+					rights : ['sa', 'open', 'nc']
+				}
+			}
+		},
+		{
+			id : 'anefo_1',
+			label : 'Related photos',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'AnefoAPI',
+				class : 'linkedtv.api.dimension.public.AnefoAPI'
+			}
+		}
+	]
+}
+
 var trialConfig = {
 	lang : 'nl',
 	entityExpansion : false,
@@ -284,6 +330,7 @@ var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
 	//euspace : europeanaSpaceConfig,
+	openbeelden : openbeeldenConfig,
 	trial : trialConfig
 }
 
@@ -567,6 +614,7 @@ linkedtv.run(function($rootScope, conf) {
 	var _chapters = [];
 	var _activeChapter = null;
 	var _thumbBaseUrl = null;
+	var _thumbUrl = null;
 	var _srtUrl = null;
 	var _observers = [];
 	var _expandedEntities = {}
@@ -575,6 +623,7 @@ linkedtv.run(function($rootScope, conf) {
 	function initCollectionData(provider, resourceData, curatedData) {
 		console.debug('Initializing chapter data');
 		_thumbBaseUrl = resourceData.thumbBaseUrl;
+		_thumbUrl = resourceData.thumbUrl;
 		_srtUrl = resourceData.srtUrl;
 		var chapters = [];
 		//load curated data from ET storage
@@ -658,7 +707,7 @@ linkedtv.run(function($rootScope, conf) {
 		}
 
 		//always make sure to set the poster and start times
-		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
+		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, _thumbUrl, chapter.start);
 		chapter.prettyStart = timeUtils.toPrettyTime(chapter.start);
 		chapter.prettyEnd = timeUtils.toPrettyTime(chapter.end);
 		chapter.mediaFragmentId = idUtils.generateMediaFragmentId(chapter.start, chapter.end);
@@ -965,13 +1014,15 @@ linkedtv.run(function($rootScope, conf) {
 	var _groupedChapterShots = {};//stores all the entities grouped by label
 	var _chapterShots = [];//only stores the unique entities (based on labels)
 	var _thumbBaseUrl = null;
+	var _thumbUrl = null;
 
 	function initCollectionData(resourceData) {
 		console.debug('Initializing shot data');
 		_thumbBaseUrl = resourceData.thumbBaseUrl;
+		_thumbUrl = resourceData.thumbUrl;
 		_shots = resourceData.shots; //no transformation necessary
 		_.each(_shots, function(s){
-			s.poster = imageService.getThumbnail(_thumbBaseUrl, s.start);
+			s.poster = imageService.getThumbnail(_thumbBaseUrl, _thumbUrl, s.start);
 			s.prettyStart = timeUtils.toPrettyTime(s.start);
 			s.prettyEnd = timeUtils.toPrettyTime(s.end);
 		});
@@ -1059,7 +1110,7 @@ linkedtv.run(function($rootScope, conf) {
 		console.debug('Initializing video collection');
 		if(videos) {
 			_.each(videos, function(v){
-				v.poster = imageService.getThumbnail(v.thumbBaseUrl, THUMBNAIL_SECOND * 1000);
+				v.poster = imageService.getThumbnail(v.thumbBaseUrl, v.thumbUrl, THUMBNAIL_SECOND * 1000);
 			});
 			videos.sort(function(a, b) {
 				return  parseInt(b.dateInserted) - parseInt(a.dateInserted);
@@ -1432,33 +1483,36 @@ linkedtv.run(function($rootScope, conf) {
 
 }]);;angular.module('linkedtv').factory('imageService', [function(){
 
-	function getThumbnail(thumbBaseUrl, millis, useImageProxy) {
-		if (!thumbBaseUrl) {
+	function getThumbnail(thumbBaseUrl, thumbUrl, millis, useImageProxy) {
+		if (thumbBaseUrl == undefined || thumbBaseUrl == null) {
 			return null;
 		}
 		if (useImageProxy) {
 			return '/image?ms=' + millis + '&baseUrl=' + thumbBaseUrl;
 		}
-		var h = m = s = 0;
-		//round up to full seconds
-		if (millis % 1000 != 0) {
-			millis += 1000 - millis % 1000;
+		if(thumbBaseUrl.indexOf('noterik') != -1) {
+			var h = m = s = 0;
+			//round up to full seconds
+			if (millis % 1000 != 0) {
+				millis += 1000 - millis % 1000;
+			}
+			while (millis >= 3600000) {
+				h ++;
+	            millis -= 3600000;
+			}
+	        while (millis >= 60000) {
+	            m ++;
+	            millis -= 60000;
+	        }
+	        while (millis >= 1000) {
+	            s++;
+	            millis -= 1000;
+	        }
+	        return thumbBaseUrl + 'h/' + h + '/m/' + m + '/sec' + s + '.jpg';
+		} else {
+			return thumbBaseUrl + thumbUrl;
 		}
-		while (millis >= 3600000) {
-			h ++;
-            millis -= 3600000;
-		}
-        while (millis >= 60000) {
-            m ++;
-            millis -= 60000;
-        }
-        while (millis >= 1000) {
-            s++;
-            millis -= 1000;
-        }
-        var url = thumbBaseUrl;
-        url += 'h/' + h + '/m/' + m + '/sec' + s + '.jpg';
-        return url;
+        return null;
 	}
 
 	return {
@@ -2219,9 +2273,11 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$scope.$apply(function() {
 			$scope.loading = false;
 			$scope.thumbIndex = 0;
-			$scope.thumbs = data.thumbs;
-			$scope.fetchedTriples = data.info;
-		})
+			if(data) {
+				$scope.thumbs = data.thumbs;
+				$scope.fetchedTriples = data.info;
+			}
+		});
 	};
 
 	//----------------------------VALIDATION AND DATA FORMATTING------------------------------

@@ -43,8 +43,6 @@ Tour videos:
 		/videos/berlin-contemporary-witness-burying-tips-in-tiergarten-805/
 		http://editortool.linkedtv.eu/load_curated?id=226
 		http://a1.noterik.com:8081/smithers2/domain/espace/user/rbb/presentation/23
-
-
 """
 
 class EuropeanaSpaceDataLoader(DataLoader):
@@ -53,6 +51,8 @@ class EuropeanaSpaceDataLoader(DataLoader):
 		#self.cache = redis.Redis(host='localhost', port=6379, db=2)
 		self.es = Elasticsearch(host=LTV_ES_SETTINGS['host'], port=LTV_ES_SETTINGS['port'])
 		self.BASE_SPRINGFIELD_URL = 'http://stream19.noterik.com/progressive/stream19'
+		self.ES_INDEX = 'europeana_space'
+		self.ES_DOC_TYPE = 'mediaresource'
 
 	#implementation of DataLoader function
 	def loadMediaResourceData(self, resourceUri, clientIP, loadAnnotations):
@@ -80,11 +80,11 @@ class EuropeanaSpaceDataLoader(DataLoader):
   			"fields": [],
 			"size": 500
 		}
-		resp = self.es.search(index=LTV_ES_SETTINGS['index'], doc_type=LTV_ES_SETTINGS['doc-type'], body=query, timeout="10s")
+		resp = self.es.search(index=self.ES_INDEX, doc_type=self.ES_DOC_TYPE, body=query, timeout="10s")
 		if resp:
 			for hit in resp['hits']['hits']:
 				print hit['_id']
-				vid = self.es.get(index=LTV_ES_SETTINGS['index'], doc_type=LTV_ES_SETTINGS['doc-type'], id=hit['_id'])
+				vid = self.es.get(index=self.ES_INDEX, doc_type=self.ES_DOC_TYPE, id=hit['_id'])
 				vids.append(vid['_source'])
 			for vd in vids:
 				if vd['id'].find('e') == -1: #only add german movies for now
@@ -98,6 +98,10 @@ class EuropeanaSpaceDataLoader(DataLoader):
 					}
 					videos.append(video)
 		return {'videos' : videos}
+
+	#see script directory for an index script
+	def reindex(self, provider = None):
+		return False
 
 
 	"""TODO create some function that reads named entities from some cache"""
@@ -123,7 +127,7 @@ class EuropeanaSpaceDataLoader(DataLoader):
 
 	def __getAllVideoMetadata(self, mediaResource, clientIP):
 		print mediaResource.getId()
-		vd = self.es.get(index=LTV_ES_SETTINGS['index'], doc_type=LTV_ES_SETTINGS['doc-type'], id=mediaResource.getId())
+		vd = self.es.get(index=self.ES_INDEX, doc_type=self.ES_DOC_TYPE, id=mediaResource.getId())
 		if vd:
 			vd = vd['_source']
 			mediaResource.setVideoMetadata(vd)

@@ -16,6 +16,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	var _chapters = [];
 	var _activeChapter = null;
 	var _thumbBaseUrl = null;
+	var _thumbUrl = null;
 	var _srtUrl = null;
 	var _observers = [];
 	var _expandedEntities = {}
@@ -24,6 +25,7 @@ angular.module('linkedtv').factory('chapterCollection',
 	function initCollectionData(provider, resourceData, curatedData) {
 		console.debug('Initializing chapter data');
 		_thumbBaseUrl = resourceData.thumbBaseUrl;
+		_thumbUrl = resourceData.thumbUrl;
 		_srtUrl = resourceData.srtUrl;
 		var chapters = [];
 		//load curated data from ET storage
@@ -107,7 +109,7 @@ angular.module('linkedtv').factory('chapterCollection',
 		}
 
 		//always make sure to set the poster and start times
-		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, chapter.start);
+		chapter.poster = imageService.getThumbnail(_thumbBaseUrl, _thumbUrl, chapter.start);
 		chapter.prettyStart = timeUtils.toPrettyTime(chapter.start);
 		chapter.prettyEnd = timeUtils.toPrettyTime(chapter.end);
 		chapter.mediaFragmentId = idUtils.generateMediaFragmentId(chapter.start, chapter.end);

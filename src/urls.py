@@ -27,6 +27,7 @@ urlpatterns = patterns('',
     #API - load images and other vidoes
     url(r'^image$', 'views.image'),
     url(r'^videos$', 'views.videos'),
+    url(r'^reindex$', 'views.reindex'),
     url(r'^subtitles$', 'views.subtitles'),
 
     #API - dimension services (for fetching enrichments)

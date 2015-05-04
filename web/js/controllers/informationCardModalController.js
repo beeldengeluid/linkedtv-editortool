@@ -168,9 +168,11 @@ angular.module('linkedtv').controller('informationCardModalController',
 		$scope.$apply(function() {
 			$scope.loading = false;
 			$scope.thumbIndex = 0;
-			$scope.thumbs = data.thumbs;
-			$scope.fetchedTriples = data.info;
-		})
+			if(data) {
+				$scope.thumbs = data.thumbs;
+				$scope.fetchedTriples = data.info;
+			}
+		});
 	};
 
 	//----------------------------VALIDATION AND DATA FORMATTING------------------------------

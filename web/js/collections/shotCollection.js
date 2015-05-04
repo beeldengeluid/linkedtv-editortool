@@ -5,13 +5,15 @@ angular.module('linkedtv').factory('shotCollection', ['imageService', 'timeUtils
 	var _groupedChapterShots = {};//stores all the entities grouped by label
 	var _chapterShots = [];//only stores the unique entities (based on labels)
 	var _thumbBaseUrl = null;
+	var _thumbUrl = null;
 
 	function initCollectionData(resourceData) {
 		console.debug('Initializing shot data');
 		_thumbBaseUrl = resourceData.thumbBaseUrl;
+		_thumbUrl = resourceData.thumbUrl;
 		_shots = resourceData.shots; //no transformation necessary
 		_.each(_shots, function(s){
-			s.poster = imageService.getThumbnail(_thumbBaseUrl, s.start);
+			s.poster = imageService.getThumbnail(_thumbBaseUrl, _thumbUrl, s.start);
 			s.prettyStart = timeUtils.toPrettyTime(s.start);
 			s.prettyEnd = timeUtils.toPrettyTime(s.end);
 		});

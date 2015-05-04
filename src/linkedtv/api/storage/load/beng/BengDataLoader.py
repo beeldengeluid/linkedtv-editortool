@@ -10,3 +10,6 @@ class BengDataLoader(DataLoader):
 
 	def loadMediaResources(self, provider):
 		return None
+
+	def reindex(self, provider = None):
+		return False

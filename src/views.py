@@ -205,6 +205,17 @@ def videos(request):
 			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
 	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
 
+def reindex(request):
+	platform = request.GET.get('p', None)
+	contentProvider = request.GET.get('cp', None)
+	if platform:
+		api = Api()
+		resp = api.reindex(platform, contentProvider)
+		if resp:
+			return HttpResponse(simplejson.dumps(resp), mimetype='application/json')
+	return HttpResponse(__getErrorMessage('Please provide the correct parameters'), mimetype='application/json')
+
+
 def subtitles(request):
 	resourceUri = request.GET.get('uri', None)
 	start = request.GET.get('start', -1)

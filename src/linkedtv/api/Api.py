@@ -45,7 +45,6 @@ class Api():
         return resp
 
     def publish(self, publishingPoint, saveData, unpublish):
-        print 'PUBLISHING DATA TO: %s' % publishingPoint
         ph = PublishingHandler()
         #create mediaResource object
         mr = DataConverter.convertSaveData(saveData)
@@ -88,6 +87,9 @@ class Api():
 
     def videos(self, platform, provider):
         return self.dataLoadHandler.loadMediaResources(platform, provider)
+
+    def reindex(self, platform, provider):
+        return self.dataLoadHandler.reindex(platform, provider)
 
     def image(self, millis, baseUrl):
         fetcher = ImageFetcher()

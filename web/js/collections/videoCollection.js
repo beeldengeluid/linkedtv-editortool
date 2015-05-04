@@ -8,7 +8,7 @@ angular.module('linkedtv').factory('videoCollection', ['imageService', function(
 		console.debug('Initializing video collection');
 		if(videos) {
 			_.each(videos, function(v){
-				v.poster = imageService.getThumbnail(v.thumbBaseUrl, THUMBNAIL_SECOND * 1000);
+				v.poster = imageService.getThumbnail(v.thumbBaseUrl, v.thumbUrl, THUMBNAIL_SECOND * 1000);
 			});
 			videos.sort(function(a, b) {
 				return  parseInt(b.dateInserted) - parseInt(a.dateInserted);
