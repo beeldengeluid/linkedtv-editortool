@@ -74,7 +74,24 @@ var informationCardTemplates = {
 	],
 	euspace : null,
 
-	orf : null,
+	openbeelden : [
+		{
+			label : 'Event',
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'description', type : 'literal', optional : true},
+				{key : 'date', type : 'literal', optional : true}
+			]
+		},
+		{
+			label : 'Special highlight',
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'description', type : 'literal', optional : true},
+				{key : 'url', type : 'literal', optional : true}
+			]
+		}
+	],
 
 	trial : null
 
@@ -82,13 +99,13 @@ var informationCardTemplates = {
 
 var rbbConfig = {
 	lang : 'de',
-	entityExpansion : false,
+	entityExpansion : true,
 	loadGroundTruth : false,
 	platform : 'linkedtv',
 	logUserActions : false,
 	synchronization : {
-		syncOnLoad : false,
-		syncOnSave : false,
+		syncOnLoad : true,
+		syncOnSave : true,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [
@@ -138,8 +155,8 @@ var tkkConfig = {
 	platform : 'linkedtv',
 	logUserActions : false,
 	synchronization : {
-		syncOnLoad : false,
-		syncOnSave : false,
+		syncOnLoad : true,
+		syncOnSave : true,
 		platform : 'LinkedTVSOLR'
 	},
 	dimensions : [

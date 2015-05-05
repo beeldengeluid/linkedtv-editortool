@@ -83,7 +83,24 @@ var informationCardTemplates = {
 	],
 	euspace : null,
 
-	orf : null,
+	openbeelden : [
+		{
+			label : 'Event',
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'description', type : 'literal', optional : true},
+				{key : 'date', type : 'literal', optional : true}
+			]
+		},
+		{
+			label : 'Special highlight',
+			properties : [
+				{key : 'label', type: 'literal', optional : false},
+				{key : 'description', type : 'literal', optional : true},
+				{key : 'url', type : 'literal', optional : true}
+			]
+		}
+	],
 
 	trial : null
 
