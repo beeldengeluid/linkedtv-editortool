@@ -1,12 +1,20 @@
 #!/usr/bin/python
 
 """
-OpenBeelden OAI harvester for the B&G set
-
 PyOAI docs:
 	https://svn.infrae.com/pyoai/tag/pyoai-2.4/doc/API.html
 
 
+How to match an id with Openbeelden:
+
+[ElasticSearch ID]
+	oai:openimages.eu:3860
+
+[OAI ID]
+	http://openbeelden.nl/feeds/oai/?verb=GetRecord&identifier=oai:openimages.eu:3860&metadataPrefix=oai_oi
+
+[WEBSITE ID]
+	http://openbeelden.nl/media/3860
 
 """
 import codecs
@@ -47,17 +55,22 @@ class OpenBeeldenDataLoader(DataLoader):
 		resp = simplejson.dumps(mediaResource, default=lambda obj: obj.__dict__)
 		return resp
 
-	def loadMediaResources(self, provider):
-		videos = []
+	def loadMediaResources(self, provider):#ignores provider
+		return self.loadOpenBeeldenItemsFromES(0, [])
+
+
+	def loadOpenBeeldenItemsFromES(self, offset, videos):
 		query = {
 			"query": {
 				"match_all": {}
 			},
   			"fields": [],
-			"size": 500
+  			"from": offset,
+			"size": 300
 		}
 		resp = self.es_local.search(index=self.ES_INDEX, doc_type=self.ES_DOC_TYPE, body=query, timeout="10s")
-		if resp:
+		if resp and len(resp['hits']['hits']) > 0:
+			print len(resp['hits']['hits'])
 			vids = []
 			for hit in resp['hits']['hits']:
 				vid = self.es_local.get(index=self.ES_INDEX, doc_type=self.ES_DOC_TYPE, id=hit['_id'])
@@ -72,7 +85,9 @@ class OpenBeeldenDataLoader(DataLoader):
 					'thumbBaseUrl' : ''
 				}
 				videos.append(video)
+			self.loadOpenBeeldenItemsFromES(offset + 300, videos)
 		return {'videos' : videos}
+
 
 	def __getMediumByExtension(self, mediums, extension):
 		poster = None
