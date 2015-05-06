@@ -12,7 +12,7 @@
 
 		<div class="panel-body">
 			<ul class="video-selector">
-				<li ng-repeat="v in videos" ng-click="setActiveVideo(v);">
+				<li id="{{v.id}}" ng-repeat="v in videos" ng-click="setActiveVideo(v);">
 
 					<div class="thumbnail">
 						<img ng-if="v.poster" src="{{v.poster}}" alt="{{v.title}}">

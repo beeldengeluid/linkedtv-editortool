@@ -24,12 +24,37 @@ class EuropeanaAPI(DimensionService):
 			'http://creativecommons.org/publicdomain/mark/1.0/' : ['open'],
 			'http://www.europeana.eu/rights/out-of-copyright-non-commercial/' : ['restricted'],
 			'http://creativecommons.org/publicdomain/zero/1.0/' : ['open'],
-			'http://creativecommons.org/licenses/by/4.0/' : ['credit'],
-			'http://creativecommons.org/licenses/by-sa/4.0/' : ['sa'],
-			'http://creativecommons.org/licenses/by-nd/4.0/' : ['nd', 'sa'],
-			'http://creativecommons.org/licenses/by-nc/4.0/' : ['nc'],
-			'http://creativecommons.org/licenses/by-nc-sa/4.0/' : ['nc', 'sa'],
-			'http://creativecommons.org/licenses/by-nc-nd/4.0/' : ['nc', 'nd'],
+
+			'http://creativecommons.org/licenses/by/4.0/' : ['by'],
+			'http://creativecommons.org/licenses/by/3.0/' : ['by'],
+			'http://creativecommons.org/licenses/by/2.0/' : ['by'],
+			'http://creativecommons.org/licenses/by/1.0/' : ['by'],
+
+			'http://creativecommons.org/licenses/by-sa/4.0/' : ['by', 'sa'],
+			'http://creativecommons.org/licenses/by-sa/3.0/' : ['by', 'sa'],
+			'http://creativecommons.org/licenses/by-sa/2.0/' : ['by', 'sa'],
+			'http://creativecommons.org/licenses/by-sa/1.0/' : ['by', 'sa'],
+
+			'http://creativecommons.org/licenses/by-nd/4.0/' : ['by', 'nd', 'sa'],
+			'http://creativecommons.org/licenses/by-nd/3.0/' : ['by', 'nd', 'sa'],
+			'http://creativecommons.org/licenses/by-nd/2.0/' : ['by', 'nd', 'sa'],
+			'http://creativecommons.org/licenses/by-nd/1.0/' : ['by', 'nd', 'sa'],
+
+			'http://creativecommons.org/licenses/by-nc/4.0/' : ['by', 'nc'],
+			'http://creativecommons.org/licenses/by-nc/3.0/' : ['by', 'nc'],
+			'http://creativecommons.org/licenses/by-nc/2.0/' : ['by', 'nc'],
+			'http://creativecommons.org/licenses/by-nc/1.0/' : ['by', 'nc'],
+
+			'http://creativecommons.org/licenses/by-nc-sa/4.0/' : ['by', 'nc', 'sa'],
+			'http://creativecommons.org/licenses/by-nc-sa/3.0/' : ['by', 'nc', 'sa'],
+			'http://creativecommons.org/licenses/by-nc-sa/2.0/' : ['by', 'nc', 'sa'],
+			'http://creativecommons.org/licenses/by-nc-sa/1.0/' : ['by', 'nc', 'sa'],
+
+			'http://creativecommons.org/licenses/by-nc-nd/4.0/' : ['by', 'nc', 'nd'],
+			'http://creativecommons.org/licenses/by-nc-nd/3.0/' : ['by', 'nc', 'nd'],
+			'http://creativecommons.org/licenses/by-nc-nd/2.0/' : ['by', 'nc', 'nd'],
+			'http://creativecommons.org/licenses/by-nc-nd/1.0/' : ['by', 'nc', 'nd'],
+
 			'http://www.europeana.eu/rights/rr-f/' : ['restricted'],
 			'http://www.europeana.eu/rights/rr-p/' : ['restricted', 'paid'],
 			'http://www.europeana.eu/rights/orphan-work-eu/' : ['orphan'],
