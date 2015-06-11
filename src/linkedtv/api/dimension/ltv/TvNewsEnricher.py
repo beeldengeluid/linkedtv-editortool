@@ -47,7 +47,8 @@ class TvNewsEnricher(DimensionService):
 			'opinion' : '008879027825390475756:jttjpihzlns',
 			'othermedia' : '008879027825390475756:jttjpihzlns',
 			'indepth' : '008879027825390475756:jttjpihzlns',
-			'timeline' : '008879027825390475756:jttjpihzlns'
+			'timeline' : '008879027825390475756:jttjpihzlns',
+			'english' : '014567755836058125714:c1kdam3wyey'
 		}
 		self.periodInDays = 7
 		self.searchLimit = 50
@@ -94,6 +95,9 @@ class TvNewsEnricher(DimensionService):
 				startDate = endDate-timedelta(days=self.periodInDays)
 
 			d = params['dimension']
+			cse = d
+			if params.has_key('cse'):
+				cse = params['cse']
 
 			#create the query from the entity labels
 			if query == '':
@@ -109,7 +113,7 @@ class TvNewsEnricher(DimensionService):
 				self.searchLimit
 			)
 			if d != 'tweets':
-				url = '%s&cse=%s' % (url, self.googleCustomSearchEngines[d])
+				url = '%s&cse=%s' % (url, self.googleCustomSearchEngines[cse])
 			print url
 			return url
 		return None
@@ -138,7 +142,7 @@ class TvNewsEnricher(DimensionService):
 					e['title'],
 					url=e['url']
 				)
-				if e.has_key('source'):
+				if e.has_key('source') and e['source'].has_key('name'):
 					enrichment.setSource(e['source']['name'])
 				if e.has_key('media'):
 					if e['media'].has_key('thumbnail'):

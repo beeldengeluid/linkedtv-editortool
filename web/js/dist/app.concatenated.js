@@ -148,6 +148,59 @@ var rbbConfig = {
 	]
 };
 
+var demoConfig = {
+	lang : 'en',
+	entityExpansion : false,
+	loadGroundTruth : false,
+	platform : 'linkedtv',
+	logUserActions : false,
+	synchronization : {
+		syncOnLoad : false,
+		syncOnSave : false,
+		platform : 'LinkedTVSOLR'
+	},
+	dimensions : [
+		{
+			id : 'maintopic',//check this
+			label : 'Mehr Zu',
+			linkedtvDimension : 'InDepth',
+			service : {
+				id :'informationCards',
+				params : {
+					vocabulary : 'DBpedia'
+				}
+			}
+		},
+		{
+			id : 'irapi_1',
+			label : 'Hintergrund',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'IRAPI',
+				class : 'linkedtv.api.dimension.ltv.TvNewsEnricher',
+				params : {
+					domain : 'RBB',
+					cse : 'english',
+					dimension : 'indepth'
+				}
+			}
+		},
+		{
+			id : 'solr_1',
+			label : 'Aktuelle RBB-Videos',
+			linkedtvDimension : 'RelatedChapter',
+			service : {
+				id : 'RelatedChapterEnricher',
+				class : 'linkedtv.api.dimension.ltv.RelatedChapterEnricher',
+				params : {
+					provider : 'rbb',
+					curatedOnly : false
+				}
+			}
+		}
+	]
+};
+
 var tkkConfig = {
 	lang : 'nl',
 	entityExpansion : false,
@@ -346,7 +399,7 @@ var trialConfig = {
 var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
-	//euspace : europeanaSpaceConfig,
+	demo : demoConfig,
 	openbeelden : openbeeldenConfig,
 	trial : trialConfig
 }
