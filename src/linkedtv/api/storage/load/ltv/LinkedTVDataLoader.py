@@ -272,7 +272,7 @@ class LinkedTVDataLoader(DataLoader):
 						relevance=r,
 						confidence=c
 						))
-				elif RDFType == '%sChapter' % LinkedTVDataUtils.LINKEDTV_ONTOLOGY_PF:
+				elif RDFType == '%sChapter' % LinkedTVDataUtils.LINKEDTV_ONTOLOGY_PF or RDFType == '%sScene' % LinkedTVDataUtils.LINKEDTV_ONTOLOGY_PF:
 					chapters.append(Chapter(
 						label,
 						start=start,
