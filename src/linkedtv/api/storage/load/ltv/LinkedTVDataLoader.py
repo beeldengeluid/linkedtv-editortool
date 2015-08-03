@@ -184,6 +184,8 @@ class LinkedTVDataLoader(DataLoader):
 				if k.has_key('medialocator') and k.has_key('locator'):
 					if publisher == 'sv':
 						found = k['locator']['value'].find('SV') != -1 or k['locator']['value'].find('avro') != -1
+					elif publisher == 'orf':
+						found = k['locator']['value'].find('orf') != -1
 					else:#rbb videos always
 						found = k['locator']['value'].find('rbb') != -1
 					if found:

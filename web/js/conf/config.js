@@ -213,7 +213,7 @@ var demoConfig = {
 var tkkConfig = {
 	lang : 'nl',
 	entityExpansion : false,
-	loadGroundTruth : true,
+	loadGroundTruth : false,
 	platform : 'linkedtv',
 	logUserActions : false,
 	synchronization : {
@@ -404,13 +404,65 @@ var trialConfig = {
 	]
 }
 
+var orfConfig = {
+	lang : 'de',
+	entityExpansion : false,
+	loadGroundTruth : false,
+	platform : 'linkedtv',
+	logUserActions : false,
+	synchronization : {
+		syncOnLoad : false,
+		syncOnSave : false,
+		platform : 'LinkedTVSOLR'
+	},
+	dimensions : [
+		{
+			id : 'maintopic',//check this
+			label : 'Mehr Zu',
+			linkedtvDimension : 'InDepth',
+			service : {
+				id :'informationCards',
+				params : {
+					vocabulary : 'DBpedia'
+				}
+			}
+		},
+		{
+			id : 'irapi_1',
+			label : 'Hintergrund',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'IRAPI',
+				class : 'linkedtv.api.dimension.ltv.IRAPI',
+				params : {
+					domain : 'RBB'
+				}
+			}
+		},
+		{
+			id : 'solr_1',
+			label : 'Aktuelle RBB-Videos',
+			linkedtvDimension : 'RelatedChapter',
+			service : {
+				id : 'RelatedChapterEnricher',
+				class : 'linkedtv.api.dimension.ltv.RelatedChapterEnricher',
+				params : {
+					provider : 'rbb',
+					curatedOnly : false
+				}
+			}
+		}
+	]
+};
+
 //specific config for each television program / content provider
 var programmeConfigs = {
 	sv : tkkConfig,
 	rbb : rbbConfig,
 	demo : demoConfig,
 	openbeelden : openbeeldenConfig,
-	trial : trialConfig
+	trial : trialConfig,
+	orf :orfConfig
 }
 
 //main config
