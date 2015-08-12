@@ -10,7 +10,7 @@ angular.module('linkedtv').factory('playerService', [function() {
 		console.debug('Playing video: ' + playoutUrl);
 		_mediaPlaying = false;
 		_videoPlayer = document.getElementById('html5player');
-		$('#videoSource').attr('src', playoutUrl + '?' + new Date().getTime());
+		$('#videoSource').attr('src', playoutUrl);// + '?' + new Date().getTime()
 		_videoPlayer.addEventListener('play', onPlay, false);
 		_videoPlayer.addEventListener('pause', onPause, false);
 		_videoPlayer.addEventListener('loadeddata', onLoadedData, false);
