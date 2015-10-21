@@ -375,12 +375,15 @@ var trialConfig = {
 			}
 		},
 		{
-			id : 'freshMedia',
-			label : 'Background Information',
-			linkedtvDimension : 'Background',
+			id : 'tve_2',
+			label : 'Related Art Work',
+			linkedtvDimension : 'RelatedArtWork',
 			service : {
-				id : 'TvEnricher',
-				class : 'linkedtv.api.dimension.ltv.TvEnricher'
+				id : 'EuropeanaAPI',
+				class : 'linkedtv.api.dimension.public.EuropeanaAPI',
+				params : {
+					//queryParts : ['COUNTRY:netherlands']
+				}
 			}
 		},
 		{
