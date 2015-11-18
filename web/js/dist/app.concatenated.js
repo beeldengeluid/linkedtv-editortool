@@ -500,6 +500,57 @@ var tagConfig = {
 	]
 };
 
+var sandbConfig = {
+	lang : 'en',
+	entityExpansion : false,
+	loadGroundTruth : false,
+	platform : 'linkedtv',
+	logUserActions : false,
+	synchronization : {
+		syncOnLoad : false,
+		syncOnSave : false,
+		platform : 'LinkedTVSOLR'
+	},
+	dimensions : [
+		{
+			id : 'maintopic',//check this
+			label : 'More about',
+			linkedtvDimension : 'InDepth',
+			service : {
+				id :'informationCards',
+				params : {
+					vocabulary : 'DBpedia'
+				}
+			}
+		},
+		{
+			id : 'irapi_1',
+			label : 'Related Articles',
+			linkedtvDimension : 'Background',
+			service : {
+				id : 'IRAPI',
+				class : 'linkedtv.api.dimension.ltv.IRAPI',
+				params : {
+					domain : 'RBB'
+				}
+			}
+		},
+		{
+			id : 'solr_1',
+			label : 'Related Videos',
+			linkedtvDimension : 'RelatedChapter',
+			service : {
+				id : 'RelatedChapterEnricher',
+				class : 'linkedtv.api.dimension.ltv.RelatedChapterEnricher',
+				params : {
+					provider : 'tag',
+					curatedOnly : false
+				}
+			}
+		}
+	]
+};
+
 //specific config for each television program / content provider
 var programmeConfigs = {
 	sv : tkkConfig,
@@ -508,7 +559,8 @@ var programmeConfigs = {
 	openbeelden : openbeeldenConfig,
 	trial : trialConfig,
 	orf : orfConfig,
-	tag : tagConfig
+	tag : tagConfig,
+	sandb : sandbConfig
 }
 
 //main config
