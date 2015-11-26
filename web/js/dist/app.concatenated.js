@@ -478,9 +478,12 @@ var tagConfig = {
 			linkedtvDimension : 'Background',
 			service : {
 				id : 'IRAPI',
-				class : 'linkedtv.api.dimension.ltv.IRAPI',
+				class : 'linkedtv.api.dimension.ltv.TvNewsEnricher',
 				params : {
-					domain : 'RBB'
+					domain : 'RBB',
+					cse : 'new',
+					periodindays: 1095,
+					dimension : 'othermedia'
 				}
 			}
 		},
@@ -529,9 +532,12 @@ var sandbConfig = {
 			linkedtvDimension : 'Background',
 			service : {
 				id : 'IRAPI',
-				class : 'linkedtv.api.dimension.ltv.IRAPI',
+				class : 'linkedtv.api.dimension.ltv.TvNewsEnricher',
 				params : {
-					domain : 'RBB'
+					domain : 'RBB',
+					cse : 'new',
+					periodindays: 1095,
+					dimension : 'othermedia'
 				}
 			}
 		},

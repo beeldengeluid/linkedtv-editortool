@@ -48,7 +48,8 @@ class TvNewsEnricher(DimensionService):
 			'othermedia' : '008879027825390475756:jttjpihzlns',
 			'indepth' : '008879027825390475756:jttjpihzlns',
 			'timeline' : '008879027825390475756:jttjpihzlns',
-			'english' : '014567755836058125714:c1kdam3wyey'
+			'english' : '014567755836058125714:c1kdam3wyey',
+			'new' : '008879027825390475756:bjnf79kal8u'
 		}
 		self.periodInDays = 7
 		self.searchLimit = 50
