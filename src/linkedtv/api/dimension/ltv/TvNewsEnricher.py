@@ -52,7 +52,7 @@ class TvNewsEnricher(DimensionService):
 			'new' : '008879027825390475756:bjnf79kal8u'
 		}
 		self.periodInDays = 7
-		self.searchLimit = 50
+		self.searchLimit = 10
 
 	def fetch(self, query, entities, dimension):
 		if self.__isValidDimension(dimension):
